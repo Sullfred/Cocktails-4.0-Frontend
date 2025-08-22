@@ -1,0 +1,7 @@
+{
+  "liquor": ["bourbon", "rye", "whiskey", "whisky", "gin", "tequila", "rum", "kahlua", "triple sec", "cointreau", "amaretto", "vodka", "brandy", "scotch", "mezcal", "absinthe", "aperol", "campari", "chartreuse", "drambuie", "frangelico", "grand marnier", "jagermeister", "sambuca", "strega", "baileys", "midori", "curacao", "limoncello", "pisco", "ouzo", "arak", "amaro", "liqueur", "cognac","calvados"],
+  "juice": ["juice", "lemonade"],
+  "bitter": ["bitter", "angostura", "peychaud's", "orange bitters", "chocolate bitters"],
+  "mixer": ["soda", "tonic", "ginger beer", "ginger ale", "cola", "club soda", "sparkling water", "energy drink", "seltzer", "danskvand"],
+  "sweetener": ["sugar", "honey", "syrup", "grenadine", "orgeat", "syrup", "agave nectar", "maple syrup", "sirup"]
+}

@@ -7,53 +7,40 @@
 	objects = {
 
 /* Begin PBXContainerItemProxy section */
-		654F45072E2F9FC900E9F256 /* PBXContainerItemProxy */ = {
+		654F45412E2FAB9700E9F256 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 654F44EA2E2F9FC800E9F256 /* Project object */;
+			containerPortal = 654F45262E2FAB9600E9F256 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 654F44F12E2F9FC800E9F256;
+			remoteGlobalIDString = 654F452D2E2FAB9600E9F256;
 			remoteInfo = "Cocktails 4.0";
 		};
-		654F45112E2F9FC900E9F256 /* PBXContainerItemProxy */ = {
+		654F454B2E2FAB9700E9F256 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 654F44EA2E2F9FC800E9F256 /* Project object */;
+			containerPortal = 654F45262E2FAB9600E9F256 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 654F44F12E2F9FC800E9F256;
+			remoteGlobalIDString = 654F452D2E2FAB9600E9F256;
 			remoteInfo = "Cocktails 4.0";
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		654F44F22E2F9FC800E9F256 /* Cocktails 4.0.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Cocktails 4.0.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		654F45062E2F9FC900E9F256 /* Cocktails 4.0Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Cocktails 4.0Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		654F45102E2F9FC900E9F256 /* Cocktails 4.0UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Cocktails 4.0UITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		654F452E2E2FAB9600E9F256 /* Cocktails 4.0.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Cocktails 4.0.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		654F45402E2FAB9700E9F256 /* Cocktails 4.0Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Cocktails 4.0Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		654F454A2E2FAB9700E9F256 /* Cocktails 4.0UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Cocktails 4.0UITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		654F45182E2F9FC900E9F256 /* Exceptions for "Cocktails 4.0" folder in "Cocktails 4.0" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = 654F44F12E2F9FC800E9F256 /* Cocktails 4.0 */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		654F44F42E2F9FC800E9F256 /* Cocktails 4.0 */ = {
+		654F45302E2FAB9600E9F256 /* Cocktails 4.0 */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				654F45182E2F9FC900E9F256 /* Exceptions for "Cocktails 4.0" folder in "Cocktails 4.0" target */,
-			);
 			path = "Cocktails 4.0";
 			sourceTree = "<group>";
 		};
-		654F45092E2F9FC900E9F256 /* Cocktails 4.0Tests */ = {
+		654F45432E2FAB9700E9F256 /* Cocktails 4.0Tests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "Cocktails 4.0Tests";
 			sourceTree = "<group>";
 		};
-		654F45132E2F9FC900E9F256 /* Cocktails 4.0UITests */ = {
+		654F454D2E2FAB9700E9F256 /* Cocktails 4.0UITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "Cocktails 4.0UITests";
 			sourceTree = "<group>";
@@ -61,21 +48,21 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		654F44EF2E2F9FC800E9F256 /* Frameworks */ = {
+		654F452B2E2FAB9600E9F256 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		654F45032E2F9FC900E9F256 /* Frameworks */ = {
+		654F453D2E2FAB9700E9F256 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		654F450D2E2F9FC900E9F256 /* Frameworks */ = {
+		654F45472E2FAB9700E9F256 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -85,22 +72,22 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		654F44E92E2F9FC800E9F256 = {
+		654F45252E2FAB9600E9F256 = {
 			isa = PBXGroup;
 			children = (
-				654F44F42E2F9FC800E9F256 /* Cocktails 4.0 */,
-				654F45092E2F9FC900E9F256 /* Cocktails 4.0Tests */,
-				654F45132E2F9FC900E9F256 /* Cocktails 4.0UITests */,
-				654F44F32E2F9FC800E9F256 /* Products */,
+				654F45302E2FAB9600E9F256 /* Cocktails 4.0 */,
+				654F45432E2FAB9700E9F256 /* Cocktails 4.0Tests */,
+				654F454D2E2FAB9700E9F256 /* Cocktails 4.0UITests */,
+				654F452F2E2FAB9600E9F256 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		654F44F32E2F9FC800E9F256 /* Products */ = {
+		654F452F2E2FAB9600E9F256 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				654F44F22E2F9FC800E9F256 /* Cocktails 4.0.app */,
-				654F45062E2F9FC900E9F256 /* Cocktails 4.0Tests.xctest */,
-				654F45102E2F9FC900E9F256 /* Cocktails 4.0UITests.xctest */,
+				654F452E2E2FAB9600E9F256 /* Cocktails 4.0.app */,
+				654F45402E2FAB9700E9F256 /* Cocktails 4.0Tests.xctest */,
+				654F454A2E2FAB9700E9F256 /* Cocktails 4.0UITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -108,134 +95,134 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		654F44F12E2F9FC800E9F256 /* Cocktails 4.0 */ = {
+		654F452D2E2FAB9600E9F256 /* Cocktails 4.0 */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 654F45192E2F9FC900E9F256 /* Build configuration list for PBXNativeTarget "Cocktails 4.0" */;
+			buildConfigurationList = 654F45542E2FAB9700E9F256 /* Build configuration list for PBXNativeTarget "Cocktails 4.0" */;
 			buildPhases = (
-				654F44EE2E2F9FC800E9F256 /* Sources */,
-				654F44EF2E2F9FC800E9F256 /* Frameworks */,
-				654F44F02E2F9FC800E9F256 /* Resources */,
+				654F452A2E2FAB9600E9F256 /* Sources */,
+				654F452B2E2FAB9600E9F256 /* Frameworks */,
+				654F452C2E2FAB9600E9F256 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				654F44F42E2F9FC800E9F256 /* Cocktails 4.0 */,
+				654F45302E2FAB9600E9F256 /* Cocktails 4.0 */,
 			);
 			name = "Cocktails 4.0";
 			packageProductDependencies = (
 			);
 			productName = "Cocktails 4.0";
-			productReference = 654F44F22E2F9FC800E9F256 /* Cocktails 4.0.app */;
+			productReference = 654F452E2E2FAB9600E9F256 /* Cocktails 4.0.app */;
 			productType = "com.apple.product-type.application";
 		};
-		654F45052E2F9FC900E9F256 /* Cocktails 4.0Tests */ = {
+		654F453F2E2FAB9700E9F256 /* Cocktails 4.0Tests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 654F451E2E2F9FC900E9F256 /* Build configuration list for PBXNativeTarget "Cocktails 4.0Tests" */;
+			buildConfigurationList = 654F45572E2FAB9700E9F256 /* Build configuration list for PBXNativeTarget "Cocktails 4.0Tests" */;
 			buildPhases = (
-				654F45022E2F9FC900E9F256 /* Sources */,
-				654F45032E2F9FC900E9F256 /* Frameworks */,
-				654F45042E2F9FC900E9F256 /* Resources */,
+				654F453C2E2FAB9700E9F256 /* Sources */,
+				654F453D2E2FAB9700E9F256 /* Frameworks */,
+				654F453E2E2FAB9700E9F256 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				654F45082E2F9FC900E9F256 /* PBXTargetDependency */,
+				654F45422E2FAB9700E9F256 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				654F45092E2F9FC900E9F256 /* Cocktails 4.0Tests */,
+				654F45432E2FAB9700E9F256 /* Cocktails 4.0Tests */,
 			);
 			name = "Cocktails 4.0Tests";
 			packageProductDependencies = (
 			);
 			productName = "Cocktails 4.0Tests";
-			productReference = 654F45062E2F9FC900E9F256 /* Cocktails 4.0Tests.xctest */;
+			productReference = 654F45402E2FAB9700E9F256 /* Cocktails 4.0Tests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		654F450F2E2F9FC900E9F256 /* Cocktails 4.0UITests */ = {
+		654F45492E2FAB9700E9F256 /* Cocktails 4.0UITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 654F45212E2F9FC900E9F256 /* Build configuration list for PBXNativeTarget "Cocktails 4.0UITests" */;
+			buildConfigurationList = 654F455A2E2FAB9700E9F256 /* Build configuration list for PBXNativeTarget "Cocktails 4.0UITests" */;
 			buildPhases = (
-				654F450C2E2F9FC900E9F256 /* Sources */,
-				654F450D2E2F9FC900E9F256 /* Frameworks */,
-				654F450E2E2F9FC900E9F256 /* Resources */,
+				654F45462E2FAB9700E9F256 /* Sources */,
+				654F45472E2FAB9700E9F256 /* Frameworks */,
+				654F45482E2FAB9700E9F256 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				654F45122E2F9FC900E9F256 /* PBXTargetDependency */,
+				654F454C2E2FAB9700E9F256 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				654F45132E2F9FC900E9F256 /* Cocktails 4.0UITests */,
+				654F454D2E2FAB9700E9F256 /* Cocktails 4.0UITests */,
 			);
 			name = "Cocktails 4.0UITests";
 			packageProductDependencies = (
 			);
 			productName = "Cocktails 4.0UITests";
-			productReference = 654F45102E2F9FC900E9F256 /* Cocktails 4.0UITests.xctest */;
+			productReference = 654F454A2E2FAB9700E9F256 /* Cocktails 4.0UITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		654F44EA2E2F9FC800E9F256 /* Project object */ = {
+		654F45262E2FAB9600E9F256 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1620;
 				LastUpgradeCheck = 1620;
 				TargetAttributes = {
-					654F44F12E2F9FC800E9F256 = {
+					654F452D2E2FAB9600E9F256 = {
 						CreatedOnToolsVersion = 16.2;
 					};
-					654F45052E2F9FC900E9F256 = {
+					654F453F2E2FAB9700E9F256 = {
 						CreatedOnToolsVersion = 16.2;
-						TestTargetID = 654F44F12E2F9FC800E9F256;
+						TestTargetID = 654F452D2E2FAB9600E9F256;
 					};
-					654F450F2E2F9FC900E9F256 = {
+					654F45492E2FAB9700E9F256 = {
 						CreatedOnToolsVersion = 16.2;
-						TestTargetID = 654F44F12E2F9FC800E9F256;
+						TestTargetID = 654F452D2E2FAB9600E9F256;
 					};
 				};
 			};
-			buildConfigurationList = 654F44ED2E2F9FC800E9F256 /* Build configuration list for PBXProject "Cocktails 4.0" */;
+			buildConfigurationList = 654F45292E2FAB9600E9F256 /* Build configuration list for PBXProject "Cocktails 4.0" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
 			);
-			mainGroup = 654F44E92E2F9FC800E9F256;
+			mainGroup = 654F45252E2FAB9600E9F256;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 654F44F32E2F9FC800E9F256 /* Products */;
+			productRefGroup = 654F452F2E2FAB9600E9F256 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				654F44F12E2F9FC800E9F256 /* Cocktails 4.0 */,
-				654F45052E2F9FC900E9F256 /* Cocktails 4.0Tests */,
-				654F450F2E2F9FC900E9F256 /* Cocktails 4.0UITests */,
+				654F452D2E2FAB9600E9F256 /* Cocktails 4.0 */,
+				654F453F2E2FAB9700E9F256 /* Cocktails 4.0Tests */,
+				654F45492E2FAB9700E9F256 /* Cocktails 4.0UITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		654F44F02E2F9FC800E9F256 /* Resources */ = {
+		654F452C2E2FAB9600E9F256 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		654F45042E2F9FC900E9F256 /* Resources */ = {
+		654F453E2E2FAB9700E9F256 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		654F450E2E2F9FC900E9F256 /* Resources */ = {
+		654F45482E2FAB9700E9F256 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -245,21 +232,21 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		654F44EE2E2F9FC800E9F256 /* Sources */ = {
+		654F452A2E2FAB9600E9F256 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		654F45022E2F9FC900E9F256 /* Sources */ = {
+		654F453C2E2FAB9700E9F256 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		654F450C2E2F9FC900E9F256 /* Sources */ = {
+		654F45462E2FAB9700E9F256 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -269,80 +256,20 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		654F45082E2F9FC900E9F256 /* PBXTargetDependency */ = {
+		654F45422E2FAB9700E9F256 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 654F44F12E2F9FC800E9F256 /* Cocktails 4.0 */;
-			targetProxy = 654F45072E2F9FC900E9F256 /* PBXContainerItemProxy */;
+			target = 654F452D2E2FAB9600E9F256 /* Cocktails 4.0 */;
+			targetProxy = 654F45412E2FAB9700E9F256 /* PBXContainerItemProxy */;
 		};
-		654F45122E2F9FC900E9F256 /* PBXTargetDependency */ = {
+		654F454C2E2FAB9700E9F256 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 654F44F12E2F9FC800E9F256 /* Cocktails 4.0 */;
-			targetProxy = 654F45112E2F9FC900E9F256 /* PBXContainerItemProxy */;
+			target = 654F452D2E2FAB9600E9F256 /* Cocktails 4.0 */;
+			targetProxy = 654F454B2E2FAB9700E9F256 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		654F451A2E2F9FC900E9F256 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "Cocktails 4.0/Cocktails_4_0.entitlements";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Cocktails 4.0/Preview Content\"";
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Cocktails 4.0/Info.plist";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.myCocktails.Cocktails-4-0";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		654F451B2E2F9FC900E9F256 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "Cocktails 4.0/Cocktails_4_0.entitlements";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"Cocktails 4.0/Preview Content\"";
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Cocktails 4.0/Info.plist";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.myCocktails.Cocktails-4-0";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
-		654F451C2E2F9FC900E9F256 /* Debug */ = {
+		654F45522E2FAB9700E9F256 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -405,7 +332,7 @@
 			};
 			name = Debug;
 		};
-		654F451D2E2F9FC900E9F256 /* Release */ = {
+		654F45532E2FAB9700E9F256 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -461,7 +388,63 @@
 			};
 			name = Release;
 		};
-		654F451F2E2F9FC900E9F256 /* Debug */ = {
+		654F45552E2FAB9700E9F256 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Cocktails 4.0/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.myCocktails.Cocktails-4-0";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		654F45562E2FAB9700E9F256 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Cocktails 4.0/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.myCocktails.Cocktails-4-0";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		654F45582E2FAB9700E9F256 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -479,7 +462,7 @@
 			};
 			name = Debug;
 		};
-		654F45202E2F9FC900E9F256 /* Release */ = {
+		654F45592E2FAB9700E9F256 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
@@ -497,7 +480,7 @@
 			};
 			name = Release;
 		};
-		654F45222E2F9FC900E9F256 /* Debug */ = {
+		654F455B2E2FAB9700E9F256 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -513,7 +496,7 @@
 			};
 			name = Debug;
 		};
-		654F45232E2F9FC900E9F256 /* Release */ = {
+		654F455C2E2FAB9700E9F256 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -532,43 +515,43 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		654F44ED2E2F9FC800E9F256 /* Build configuration list for PBXProject "Cocktails 4.0" */ = {
+		654F45292E2FAB9600E9F256 /* Build configuration list for PBXProject "Cocktails 4.0" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				654F451C2E2F9FC900E9F256 /* Debug */,
-				654F451D2E2F9FC900E9F256 /* Release */,
+				654F45522E2FAB9700E9F256 /* Debug */,
+				654F45532E2FAB9700E9F256 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		654F45192E2F9FC900E9F256 /* Build configuration list for PBXNativeTarget "Cocktails 4.0" */ = {
+		654F45542E2FAB9700E9F256 /* Build configuration list for PBXNativeTarget "Cocktails 4.0" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				654F451A2E2F9FC900E9F256 /* Debug */,
-				654F451B2E2F9FC900E9F256 /* Release */,
+				654F45552E2FAB9700E9F256 /* Debug */,
+				654F45562E2FAB9700E9F256 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		654F451E2E2F9FC900E9F256 /* Build configuration list for PBXNativeTarget "Cocktails 4.0Tests" */ = {
+		654F45572E2FAB9700E9F256 /* Build configuration list for PBXNativeTarget "Cocktails 4.0Tests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				654F451F2E2F9FC900E9F256 /* Debug */,
-				654F45202E2F9FC900E9F256 /* Release */,
+				654F45582E2FAB9700E9F256 /* Debug */,
+				654F45592E2FAB9700E9F256 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		654F45212E2F9FC900E9F256 /* Build configuration list for PBXNativeTarget "Cocktails 4.0UITests" */ = {
+		654F455A2E2FAB9700E9F256 /* Build configuration list for PBXNativeTarget "Cocktails 4.0UITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				654F45222E2F9FC900E9F256 /* Debug */,
-				654F45232E2F9FC900E9F256 /* Release */,
+				654F455B2E2FAB9700E9F256 /* Debug */,
+				654F455C2E2FAB9700E9F256 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 654F44EA2E2F9FC800E9F256 /* Project object */;
+	rootObject = 654F45262E2FAB9600E9F256 /* Project object */;
 }

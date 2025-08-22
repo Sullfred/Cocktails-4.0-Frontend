@@ -1,0 +1,8 @@
+{
+"whiskey": ["whiskey", "bourbon", "rye", "scotch", "irish", "whisky"],
+"rum": ["rum", "cachaça", "cachaca", "aguardiente"],
+"gin": ["gin", "london dry", "contemporary", "new western", "new american", "plymouth", "old tom", "genever"],
+"tequila": ["tequila", "mezcal"],
+"vodka": ["vodka"],
+"brandy": ["brandy", "cognac", "armagnac", "calvados", "pisco", "grappa", "metaxa"],
+}

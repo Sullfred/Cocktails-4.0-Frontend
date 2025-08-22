@@ -1,0 +1,56 @@
+{
+  "title": "Cocktail Guide and Notes",
+  "introduction": "Welcome to the ultimate cocktail guide. Here you'll find categories of cocktails, how to create your own, and tips on adding to your bar.",
+  "sections": [
+    {
+      "subtitle": "Cocktail Categories",
+      "body": "Cocktail categories help organize drinks by their style, ingredients, and preparation method. Below you can find the main categories and what defines them.",
+      "subsections": [
+        {
+          "headline": "Sours",
+          "description": "Sours are classic cocktails that balance a base spirit with citrus juice and a sweetener, often shaken and served over ice."
+        },
+        {
+          "headline": "Highballs",
+          "description": "Highballs are simple mixed drinks consisting of a base spirit and a larger proportion of a non-alcoholic mixer, served over ice in a tall glass."
+        },
+        {
+          "headline": "Spirit-Forwards",
+          "description": "Spirit-forward cocktails emphasize the base spirit with minimal mixers, often stirred and served neat or on the rocks."
+        },
+        {
+          "headline": "Mocktails",
+          "description": "Mocktails are non-alcoholic beverages designed to mimic the complexity and flavor of traditional cocktails. If no alcohol is in the ingredients the cocktail belongs to this category."
+        },
+        {
+          "headline": "Tiki Cocktails",
+          "description": "Tiki cocktails are tropical, often rum-based drinks with exotic fruit juices and elaborate garnishes."
+        },
+        {
+          "headline": "Duos and Trios",
+          "description": "Duos and Trios are simple combinations of two or three ingredients that highlight the interplay of flavors."
+        },
+        {
+          "headline": "Champagne Cocktails",
+          "description": "Champagne cocktails incorporate sparkling wine with other ingredients to create festive and elegant drinks."
+        },
+        {
+          "headline": "Juleps and Smashes",
+          "description": "Juleps and smashes are refreshing cocktails typically featuring muddled herbs, citrus, and a base spirit, served over crushed or cracked ice."
+        },
+        {
+          "headline": "Others",
+          "description": "This category includes cocktails that don't fit neatly into the other classifications but are worth exploring."
+        }
+      ]
+    },
+    {
+      "subtitle": "Creating a Cocktail",
+      "body": "..."
+    },
+    {
+      "subtitle": "Adding to My Bar",
+      "body": "..."
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+import SwiftUI
+import SwiftData
+
+struct view_cocktailsList: View {
+    @Environment(\.modelContext) private var modelContext
+
+    @State private var path: [Cocktail] = []
+    @State private var sortOrder = [
+        SortDescriptor(\Cocktail.name),
+        SortDescriptor(\Cocktail.creator)
+    ]
+    @State private var searchText: String = ""
+    @State private var showFavoritesOnly: Bool = false
+    @State private var showCraftableOnly: Bool = false
+    let selectedCategory: CocktailCategory?
+
+    var body: some View {
+        view_cocktailsListSorted(sortOrder: sortOrder, searchText: searchText, showFavoritesOnly: showFavoritesOnly, showCraftableOnly: showCraftableOnly, selectedCategory: selectedCategory)
+            .navigationTitle(selectedCategory != nil ? selectedCategory?.rawValue ?? "error" : "All Cocktails")
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always)) //Will fix flicker when navigating
+            .background(Color.colorSet2)
+            .toolbarBackground(Color.colorSet1, for: .navigationBar)
+            .scrollContentBackground(.hidden)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    NavigationLink(destination: view_newCocktail()) {
+                        Button(action: {}) {
+                            Label("Add Cocktail", systemImage: "plus")
+                        }
+                    }
+                }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Menu {
+                        Section("Display"){
+                            
+                            Toggle("Show Favorites only", systemImage: showFavoritesOnly ? "heart.fill" : "heart", isOn: $showFavoritesOnly)
+                            
+                            Toggle("Show Craftables only", systemImage: showCraftableOnly ? "wineglass.fill" : "wineglass", isOn: $showCraftableOnly)
+                        }
+                        
+                        Section("Sort by") {
+                            Picker("Sort by", selection: $sortOrder) {
+                                Text("Name")
+                                    .tag([
+                                        SortDescriptor(\Cocktail.name),
+                                        SortDescriptor(\Cocktail.creator)
+                                    ])
+                                
+                                Text("Creator")
+                                    .tag([
+                                        SortDescriptor(\Cocktail.creator),
+                                        SortDescriptor(\Cocktail.name)
+                                    ])
+                            }
+                            .pickerStyle(.inline)
+                            .labelsVisibility(.visible)
+                        }
+                    } label: {
+                        Label("Sort", systemImage: "arrow.up.arrow.down")
+                    }
+                    .menuActionDismissBehavior(.disabled)
+                }
+            }
+            .tint(.colorSet4)
+    }
+}
+
+#Preview {
+    view_cocktailsList(selectedCategory: nil)
+}

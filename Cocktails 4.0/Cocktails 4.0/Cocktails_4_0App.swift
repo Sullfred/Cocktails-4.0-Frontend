@@ -12,7 +12,8 @@ import SwiftData
 struct Cocktails_4_0App: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            Cocktail.self,
+            myBar.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

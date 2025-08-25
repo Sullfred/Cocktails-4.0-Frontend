@@ -13,9 +13,10 @@ struct view_cocktailsList: View {
     @State private var showFavoritesOnly: Bool = false
     @State private var showCraftableOnly: Bool = false
     let selectedCategory: CocktailCategory?
+    @State var baseSpirit: IngredientTag?
 
     var body: some View {
-        view_cocktailsListSorted(sortOrder: sortOrder, searchText: searchText, showFavoritesOnly: showFavoritesOnly, showCraftableOnly: showCraftableOnly, selectedCategory: selectedCategory)
+        view_cocktailsListSorted(sortOrder: sortOrder, searchText: searchText, showFavoritesOnly: showFavoritesOnly, showCraftableOnly: showCraftableOnly, selectedCategory: selectedCategory, baseSpirit: baseSpirit)
             .navigationTitle(selectedCategory != nil ? selectedCategory?.rawValue ?? "error" : "All Cocktails")
             .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always)) //Will fix flicker when navigating
             .background(Color.colorSet2)
@@ -55,6 +56,16 @@ struct view_cocktailsList: View {
                             .pickerStyle(.inline)
                             .labelsVisibility(.visible)
                         }
+                        
+                        Section("Base Spirit") {
+                            Picker("Base Spirit", selection: $baseSpirit) {
+                                Text("All").tag(nil as IngredientTag?)
+                                ForEach(IngredientTag.allCases, id: \.self) { tag in
+                                    Text(tag.rawValue.capitalized).tag(tag as IngredientTag?)
+                                }
+                            }
+                            .pickerStyle(.menu)
+                        }
                     } label: {
                         Label("Sort", systemImage: "arrow.up.arrow.down")
                     }
@@ -66,5 +77,5 @@ struct view_cocktailsList: View {
 }
 
 #Preview {
-    view_cocktailsList(selectedCategory: nil)
+    view_cocktailsList(selectedCategory: nil, baseSpirit: nil)
 }

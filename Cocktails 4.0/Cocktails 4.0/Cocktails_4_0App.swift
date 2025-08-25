@@ -13,7 +13,7 @@ struct Cocktails_4_0App: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Cocktail.self,
-            myBar.self,
+            MyBar.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

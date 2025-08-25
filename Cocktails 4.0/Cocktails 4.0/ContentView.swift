@@ -10,7 +10,7 @@ import SwiftData
 
 struct ContentView: View {
     init() {
-        UITabBar.appearance().backgroundColor = UIColor.colorSet1
+        UITabBar.appearance().backgroundColor = UIColor.white
     }
     
     @Environment(\.modelContext) var modelContext

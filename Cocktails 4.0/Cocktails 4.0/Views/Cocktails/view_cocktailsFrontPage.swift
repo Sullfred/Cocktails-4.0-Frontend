@@ -12,6 +12,11 @@ struct view_cocktailsFrontPage: View {
         GridItem(.flexible()),
         GridItem(.flexible())
     ]
+    private let tagColumns = [
+        GridItem(.flexible()),
+        GridItem(.flexible()),
+        GridItem(.flexible())
+    ]
     
     var body: some View {
         NavigationStack {
@@ -22,7 +27,9 @@ struct view_cocktailsFrontPage: View {
                 } label: {
                     CategoryCard(
                         title: "All Cocktails",
-                        imageName: "cocktail_all" // replace with your asset
+                        imageName: "cocktail_all",
+                        uiHeight: 180,
+                        iHeight: 150
                     )
                     .frame(maxWidth: .infinity)
                     .padding()
@@ -36,7 +43,29 @@ struct view_cocktailsFrontPage: View {
                         } label: {
                             CategoryCard(
                                 title: category.rawValue,
-                                imageName: category.imageName
+                                imageName: category.imageName,
+                                uiHeight: 180,
+                                iHeight: 150
+                            )
+                        }
+                    }
+                }
+                .padding()
+                
+                Text("Base Spirit")
+                    .font(.title2)
+                
+                LazyVGrid(columns: tagColumns, spacing: 20) {
+                    // One card per Tag
+                    ForEach(IngredientTag.allCases, id: \.self) { tag in
+                        NavigationLink {
+                            view_cocktailsList(selectedCategory: nil, baseSpirit: tag)
+                        } label: {
+                            CategoryCard(
+                                title: tag.rawValue,
+                                imageName: tag.imageName,
+                                uiHeight: 120,
+                                iHeight: 90
                             )
                         }
                     }
@@ -82,6 +111,25 @@ extension CocktailCategory {
             return "cobblers_sample"
         case .other:
             return "other_sample"
+        }
+    }
+}
+
+extension IngredientTag {
+    var imageName: String {
+        switch self {
+        case .brandy:
+            return "brandy_sample"
+        case .gin:
+            return "gin_sample"
+        case .rum:
+            return "rum_sample"
+        case .tequila:
+            return "tequila_sample"
+        case .vodka:
+            return "vodka_sample"
+        case .whiskey:
+            return "whiskey_sample"
         }
     }
 }

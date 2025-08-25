@@ -10,11 +10,12 @@ import SwiftData
 import SwiftUI
 
 @Model
-class myBar {
+class MyBar {
     var myBarItems: [MyBarItem]
+    var favoriteCocktails: [String]
     
-    init(myBarItems: [MyBarItem] = []) {
+    init(myBarItems: [MyBarItem] = [], favoriteCocktails: [String] = []) {
         self.myBarItems = myBarItems
-        
+        self.favoriteCocktails = favoriteCocktails
     }
 }

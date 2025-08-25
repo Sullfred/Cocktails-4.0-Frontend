@@ -318,7 +318,7 @@ struct test_View: View {
 
 struct test_View: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var bars: [myBar]
+    @Query private var bars: [MyBar]
     
     var category: BarItemCategory = .juice
     

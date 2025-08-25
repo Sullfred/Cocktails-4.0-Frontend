@@ -11,7 +11,8 @@ import SwiftData
 
 struct view_myBar: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var bars: [myBar]
+    @Query private var bars: [MyBar]
+    
     @State private var newItemName: String = ""
     @State private var newItemCategory: BarItemCategory? = nil
     
@@ -69,6 +70,8 @@ struct view_myBar: View {
                 }
                 .scrollContentBackground(.hidden)
                 
+                Divider()
+                
                 HStack(alignment: .lastTextBaseline) {
                     VStack(alignment: .leading){
                         Text("Add a new item")
@@ -102,7 +105,7 @@ struct view_myBar: View {
                         if let bar = bars.first {
                             bar.myBarItems.append(newItem)
                         } else {
-                            let newBar = myBar()
+                            let newBar = MyBar()
                             newBar.myBarItems.append(newItem)
                             modelContext.insert(newBar)
                         }

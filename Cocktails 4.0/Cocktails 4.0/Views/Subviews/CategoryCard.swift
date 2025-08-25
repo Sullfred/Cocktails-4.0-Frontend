@@ -10,6 +10,8 @@ import SwiftUI
 struct CategoryCard: View {
     let title: String
     let imageName: String
+    let uiHeight: CGFloat
+    let iHeight: CGFloat
     
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -17,14 +19,14 @@ struct CategoryCard: View {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFill()
-                    .frame(height: 180)
+                    .frame(height: uiHeight)
                     .clipped()
                     .cornerRadius(12)
             } else {
                 Image(systemName: "photo")
                     .resizable()
                     .scaledToFit()
-                    .frame(height: 150)
+                    .frame(height: iHeight)
                     .foregroundColor(.gray)
                     .padding()
                     .background(Color.secondary.opacity(0.3))

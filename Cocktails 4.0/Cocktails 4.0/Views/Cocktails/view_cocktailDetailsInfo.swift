@@ -6,8 +6,12 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct view_cocktailDetailsInfo: View {
+    @Environment(\.modelContext) var modelContext
+    @Query var bars: [MyBar]
+
     var cocktail : Cocktail
     
     @State private var selectedMeasurement: UnitVolume = .milliliters
@@ -91,11 +95,15 @@ struct view_cocktailDetailsInfo: View {
         .containerRelativeFrame([.horizontal, .vertical])
         .background(.colorSet2)
         .toolbarBackground(Color.colorSet1, for: .navigationBar)
-        //.foregroundStyle(.colorSet4)
         .toolbar{
-            ToolbarItem {
-                Button(action: {cocktail.favorite.toggle()}) {
-                    Label("Toggle favorite", systemImage: cocktail.favorite ? "heart.fill" : "heart")
+            if let bar = bars.first {
+                Button(action: {
+                    toggleFavorite(cocktail: cocktail, myBar: bar)
+                }) {
+                    Label(
+                        "Toggle favorite",
+                        systemImage: isFavorite(cocktail: cocktail, myBar: bar) ? "heart.fill" : "heart"
+                    )
                 }
                 .contentTransition(.symbolEffect(.replace))
             }
@@ -118,7 +126,6 @@ struct view_cocktailDetailsInfo: View {
             Ingredient(volume: 3, unit: .dash, name: "angostura bitters", orderIndex: 4)
         ],
         comment: "Angostura bitters can be left out",
-        favorite: true,
         image: imageData,
         cocktailCategory: .sour
     )

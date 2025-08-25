@@ -55,7 +55,6 @@ struct view_cocktailListItem: View {
             Ingredient(volume: 3, unit: .dash, name: "angostura bitters", orderIndex: 4)
         ],
         comment: "angostura bitters can be left out",
-        favorite: true,
         image: imageData,
         cocktailCategory: .sour
     )

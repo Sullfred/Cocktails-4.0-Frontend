@@ -229,7 +229,7 @@ private extension view_newCocktail {
                 return ingredient
             }
         
-        let newCocktail = Cocktail(name: newCocktailName.lowercased(), creator: newCocktailCreator.lowercased(), style: newCocktailStyle, ingredients: newCocktailIngredients, comment: newCocktailComment, favorite: false, image: newCocktailImage ?? nil, cocktailCategory: newCocktailCategory)
+        let newCocktail = Cocktail(name: newCocktailName.lowercased(), creator: newCocktailCreator.lowercased(), style: newCocktailStyle, ingredients: newCocktailIngredients, comment: newCocktailComment, image: newCocktailImage ?? nil, cocktailCategory: newCocktailCategory)
                 
         modelContext.insert(newCocktail)
         do {

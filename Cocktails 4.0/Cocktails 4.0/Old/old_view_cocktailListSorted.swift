@@ -18,7 +18,7 @@ struct old_view_cocktailsListSorted: View {
         SortDescriptor(\Cocktail.name),
         SortDescriptor(\Cocktail.creator)
     ]) var allCocktails: [Cocktail]
-    @Query private var bars: [myBar]
+    @Query private var bars: [MyBar]
     
     private var filteredCocktails: [Cocktail] {
         let barItems = Set(bars.first?.myBarItems.map { $0.name.lowercased() } ?? [])
@@ -60,8 +60,8 @@ struct old_view_cocktailsListSorted: View {
                     ingredient.name.localizedStandardContains(searchText)
                 }
             )
-            &&
-            (!showFavoritesOnly || cocktail.favorite)
+            //&&
+            //(!showFavoritesOnly || cocktail.favorite)
         }, sort: sortOrder)
     }
     

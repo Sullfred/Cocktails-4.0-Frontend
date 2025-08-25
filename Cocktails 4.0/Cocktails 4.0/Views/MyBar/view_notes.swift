@@ -78,7 +78,7 @@ struct view_notes: View {
                     print("Failed to load or decode GuideAndNotes.json: \(error)")
                 }
             } else {
-                print("GuideAndNotes.json not found in bundle.")
+                print("GuideAndNotes.json not found.")
             }
         }
         .background(Color.colorSet2)

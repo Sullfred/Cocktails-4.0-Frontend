@@ -216,7 +216,6 @@ struct CocktailDraft {
     var ingredients: [Ingredient]
     var comment: String
     var cocktailCategory: CocktailCategory
-    var favorite: Bool
     var image: Data?
     
     init(from cocktail: Cocktail) {
@@ -235,7 +234,6 @@ struct CocktailDraft {
         
         self.comment = cocktail.comment
         self.cocktailCategory = cocktail.cocktailCategory
-        self.favorite = cocktail.favorite
         self.image = cocktail.image
     }
     
@@ -250,7 +248,6 @@ struct CocktailDraft {
         }
         cocktail.comment = comment
         cocktail.cocktailCategory = cocktailCategory
-        cocktail.favorite = favorite
         cocktail.image = image
     }
 }
@@ -270,7 +267,6 @@ struct CocktailDraft {
             Ingredient(volume: 3, unit: .dash, name: "angostura bitters", orderIndex: 4)
         ],
         comment: "Angostura bitters can be left out",
-        favorite: true,
         image: imageData,
         cocktailCategory: .sour
     )

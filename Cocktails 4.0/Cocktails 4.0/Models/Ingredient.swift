@@ -49,7 +49,7 @@ extension Iunit {
 }
 
 enum IngredientTag: String, Codable, CaseIterable, Identifiable {
-    case whiskey, rum, gin, tequila, vodka, brandy
+    case whiskey, rum, gin, brandy, vodka, tequila
 
     var id: String { rawValue.capitalized }
 }

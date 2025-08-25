@@ -40,8 +40,8 @@ struct old_view_cocktailList: View {
                     ingredient.name.localizedStandardContains(searchString)
                 }
             )
-            &&
-            (!showFavoritesOnly || cocktail.favorite)
+            //&&
+            //(!showFavoritesOnly || cocktail.favorite)
         }, sort: [sort])
     }
     

@@ -2,21 +2,25 @@
   "title": "Cocktail Guide and Notes",
   "introduction": "Welcome to the ultimate cocktail guide. Here you'll find categories of cocktails, how to create your own, and tips on adding to your bar.",
   "sections": [
+      {
+        "subtitle": "Making a Cocktail",
+        "body": "..."
+      },
     {
       "subtitle": "Cocktail Categories",
-      "body": "Cocktail categories help organize drinks by their style, ingredients, and preparation method. Below you can find the main categories and what defines them.",
+      "body": "Cocktail categories help organize drinks by their style and is often categorized by their ingredients. Below you can find the main categories and what defines them.",
       "subsections": [
         {
           "headline": "Sours",
-          "description": "Sours are classic cocktails that balance a base spirit with citrus juice and a sweetener, often shaken and served over ice."
+          "description": "Sours are classic cocktails that balance a base spirit with citrus juice and a sweetener, often shaken and served over ice. THe juice is usually lemon or lime, but can also be grapefruit juice (and sometimes orange juice). Examples of sours include: Whiskey sour, Cosmopolitan, Clover Club, Sidecar and The Last Word."
         },
         {
-          "headline": "Highballs",
-          "description": "Highballs are simple mixed drinks consisting of a base spirit and a larger proportion of a non-alcoholic mixer, served over ice in a tall glass."
+          "headline": "Highballs and Fizzes",
+          "description": "Highballs are mixed drinks consisting of a base spirit and a larger proportion of a non-alcoholic mixer, served over ice in a tall glass. Examples of Highballs include: Whiskey Highball and Pimm's Cup. More complex Highballs have added juice, liqueurs, or other ingredients. A Highball with the addition of lemon juice and sugar is called a Collins (Such as a Tom Collins). A fizz is in the style of a complex Highball but with the ingredients (excluding the mixer) shaken first. Examples include: Gin Fizz and Ramoz Fizz."
         },
         {
           "headline": "Spirit-Forwards",
-          "description": "Spirit-forward cocktails emphasize the base spirit with minimal mixers, often stirred and served neat or on the rocks."
+          "description": "Spirit-forward cocktails emphasize the base spirit with minimal mixers, often stirred and served neat or on the rocks. They are usually composed of a base spirit, a modifier (vermouth or similar) and bitters or a small amount of syrup or liqueur. Examples include: Martini, Manhattan, Negroni and El Presidente"
         },
         {
           "headline": "Mocktails",
@@ -24,28 +28,28 @@
         },
         {
           "headline": "Tiki Cocktails",
-          "description": "Tiki cocktails are tropical, often rum-based drinks with exotic fruit juices and elaborate garnishes."
+          "description": "Tiki cocktails are tropical, often rum-based drinks with exotic fruit juices and elaborate garnishes. They usually consists of base spirits (1 spirit or a combination of different spirits), fruit juices and syrups and/or liqueurs, often deployed in various combinations. These cocktails are usually served over crushed ice. Examples inlcude: Zombie, Planter's Punch and Singapore Sling."
         },
         {
           "headline": "Duos and Trios",
-          "description": "Duos and Trios are simple combinations of two or three ingredients that highlight the interplay of flavors."
+          "description": "Duos and Trios are simple combinations of two or three ingredients. This category of cocktails is similar to Spirit-Forwards when looking a Duos but with one key difference in the modifier. Duos consist of a base spirit and modifier (a liqueur or dash of bitters). Examples include: Stinger and Revolver. To create a trio a cream or cream liqueur is added. Trios are often found in dessert style cocktails. Examples include: Alexender (and its variations) and White Russian."
         },
         {
           "headline": "Champagne Cocktails",
-          "description": "Champagne cocktails incorporate sparkling wine with other ingredients to create festive and elegant drinks."
+          "description": "Champagne cocktails incorporate sparkling wine with other ingredients and as such, cocktails in this category is quite varied. A champagne cocktail can be created by taking a Sour or Spirit-Forward cocktail and adding sparkling wine to it. Examples include: Champagne Cocktail, French 75 and Morning Glory Royale."
         },
         {
           "headline": "Juleps and Smashes",
-          "description": "Juleps and smashes are refreshing cocktails typically featuring muddled herbs, citrus, and a base spirit, served over crushed or cracked ice."
+          "description": "Juleps and smashes are refreshing cocktails typically featuring muddled herbs, citrus, and a base spirit, served over crushed or cracked ice. Examples include: Mint julep, Whiskey Smash and Gin Basil Smash."
         },
         {
           "headline": "Others",
-          "description": "This category includes cocktails that don't fit neatly into the other classifications but are worth exploring."
+          "description": "This category includes cocktails that don't fit neatly into the other classifications."
         }
       ]
     },
     {
-      "subtitle": "Creating a Cocktail",
+      "subtitle": "Creating a New Cocktail",
       "body": "..."
     },
     {

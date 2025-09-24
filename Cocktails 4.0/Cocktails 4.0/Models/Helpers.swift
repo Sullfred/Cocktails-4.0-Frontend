@@ -30,4 +30,3 @@ func toggleFavorite(cocktail: Cocktail, myBar: MyBar) {
         myBar.favoriteCocktails.append(cocktail.id.uuidString)
     }
 }
-

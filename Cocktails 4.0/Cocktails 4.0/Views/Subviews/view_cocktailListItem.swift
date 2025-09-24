@@ -6,18 +6,30 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct view_cocktailListItem: View {
+    @Query var bars: [MyBar]
+    
     var cocktail: Cocktail
     
     let columns = [GridItem(.adaptive(minimum: 70, maximum: 80))]
     
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            // Cocktail name
-            Text(cocktail.name.capitalized)
-                .font(.headline)
-            
+            HStack {
+                // Cocktail name
+                Text(cocktail.name.capitalized)
+                    .font(.headline)
+                
+                Spacer()
+                
+                if let bar = bars.first {
+                    if isFavorite(cocktail: cocktail, myBar: bar) {
+                        Label("", systemImage: "heart.fill")
+                    }
+                }
+            }
             // Optional creator
             if !cocktail.creator.isEmpty {
                 Text("By \(cocktail.creator.capitalized)")

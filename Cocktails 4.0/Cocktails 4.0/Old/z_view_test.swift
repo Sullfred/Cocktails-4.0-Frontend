@@ -264,8 +264,6 @@ private extension test_view_newCocktail {
 */
 
 
-
-/*
 struct CustomOption: Identifiable, Hashable {
     let id = UUID()
     let text: String
@@ -312,37 +310,6 @@ struct test_View: View {
             }
         }
         .padding()
-    }
-}
- */
-
-struct test_View: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var bars: [MyBar]
-    
-    var category: BarItemCategory = .juice
-    
-    var body: some View {
-        ForEach(bars.first?.myBarItems ?? []){ item in
-            if item.category == category {
-                Text(item.name.capitalized)
-                
-                Spacer()
-                
-                Divider()
-                
-                Button(action: {
-                    withAnimation {
-                        bars.first?.myBarItems.removeAll { $0.id == item.id }
-                    }
-                }) {
-                    Image(systemName: "minus.circle.fill")
-                        .foregroundStyle(.colorSet5)
-                }
-                .buttonStyle(PlainButtonStyle())
-                
-            }
-        }
     }
 }
 

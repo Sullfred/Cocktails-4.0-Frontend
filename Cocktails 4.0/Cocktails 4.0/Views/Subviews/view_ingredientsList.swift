@@ -21,7 +21,7 @@ struct view_ingredientsList: View {
             Text(ingredient.unit == .ml || ingredient.unit == .cl || ingredient.unit == .oz ? (convertUnit(ingredient: ingredient, targetUnit: measurementUnit) ?? 0) * servings : ingredient.volume * servings, format: .number.rounded(rule: .toNearestOrEven, increment: 0.01))
                 .frame(width: 55.0,  alignment: .trailing)
             Text(ingredient.unit == .ml || ingredient.unit == .cl || ingredient.unit == .oz ? measurementUnit.symbol : ingredient.unit.rawValue)
-                .frame(width: 40.0, alignment: .leading)
+                .frame(width: 50.0, alignment: .leading)
             Text(ingredient.name.capitalized)
         }
          

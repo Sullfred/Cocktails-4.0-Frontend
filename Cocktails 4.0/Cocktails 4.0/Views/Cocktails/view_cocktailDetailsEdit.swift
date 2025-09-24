@@ -12,6 +12,7 @@ import PhotosUI
 struct view_cocktailDetailsEdit: View {
     @Environment(\.modelContext) var modelContext
     @Environment(\.dismiss) var dismiss
+    @StateObject private var api = CocktailAPI.shared
     
     var cocktail: Cocktail
     @State private var draft: CocktailDraft
@@ -22,6 +23,9 @@ struct view_cocktailDetailsEdit: View {
     @State private var newIngredientVolume: Double = 0
     @State private var newIngredientUnit: Iunit = .ml
     
+    @State private var showError = false
+    @State private var errorMessage = ""
+    
     init(cocktail: Cocktail) {
         self.cocktail = cocktail
         _draft = State(initialValue: CocktailDraft(from: cocktail))
@@ -30,151 +34,151 @@ struct view_cocktailDetailsEdit: View {
     var body: some View {
         NavigationStack {
             Form{
-            //Photo
-            Section{
-                if let photoData = draft.image, let uiImage = UIImage(data: photoData) {
-                    view_imageContainer(image: uiImage, size: 200)
-                }
-                
-                if draft.image == nil {
-                    PhotosPicker(selection: $selectedPhoto, matching: .images, photoLibrary: .shared()) {
-                        Label("Add Image", systemImage: "photo")
-                            .foregroundStyle(Color.colorSet4)
-                    }
-                }
-                
-                if draft.image != nil {
-                    PhotosPicker(selection: $selectedPhoto, matching: .images, photoLibrary: .shared()) {
-                        Label("Change Image", systemImage: "photo")
-                            .foregroundStyle(Color.colorSet4)
+                //Photo
+                Section{
+                    if let photoData = draft.image, let uiImage = UIImage(data: photoData) {
+                        view_imageContainer(image: uiImage, size: 200)
                     }
                     
-                    Button(role: .destructive) {
-                        withAnimation {
-                            selectedPhoto = nil
-                            draft.image = nil
+                    if draft.image == nil {
+                        PhotosPicker(selection: $selectedPhoto, matching: .images, photoLibrary: .shared()) {
+                            Label("Add Image", systemImage: "photo")
+                                .foregroundStyle(Color.colorSet4)
                         }
-                    } label: {
-                        Label("Remove Image", systemImage: "xmark")
-                            .foregroundStyle(Color.colorSet5)
+                    }
+                    
+                    if draft.image != nil {
+                        PhotosPicker(selection: $selectedPhoto, matching: .images, photoLibrary: .shared()) {
+                            Label("Change Image", systemImage: "photo")
+                                .foregroundStyle(Color.colorSet4)
+                        }
+                        
+                        Button(role: .destructive) {
+                            withAnimation {
+                                selectedPhoto = nil
+                                draft.image = nil
+                            }
+                        } label: {
+                            Label("Remove Image", systemImage: "xmark")
+                                .foregroundStyle(Color.colorSet5)
+                        }
                     }
                 }
-            }
-            
-            // Info
-            Section{
-                HStack{
-                    Text("Name: ")
-                    TextField("Name", text: $draft.name)
-                }
-                HStack{
-                    Text("Created by: ")
-                    TextField("Created by", text: $draft.creator)
-                }
-                Picker("Cocktail style", selection: $draft.style) {
-                    ForEach(Style.allCases, id: \.self) { style in
-                        Text(style.localizedName)
+                 
+                // Info
+                Section{
+                    HStack{
+                        Text("Name: ")
+                        TextField("Name", text: $draft.name)
                     }
-                }.tint(.black)
-                Picker("Cocktail Category", selection: $draft.cocktailCategory) {
-                    ForEach(CocktailCategory.allCases, id: \.self) { category in
-                        Text(category.localizedName)
+                    HStack{
+                        Text("Created by: ")
+                        TextField("Created by", text: $draft.creator)
                     }
-                }.tint(.black)
-            }header: {
-                Text("Info").font(.headline)
-            }.foregroundStyle(.black)
-            
-            // Ingredients
-            Section{
-                ForEach($draft.ingredients) { $ingredient in
-                    HStack {
-                        TextField("", value: $ingredient.volume, format: .number)
-                            .frame(width: 40)
+                    Picker("Cocktail style", selection: $draft.style) {
+                        ForEach(Style.allCases, id: \.self) { style in
+                            Text(style.localizedName)
+                        }
+                    }.tint(.black)
+                    Picker("Cocktail Category", selection: $draft.cocktailCategory) {
+                        ForEach(CocktailCategory.allCases, id: \.self) { category in
+                            Text(category.localizedName)
+                        }
+                    }.tint(.black)
+                }header: {
+                    Text("Info").font(.headline)
+                }.foregroundStyle(.black)
+                
+                // Ingredients
+                Section{
+                    ForEach($draft.ingredients) { $ingredient in
+                        HStack {
+                            TextField("", value: $ingredient.volume, format: .number)
+                                .frame(width: 40)
+                                .textFieldStyle(.plain)
+                                .foregroundStyle(.black)
+                            
+                            Divider()
+                            
+                            Picker("", selection: $ingredient.unit) {
+                                ForEach(Iunit.allCases, id: \.self) { unit in
+                                    Text(unit.localizedName)
+                                }
+                            }
+                            .labelsHidden()
+                            .tint(.black)
+                            
+                            Divider()
+                            
+                            TextField("Ingredient", text: $ingredient.name)
+                                .foregroundStyle(.black)
+                            
+                            Spacer()
+                            
+                            Divider()
+                            
+                            Button(action: {
+                                withAnimation {
+                                    draft.ingredients.removeAll { $0.id == ingredient.id }
+                                }
+                            }) {
+                                Image(systemName: "minus.circle.fill")
+                                    .foregroundStyle(.colorSet5)
+                            }
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                    
+                    HStack{
+                        TextField("", value: $newIngredientVolume, format: .number)
+                            .frame(width: 40.0)
                             .textFieldStyle(.plain)
                             .foregroundStyle(.black)
                         
                         Divider()
                         
-                        Picker("", selection: $ingredient.unit) {
-                            ForEach(Iunit.allCases, id: \.self) { unit in
-                                Text(unit.localizedName)
+                        Picker("", selection: $newIngredientUnit) {
+                            ForEach(Iunit.allCases, id: \.self) {
+                                unit in Text(unit.localizedName)
                             }
                         }
-                        .labelsHidden()
                         .tint(.black)
+                        .labelsHidden()
                         
                         Divider()
                         
-                        TextField("Ingredient", text: $ingredient.name)
-                            .foregroundStyle(.black)
-                        
-                        Spacer()
+                        TextField("New ingredient", text: $newIngredientItemName).foregroundStyle(.black)
                         
                         Divider()
                         
                         Button(action: {
                             withAnimation {
-                                draft.ingredients.removeAll { $0.id == ingredient.id }
+                                let newOrderIndex = draft.ingredients.count
+                                let ingredient = Ingredient(volume: newIngredientVolume, unit: newIngredientUnit, name: newIngredientItemName, orderIndex: newOrderIndex)
+                                ingredient.assignTagBasedOnName()
+                                draft.ingredients.append(ingredient)
+                                newIngredientVolume = 0
+                                newIngredientItemName = ""
                             }
                         }) {
-                            Image(systemName: "minus.circle.fill")
-                                .foregroundStyle(.colorSet5)
+                            Image(systemName: "plus.circle.fill")
+                                .foregroundStyle(Color.colorSet4)
                         }
+                        .disabled(newIngredientItemName.isEmpty)
+                        .buttonStyle(PlainButtonStyle())
                     }
-                    .buttonStyle(PlainButtonStyle())
+                    
+                }header: {
+                    Text("Ingredients").font(.headline).foregroundStyle(.black)
                 }
                 
-                HStack{
-                    TextField("", value: $newIngredientVolume, format: .number)
-                        .frame(width: 40.0)
-                        .textFieldStyle(.plain)
-                        .foregroundStyle(.black)
-                    
-                    Divider()
-                    
-                    Picker("", selection: $newIngredientUnit) {
-                        ForEach(Iunit.allCases, id: \.self) {
-                            unit in Text(unit.localizedName)
-                        }
-                    }
-                    .tint(.black)
-                    .labelsHidden()
-                    
-                    Divider()
-                    
-                    TextField("New ingredient", text: $newIngredientItemName).foregroundStyle(.black)
-                    
-                    Divider()
-                    
-                    Button(action: {
-                        withAnimation {
-                            let newOrderIndex = draft.ingredients.count
-                            let ingredient = Ingredient(volume: newIngredientVolume, unit: newIngredientUnit, name: newIngredientItemName, orderIndex: newOrderIndex)
-                            ingredient.assignTagBasedOnName()
-                            draft.ingredients.append(ingredient)
-                            newIngredientVolume = 0
-                            newIngredientItemName = ""
-                        }
-                    }) {
-                        Image(systemName: "plus.circle.fill")
-                            .foregroundStyle(Color.colorSet4)
-                    }
-                    .disabled(newIngredientItemName.isEmpty)
-                    .buttonStyle(PlainButtonStyle())
-                }
-                 
-            }header: {
-                Text("Ingredients").font(.headline).foregroundStyle(.black)
-            }
-            
-            // Comment
-            Section{
-                TextField("Comment", text: $draft.comment, axis: .vertical).lineLimit(3)
-            }header: {
-                Text("Comment").font(.headline)
-            }.foregroundStyle(.black)
-            
+                // Comment
+                Section{
+                    TextField("Comment", text: $draft.comment, axis: .vertical).lineLimit(3)
+                }header: {
+                    Text("Comment").font(.headline)
+                }.foregroundStyle(.black)
+                
             }
             .tint(.blue)
             .background(Color("ColorSet2"))
@@ -194,17 +198,29 @@ struct view_cocktailDetailsEdit: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        draft.apply(to: cocktail)
                         do {
                             try modelContext.save()
+                            draft.apply(to: cocktail)
+                            
+                            Task {
+                                await api.updateCocktail(cocktail)
+                                await api.syncPendingUpdates(context: modelContext)
+                            }
+                            
+                            dismiss()
                         } catch {
-                            // handle error if needed
+                            errorMessage = "Failed to save cocktail: \(error.localizedDescription)"
+                            showError = true
                         }
-                        dismiss()
                     }
                     .disabled(draft.name.isEmpty)
                 }
             }
+        }
+        .alert("Save Error", isPresented: $showError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(errorMessage)
         }
     }
 }
@@ -222,7 +238,7 @@ struct CocktailDraft {
         self.name = cocktail.name.capitalized
         self.creator = cocktail.creator.capitalized
         self.style = cocktail.style
-        // Deep copy of ingredients
+        // Deep copy of ingredients as Ingredient is reference due to @Model
         self.ingredients = cocktail.ingredients.map { ingredient in
             Ingredient(
                 volume: ingredient.volume,

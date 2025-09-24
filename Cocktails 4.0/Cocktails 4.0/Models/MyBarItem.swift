@@ -10,7 +10,6 @@ import Foundation
 import SwiftData
 
 class MyBarItem: Codable, Identifiable {
-    var id: UUID = UUID()
     var name: String
     var category: BarItemCategory
     

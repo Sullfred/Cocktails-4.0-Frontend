@@ -82,7 +82,7 @@ struct view_cocktailDetailsInfo: View {
                         
                         Spacer().frame(height: 15)
                         
-                        if (cocktail.comment.count > 0) {
+                        if (!cocktail.comment.isEmpty) {
                             Text("Comment:").font(.title3).padding(.bottom, 1)
                             Text(cocktail.comment)
                                 .padding(.bottom, 15)
@@ -94,7 +94,6 @@ struct view_cocktailDetailsInfo: View {
         }
         .containerRelativeFrame([.horizontal, .vertical])
         .background(.colorSet2)
-        .toolbarBackground(Color.colorSet1, for: .navigationBar)
         .toolbar{
             if let bar = bars.first {
                 Button(action: {

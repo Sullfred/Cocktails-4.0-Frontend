@@ -31,8 +31,8 @@
           "description": "Tiki cocktails are tropical, often rum-based drinks with exotic fruit juices and elaborate garnishes. They usually consists of base spirits (1 spirit or a combination of different spirits), fruit juices and syrups and/or liqueurs, often deployed in various combinations. These cocktails are usually served over crushed ice. Examples inlcude: Zombie, Planter's Punch and Singapore Sling."
         },
         {
-          "headline": "Duos and Trios",
-          "description": "Duos and Trios are simple combinations of two or three ingredients. This category of cocktails is similar to Spirit-Forwards when looking a Duos but with one key difference in the modifier. Duos consist of a base spirit and modifier (a liqueur or dash of bitters). Examples include: Stinger and Revolver. To create a trio a cream or cream liqueur is added. Trios are often found in dessert style cocktails. Examples include: Alexender (and its variations) and White Russian."
+          "headline": "Duos",
+          "description": "Duos are simple combinations of two ingredients. This category of cocktails is similar to Spirit-Forwards when looking a Duos but with one key difference in the modifier. Duos consist of a base spirit and modifier (a liqueur or dash of bitters). Examples include: Stinger and Revolver."
         },
         {
           "headline": "Champagne Cocktails",
@@ -43,18 +43,44 @@
           "description": "Juleps and smashes are refreshing cocktails typically featuring muddled herbs, citrus, and a base spirit, served over crushed or cracked ice. Examples include: Mint julep, Whiskey Smash and Gin Basil Smash."
         },
         {
+          "headline": "Dessert Cocktails",
+          "description": "Dessert cocktails are sweet cocktails often served as a dessert. These cocktails usually consist of an alcholoic base such as a spirit or liqueur with some sweet ingredients such as cream, chocolate, or syrup. Another category often used as a dessert cocktail is a Trio. To create a trio a cream or cream liqueur is added to a Duos. Examples include: Alexander (and its variations) and White Russian."
+        },
+        {
           "headline": "Others",
           "description": "This category includes cocktails that don't fit neatly into the other classifications."
         }
       ]
     },
     {
-      "subtitle": "Creating a New Cocktail",
-      "body": "..."
+      "subtitle": "Cocktails",
+      "body": "This is the frontpage where you can choose which ",
+      "subsections": [
+          {
+            "headline": "The Cocktail List",
+            "description": ""
+          },
+          {
+            "headline": "Favorite Cocktails",
+            "description": ""
+          },
+          {
+            "headline": "Deleted Cocktails",
+            "description": ""
+          },
+          {
+            "headline": "Creating a New Cocktail",
+            "description": ""
+          },
+          {
+            "headline": "Editing a Cocktail",
+            "description": ""
+          },
+      ]
     },
     {
-      "subtitle": "Adding to My Bar",
-      "body": "..."
+      "subtitle": "My Bar",
+      "body": "My Bar is used to keep track of which cocktail ingredients you own. "
     }
   ]
 }

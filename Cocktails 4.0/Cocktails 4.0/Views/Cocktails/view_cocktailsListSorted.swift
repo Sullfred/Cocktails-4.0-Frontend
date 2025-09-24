@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct view_cocktailsListSorted: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.modelContext) private var context
     
     let selectedCategory: CocktailCategory?
     var baseSpirit: IngredientTag?
@@ -35,7 +35,7 @@ struct view_cocktailsListSorted: View {
             })
             &&
             (!showCraftableOnly || cocktail.ingredients.allSatisfy { ingredient in
-                        barItems.contains(ingredient.name.lowercased())
+                barItems.contains(ingredient.name.lowercased())
             })
             &&
             (!showFavoritesOnly || favorites.contains(cocktail.id.uuidString))
@@ -60,6 +60,11 @@ struct view_cocktailsListSorted: View {
             }
             .onDelete(perform: deleteCocktail)
             .listRowBackground(Color.clear)
+        }
+        .refreshable {
+            if await CocktailAPI.shared.checkServerConnection() {
+                await CocktailAPI.shared.fetchCocktails(context: context)
+            }
         }
     }
     
@@ -87,8 +92,10 @@ struct view_cocktailsListSorted: View {
     func deleteCocktail(_ indexSet: IndexSet) {
         for index in indexSet {
             let cocktail = allCocktails[index]
-            modelContext.delete(cocktail)
+            bars.first?.deletedCocktails.append(DeletedCocktail(id: cocktail.id.uuidString, name: cocktail.name, creator: cocktail.creator))
+            context.delete(cocktail)
         }
+        try? context.save()
     }
 }
 

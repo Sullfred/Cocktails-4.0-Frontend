@@ -6,19 +6,22 @@
 //
 
 import SwiftUI
-
 import SwiftData
 
-struct view_myBar: View {
+struct view_personalBar: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var bars: [MyBar]
+    
+    @EnvironmentObject var loginViewModel: LoginViewModel
     
     @State private var newItemName: String = ""
     @State private var newItemCategory: BarItemCategory? = nil
     
+    @State private var showError = false
+    @State private var errorMessage = ""
+    
     var body: some View {
-        NavigationStack {
-            VStack(alignment: .leading) {
+        VStack(alignment: .leading) {
                 HStack {
                     NavigationLink(destination: view_notes()) {
                         Label("Guide", systemImage: "note.text")
@@ -27,7 +30,7 @@ struct view_myBar: View {
                 .padding(.leading, 15)
                 
                 
-                Text("My Bar Items")
+                Text("\(loginViewModel.currentUser?.username ?? "My")'s Bar Items")
                     .font(.title)
                     .padding(.top, 15)
                     .padding(.leading, 15)
@@ -94,36 +97,62 @@ struct view_myBar: View {
                     }
                     
                     Button("Add") {
-                        let trimmedName = newItemName.trimmingCharacters(in: .whitespacesAndNewlines)
-                        guard !trimmedName.isEmpty else { return }
-                        let newItem = MyBarItem(name: trimmedName.lowercased())
-                        if let selectedCategory = newItemCategory {
-                            newItem.category = selectedCategory
-                        } else {
-                            newItem.assignCategoryBasedOnName()
-                        }
-                        if let bar = bars.first {
-                            bar.myBarItems.append(newItem)
-                        } else {
-                            let newBar = MyBar()
-                            newBar.myBarItems.append(newItem)
-                            modelContext.insert(newBar)
-                        }
-                        try? modelContext.save()
-                        newItemName = ""
-                        newItemCategory = nil
+                        add_item()
                     }
                     .disabled(newItemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
                 .padding()
             }
-            .navigationTitle("My Bar")
-            .background(Color.colorSet2)
+        .navigationTitle("\(loginViewModel.currentUser?.username ?? "My")'s Bar")
+        .background(Color.colorSet2)
+        .tint(Color.colorSet4)
+        .alert("Add Error", isPresented: $showError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(errorMessage)
         }
-        .tint(.colorSet4)
+    }
+}
+
+
+private extension view_personalBar {
+    func add_item() {
+        do {
+            let trimmedName = newItemName.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedName.isEmpty else { return }
+            let newItem = MyBarItem(name: trimmedName.lowercased())
+            if let selectedCategory = newItemCategory {
+                newItem.category = selectedCategory
+            } else {
+                newItem.assignCategoryBasedOnName()
+            }
+            if let bar = bars.first {
+                bar.myBarItems.append(newItem)
+            } else {
+                let newBar = MyBar()
+                newBar.myBarItems.append(newItem)
+                modelContext.insert(newBar)
+            }
+            try modelContext.save()
+            newItemName = ""
+            newItemCategory = nil
+        } catch {
+            errorMessage = "Failed to save bar item: \(error.localizedDescription)"
+            showError = true
+        }
     }
 }
 
 #Preview {
-    view_myBar()
+        view_personalBar()
+            .environmentObject({
+                let vm = LoginViewModel()
+                vm.currentUser = LoggedInUser(
+                    username: "PreviewUser",
+                    addPermission: false,
+                    editPermissions: false,
+                    adminRights: false
+                )
+                return vm
+            }())
 }

@@ -10,24 +10,54 @@ import SwiftData
 
 @main
 struct Cocktails_4_0App: App {
-    var sharedModelContainer: ModelContainer = {
+    @StateObject private var sharedModelContainer = ModelContainerObservable()
+    @StateObject private var cocktailAPI = CocktailAPI.shared
+    
+    @StateObject private var toastManager = ToastManager.shared
+
+
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .environmentObject(toastManager)
+                .toastView(toast: $toastManager.toast)
+                .task {
+                    let modelContext = sharedModelContainer.container.mainContext
+                    do {
+                        let existingBars = try modelContext.fetch(FetchDescriptor<MyBar>())
+                        if existingBars.isEmpty {
+                            let newBar = MyBar()
+                            modelContext.insert(newBar)
+                            try modelContext.save()
+                        }
+                        
+                        if await cocktailAPI.checkServerConnection() {
+                            await cocktailAPI.syncPendingUploads(context: modelContext)
+                            await cocktailAPI.syncPendingUpdates(context: modelContext)
+                            await cocktailAPI.fetchCocktails(context: modelContext)
+                        }
+                    } catch {
+                        print("Error in startup tasks: \(error)")
+                    }
+                }
+        }
+        .modelContainer(sharedModelContainer.container)
+    }
+}
+
+// Observable wrapper for ModelContainer
+class ModelContainerObservable: ObservableObject {
+    let container: ModelContainer
+    init() {
         let schema = Schema([
             Cocktail.self,
             MyBar.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            container = try ModelContainer(for: schema, configurations: [modelConfiguration])
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }
-    }()
-
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
-        .modelContainer(sharedModelContainer)
     }
 }

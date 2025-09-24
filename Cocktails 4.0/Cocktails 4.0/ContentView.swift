@@ -14,6 +14,7 @@ struct ContentView: View {
     }
     
     @Environment(\.modelContext) var modelContext
+    @StateObject private var loginViewModel = LoginViewModel()
 
     var body: some View {
         TabView {
@@ -21,10 +22,11 @@ struct ContentView: View {
                 .tabItem {
                     Label("Cocktails", systemImage: "list.bullet")
                 }
-            view_myBar()
+            view_myBarFrontPage()
                 .tabItem {
                     Label("My Bar", systemImage: "wineglass")
                 }
+                .environmentObject(loginViewModel)
         }
         .background(Color.colorSet2)
         .tint(Color.colorSet5)

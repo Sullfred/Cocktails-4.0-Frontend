@@ -71,6 +71,14 @@ struct view_cocktailsFrontPage: View {
                     }
                 }
                 .padding()
+                
+                HStack {
+                    NavigationLink(destination: view_deletedCocktails()) {
+                        Label("Deleted cocktails", systemImage: "trash.square")
+                    }
+                    Spacer()
+                }
+                .padding()
             }
             .navigationTitle("Cocktails")
             .background(Color.colorSet2)
@@ -101,14 +109,14 @@ extension CocktailCategory {
             return "highball_sample"
         case .spiritForward:
             return "spiritforward_sample"
-        case .duosAndTrios:
+        case .duos:
             return "duos_sample"
         case .champagne:
             return "champagne_sample"
         case .juleps:
             return "juleps_sample"
-        case .cobbler:
-            return "cobblers_sample"
+        case .dessert:
+            return "dessert_sample"
         case .other:
             return "other_sample"
         }

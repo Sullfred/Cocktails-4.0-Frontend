@@ -13,6 +13,7 @@ import PhotosUI
 struct view_newCocktail: View {
     @Environment(\.modelContext) var modelContext
     @Environment(\.dismiss) var dismiss
+    @StateObject private var api = CocktailAPI.shared
     
     @State var selectedPhoto : PhotosPickerItem?
     
@@ -27,6 +28,8 @@ struct view_newCocktail: View {
     @State private var newCocktailCreator: String = ""
     @State private var newCocktailComment: String = ""
     
+    @State private var showError = false
+    @State private var errorMessage = ""
     
     var body: some View {
         Form{
@@ -151,7 +154,7 @@ struct view_newCocktail: View {
                         withAnimation {
                             let newOrderIndex = newCocktailIngredients.count
                             let ingredient = Ingredient(volume: newIngredientVolume, unit: newIngredientUnit, name: newIngredientItemName, orderIndex: newOrderIndex)
-
+                            
                             newCocktailIngredients.append(ingredient)
                             newIngredientVolume = 0
                             newIngredientItemName = ""
@@ -163,7 +166,7 @@ struct view_newCocktail: View {
                     .disabled(newIngredientItemName.isEmpty)
                     .buttonStyle(PlainButtonStyle())
                 }
-                 
+                
             }header: {
                 Text("Ingredients").font(.headline).foregroundStyle(.black)
             }
@@ -217,28 +220,38 @@ struct view_newCocktail: View {
             }
             .padding(.bottom, 10)
         }
-        //.tint(.blue)
+        .alert("Save Error", isPresented: $showError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(errorMessage)
+        }
     }
 }
 
 private extension view_newCocktail {
     func save() {
-        newCocktailIngredients = newCocktailIngredients.map { ingredient in
+        do {
+            newCocktailIngredients = newCocktailIngredients.map { ingredient in
                 ingredient.name = ingredient.name.lowercased()
                 ingredient.assignTagBasedOnName()
                 return ingredient
             }
-        
-        let newCocktail = Cocktail(name: newCocktailName.lowercased(), creator: newCocktailCreator.lowercased(), style: newCocktailStyle, ingredients: newCocktailIngredients, comment: newCocktailComment, image: newCocktailImage ?? nil, cocktailCategory: newCocktailCategory)
-                
-        modelContext.insert(newCocktail)
-        do {
+            
+            let newCocktail = Cocktail(name: newCocktailName.lowercased(), creator: newCocktailCreator.lowercased(), style: newCocktailStyle, ingredients: newCocktailIngredients, comment: newCocktailComment, image: newCocktailImage ?? nil, cocktailCategory: newCocktailCategory)
+            
+            modelContext.insert(newCocktail)
             try modelContext.save()
+            
+            Task {
+                await api.createCocktail(newCocktail)
+                await api.syncPendingUploads(context: modelContext)
+            }
+            
+            dismiss()
         } catch {
-            print("Failed to save cocktail")
+            errorMessage = "Failed to save cocktail: \(error.localizedDescription)"
+            showError = true
         }
-        
-        dismiss()
     }
     
     func cancel() {

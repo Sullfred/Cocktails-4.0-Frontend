@@ -439,6 +439,7 @@ class CocktailAPI: ObservableObject {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(dto)
+        
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
             throw NSError(domain: "CocktailAPI", code: 1, userInfo: [NSLocalizedDescriptionKey: "No response from server"])
@@ -458,7 +459,6 @@ class CocktailAPI: ObservableObject {
     
     func login(username: String, password: String) async throws -> LoginResponse {
         let url = baseURL.appendingPathComponent("users/login")
-
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
 
@@ -487,5 +487,29 @@ class CocktailAPI: ObservableObject {
         }
         let loginResponse = try JSONDecoder().decode(LoginResponse.self, from: data)
         return loginResponse
+    }
+    
+    func logout(userToken: String) async throws {
+        let url = baseURL.appendingPathComponent("users/logout")
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(userToken)", forHTTPHeaderField: "Authorization")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NSError(domain: "CocktailAPI", code: 1, userInfo: [NSLocalizedDescriptionKey: "No response from server"])
+        }
+        
+        if !(200...299).contains(httpResponse.statusCode) {
+            // Try to decode Vapor's Abort error message
+            var errorMessage: String = "Failed to Logout user"
+            if let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+                let reason = json["reason"] as? String {
+                errorMessage = reason
+            } else if let string = String(data: data, encoding: .utf8), !string.isEmpty {
+                errorMessage = string
+            }
+            throw NSError(domain: "CocktailAPI", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: errorMessage])
+        }
     }
 }

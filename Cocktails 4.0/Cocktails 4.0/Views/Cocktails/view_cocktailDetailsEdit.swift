@@ -37,7 +37,7 @@ struct view_cocktailDetailsEdit: View {
                 //Photo
                 Section{
                     if let photoData = draft.image, let uiImage = UIImage(data: photoData) {
-                        view_imageContainer(image: uiImage, size: 200)
+                        imageContainer(image: uiImage, size: 200)
                     }
                     
                     if draft.image == nil {

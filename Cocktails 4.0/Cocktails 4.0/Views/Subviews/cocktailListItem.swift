@@ -8,7 +8,7 @@
 import SwiftUI
 import SwiftData
 
-struct view_cocktailListItem: View {
+struct cocktailListItem: View {
     @Query var bars: [MyBar]
     
     var cocktail: Cocktail
@@ -48,6 +48,7 @@ struct view_cocktailListItem: View {
             .foregroundColor(.secondary)
         }
         .padding(.vertical, 8)
+        .frame(minHeight: 68)
         
     }
 }
@@ -57,7 +58,7 @@ struct view_cocktailListItem: View {
     
     let testCocktail = Cocktail(
         name: "Whiskey sour",
-        creator: "Daniel Kleist",
+        creator: "",
         style: .shaken,
         ingredients: [
             Ingredient(volume: 60, unit: .ml, name: "bourbon", orderIndex: 0),
@@ -71,6 +72,6 @@ struct view_cocktailListItem: View {
         cocktailCategory: .sour
     )
     
-    view_cocktailListItem(cocktail: testCocktail)
+    cocktailListItem(cocktail: testCocktail)
 }
 

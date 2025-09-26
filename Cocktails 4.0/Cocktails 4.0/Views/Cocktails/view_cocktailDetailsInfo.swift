@@ -26,7 +26,7 @@ struct view_cocktailDetailsInfo: View {
                 VStack{
                     if cocktail.image != nil {
                         if let photoData = cocktail.image, let uiImage = UIImage(data: photoData) {
-                            view_imageContainer(image: uiImage, size: 280)
+                            imageContainer(image: uiImage, size: 280)
                         }
                     }
                     
@@ -75,7 +75,7 @@ struct view_cocktailDetailsInfo: View {
                         
                         VStack(alignment: .leading) {
                             ForEach (cocktail.ingredients.sorted(by: { $0.orderIndex < $1.orderIndex })){ ingredient in
-                                view_ingredientsList(ingredient: ingredient, measurementUnit: selectedMeasurement, servings: selectedServing)
+                                ingredientsList(ingredient: ingredient, measurementUnit: selectedMeasurement, servings: selectedServing)
                             }
                         }
                         

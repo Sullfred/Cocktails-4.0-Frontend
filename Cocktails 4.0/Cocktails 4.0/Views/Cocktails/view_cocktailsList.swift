@@ -3,6 +3,7 @@ import SwiftData
 
 struct view_cocktailsList: View {
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject var loginViewModel: LoginViewModel
 
     @State private var path: [Cocktail] = []
     @State private var sortOrder = [
@@ -17,14 +18,15 @@ struct view_cocktailsList: View {
 
     var body: some View {
         view_cocktailsListSorted(sortOrder: sortOrder, searchText: searchText, showFavoritesOnly: showFavoritesOnly, showCraftableOnly: showCraftableOnly, selectedCategory: selectedCategory, baseSpirit: baseSpirit)
+            .environmentObject(loginViewModel)
             .navigationTitle(selectedCategory != nil ? selectedCategory?.rawValue ?? "error" : "All Cocktails")
             .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always)) //Will fix flicker when navigating
             .background(Color.colorSet2)
             .scrollContentBackground(.hidden)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    NavigationLink(destination: view_newCocktail()) {
-                        Button(action: {}) {
+                if (loginViewModel.currentUser?.addPermission ?? false) == true {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        NavigationLink(destination: view_newCocktail()) {
                             Label("Add Cocktail", systemImage: "plus")
                         }
                     }
@@ -77,4 +79,14 @@ struct view_cocktailsList: View {
 
 #Preview {
     view_cocktailsList(selectedCategory: nil, baseSpirit: nil)
+        .environmentObject({
+            let vm = LoginViewModel()
+            vm.currentUser = LoggedInUser(
+                username: "Daniel Vang Kleist",
+                addPermission: false,
+                editPermissions: false,
+                adminRights: false
+            )
+            return vm
+        }())
 }

@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct view_imageContainer: View {
+struct imageContainer: View {
     
     var image: UIImage
     var size: CGFloat

@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 import SwiftData
 
-struct view_ingredientsList: View {
+struct ingredientsList: View {
     var ingredient: Ingredient
      
     var measurementUnit : UnitVolume
@@ -44,5 +44,5 @@ struct view_ingredientsList: View {
         cocktailCategory: .sour
     )
     
-    view_ingredientsList(ingredient: testCocktail.ingredients[0], measurementUnit: .milliliters, servings: 1)
+    ingredientsList(ingredient: testCocktail.ingredients[0], measurementUnit: .milliliters, servings: 1)
 }

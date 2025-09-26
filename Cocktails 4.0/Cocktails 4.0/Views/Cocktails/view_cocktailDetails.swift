@@ -10,6 +10,7 @@ import SwiftUI
 import SwiftData
 
 struct view_cocktailDetails: View {
+    @EnvironmentObject var loginViewModel: LoginViewModel
     var cocktail: Cocktail
     
     @State private var isEditing: Bool = false
@@ -17,11 +18,13 @@ struct view_cocktailDetails: View {
     var body: some View {
         view_cocktailDetailsInfo(cocktail: cocktail)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        isEditing = true
-                    }) {
-                        Text("Edit")
+                if (loginViewModel.currentUser?.editPermissions ?? false) == true {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: {
+                            isEditing = true
+                        }) {
+                            Text("Edit")
+                        }
                     }
                 }
             }
@@ -52,4 +55,14 @@ struct view_cocktailDetails: View {
     )
     
     view_cocktailDetails(cocktail: testCocktail)
+        .environmentObject({
+            let vm = LoginViewModel()
+            vm.currentUser = LoggedInUser(
+                username: "Daniel Vang Kleist",
+                addPermission: false,
+                editPermissions: false,
+                adminRights: false
+            )
+            return vm
+        }())
 }

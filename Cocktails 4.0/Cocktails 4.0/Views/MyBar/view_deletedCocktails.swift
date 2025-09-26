@@ -18,11 +18,11 @@ struct view_deletedCocktails: View {
         ZStack{
             if let myBar = myBars.first {
                 if myBar.deletedCocktails.isEmpty {
-                    Text("No deleted cocktails")
+                    Text("No Removed cocktails")
                         .foregroundStyle(.secondary)
                 } else {
                     VStack {
-                        Text("Deleted Cocktails")
+                        Text("Removed Cocktails")
                             .font(.title)
                             .padding(.bottom, 15)
                 
@@ -60,7 +60,7 @@ struct view_deletedCocktails: View {
                         Spacer()
                         Text("Selected: \(selectedCocktails.map { $0!.name.capitalized }.joined(separator: ", "))")
                         Button(action: undoDeletes) {
-                            Label("Undo Deletes", systemImage: "arrow.uturn.backward")
+                            Label("Undo Removes", systemImage: "arrow.uturn.backward")
                         }
                         .disabled(selectedCocktails.isEmpty)
                         .tint(Color.colorSet5)
@@ -68,7 +68,7 @@ struct view_deletedCocktails: View {
                     .padding()
                 }
             } else {
-                Text("No deleted cocktails")
+                Text("No Removed cocktails")
                     .foregroundStyle(.secondary)
             }
         }

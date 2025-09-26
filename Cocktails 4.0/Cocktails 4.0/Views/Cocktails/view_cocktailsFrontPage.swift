@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct view_cocktailsFrontPage: View {
+    @EnvironmentObject var loginViewModel: LoginViewModel
+    
     private let columns = [
         GridItem(.flexible()),
         GridItem(.flexible())
@@ -21,9 +23,9 @@ struct view_cocktailsFrontPage: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                
                 NavigationLink {
-                    view_cocktailsList(selectedCategory: nil) // nil means show all
+                    view_cocktailsList(selectedCategory: nil) // Show all cocktails
+                        .environmentObject(loginViewModel)
                 } label: {
                     CategoryCard(
                         title: "All Cocktails",
@@ -40,6 +42,7 @@ struct view_cocktailsFrontPage: View {
                     ForEach(CocktailCategory.allCases, id: \.self) { category in
                         NavigationLink {
                             view_cocktailsList(selectedCategory: category)
+                                .environmentObject(loginViewModel)
                         } label: {
                             CategoryCard(
                                 title: category.rawValue,
@@ -60,6 +63,7 @@ struct view_cocktailsFrontPage: View {
                     ForEach(IngredientTag.allCases, id: \.self) { tag in
                         NavigationLink {
                             view_cocktailsList(selectedCategory: nil, baseSpirit: tag)
+                                .environmentObject(loginViewModel)
                         } label: {
                             CategoryCard(
                                 title: tag.rawValue,
@@ -74,7 +78,7 @@ struct view_cocktailsFrontPage: View {
                 
                 HStack {
                     NavigationLink(destination: view_deletedCocktails()) {
-                        Label("Deleted cocktails", systemImage: "trash.square")
+                        Label("Removed cocktails", systemImage: "trash.square")
                     }
                     Spacer()
                 }
@@ -83,9 +87,9 @@ struct view_cocktailsFrontPage: View {
             .navigationTitle("Cocktails")
             .background(Color.colorSet2)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    NavigationLink(destination: view_newCocktail()) {
-                        Button(action: {}) {
+                if (loginViewModel.currentUser?.addPermission ?? false) == true {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        NavigationLink(destination: view_newCocktail()) {
                             Label("Add Cocktail", systemImage: "plus")
                         }
                     }
@@ -144,4 +148,14 @@ extension IngredientTag {
 
 #Preview {
     view_cocktailsFrontPage()
+        .environmentObject({
+            let vm = LoginViewModel()
+            vm.currentUser = LoggedInUser(
+                username: "Daniel Vang Kleist",
+                addPermission: false,
+                editPermissions: false,
+                adminRights: false
+            )
+            return vm
+        }())
 }

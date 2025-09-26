@@ -10,6 +10,7 @@ import SwiftData
 
 struct view_cocktailsListSorted: View {
     @Environment(\.modelContext) private var context
+    @EnvironmentObject var loginViewModel: LoginViewModel
     
     let selectedCategory: CocktailCategory?
     var baseSpirit: IngredientTag?
@@ -52,13 +53,20 @@ struct view_cocktailsListSorted: View {
     var body: some View {
         List {
             ForEach(filteredCocktails) { cocktail in
-                NavigationLink(destination: view_cocktailDetails(cocktail: cocktail)) {
+                NavigationLink(destination: view_cocktailDetails(cocktail: cocktail).environmentObject(loginViewModel)) {
                     VStack(alignment: .leading) {
-                        view_cocktailListItem(cocktail: cocktail)
+                        cocktailListItem(cocktail: cocktail)
                     }
                 }
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    Button(role: .destructive) {
+                        removeFromList(cocktail)
+                    } label: {
+                        Label("Remove from List", systemImage: "trash")
+                    }
+                    .tint(.red)
+                }
             }
-            .onDelete(perform: deleteCocktail)
             .listRowBackground(Color.clear)
         }
         .refreshable {
@@ -92,9 +100,13 @@ struct view_cocktailsListSorted: View {
     func deleteCocktail(_ indexSet: IndexSet) {
         for index in indexSet {
             let cocktail = allCocktails[index]
-            bars.first?.deletedCocktails.append(DeletedCocktail(id: cocktail.id.uuidString, name: cocktail.name, creator: cocktail.creator))
-            context.delete(cocktail)
+            removeFromList(cocktail)
         }
+    }
+
+    func removeFromList(_ cocktail: Cocktail) {
+        bars.first?.deletedCocktails.append(DeletedCocktail(id: cocktail.id.uuidString, name: cocktail.name, creator: cocktail.creator))
+        context.delete(cocktail)
         try? context.save()
     }
 }
@@ -104,4 +116,14 @@ struct view_cocktailsListSorted: View {
         SortDescriptor(\Cocktail.name),
         SortDescriptor(\Cocktail.creator)
     ], searchText: "", showFavoritesOnly: false, showCraftableOnly: false, selectedCategory: nil, baseSpirit: nil)
+    .environmentObject({
+        let vm = LoginViewModel()
+        vm.currentUser = LoggedInUser(
+            username: "Daniel Vang Kleist",
+            addPermission: false,
+            editPermissions: false,
+            adminRights: false
+        )
+        return vm
+    }())
 }

@@ -36,7 +36,7 @@ struct view_newCocktail: View {
             //Photo
             Section{
                 if let photoData = newCocktailImage, let uiImage = UIImage(data: photoData) {
-                    view_imageContainer(image: uiImage, size: 200)
+                    imageContainer(image: uiImage, size: 200)
                 }
                 
                 if newCocktailImage == nil {

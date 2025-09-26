@@ -63,6 +63,10 @@ struct view_login: View {
                 Button(action: {
                     Task {
                         await loginViewModel.login()
+                        
+                        // Reset username and password after a login
+                        loginViewModel.username = ""
+                        loginViewModel.password = ""
                     }
                 }) {
                     ZStack {

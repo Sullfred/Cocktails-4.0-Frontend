@@ -64,9 +64,9 @@ struct view_registerUser: View {
                 ZStack(alignment: .trailing) {
                     Group {
                         if viewModel.showPassword {
-                            TextField("Confirm Password", text: $viewModel.password)
+                            TextField("Confirm Password", text: $viewModel.confirmPassword)
                         } else {
-                            SecureField("Confirm Password", text: $viewModel.password)
+                            SecureField("Confirm Password", text: $viewModel.confirmPassword)
                         }
                     }
                     .textContentType(.password)
@@ -77,9 +77,9 @@ struct view_registerUser: View {
                     .cornerRadius(10)
                     
                     Button(action: {
-                        viewModel.showPassword.toggle()
+                        viewModel.showConfirmPassword.toggle()
                     }) {
-                        Image(systemName: viewModel.showPassword ? "eye.slash" : "eye")
+                        Image(systemName: viewModel.showConfirmPassword ? "eye.slash" : "eye")
                             .foregroundColor(.gray)
                     }
                     .padding(.trailing, 16)
@@ -95,7 +95,16 @@ struct view_registerUser: View {
             }
             
             // Register button
-            Button(action: { Task { await viewModel.register() } }) {
+            Button(action: {
+                Task {
+                    await viewModel.register()
+                    
+                    // Reset username, password and confirmPassword
+                    viewModel.username = ""
+                    viewModel.password = ""
+                    viewModel.confirmPassword = ""
+                }
+            }) {
                 if viewModel.isLoading {
                     ProgressView()
                 } else {

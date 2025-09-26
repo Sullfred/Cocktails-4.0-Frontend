@@ -9,17 +9,30 @@ import SwiftUI
 
 struct view_myBarFrontPage: View {
     @EnvironmentObject var loginViewModel: LoginViewModel
+    @State private var path: [String] = []
     
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             Group {
                 if loginViewModel.isLoggedIn {
-                    view_personalBar()
+                    view_personalBar(path: $path)
                         .environmentObject(loginViewModel)
                 } else {
                     view_login()
                         .environmentObject(loginViewModel)
                 }
+            }
+            .navigationDestination(for: String.self) { value in
+                if value == "settings" {
+                    view_userSettings()
+                        .environmentObject(loginViewModel)
+                }
+            }
+        }
+        .tint(Color.colorSet4)
+        .onChange(of: loginViewModel.isLoggedIn) { _, newValue in
+            if !newValue {
+                path.removeAll() // reset navigation after logout
             }
         }
     }

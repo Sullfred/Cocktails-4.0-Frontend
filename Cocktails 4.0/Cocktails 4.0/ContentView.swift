@@ -22,6 +22,7 @@ struct ContentView: View {
                 .tabItem {
                     Label("Cocktails", systemImage: "list.bullet")
                 }
+                .environmentObject(loginViewModel)
             view_myBarFrontPage()
                 .tabItem {
                     Label("My Bar", systemImage: "wineglass")

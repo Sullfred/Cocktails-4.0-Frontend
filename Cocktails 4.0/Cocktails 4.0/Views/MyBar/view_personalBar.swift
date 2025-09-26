@@ -14,6 +14,8 @@ struct view_personalBar: View {
     
     @EnvironmentObject var loginViewModel: LoginViewModel
     
+    @Binding var path: [String]
+    
     @State private var newItemName: String = ""
     @State private var newItemCategory: BarItemCategory? = nil
     
@@ -21,90 +23,99 @@ struct view_personalBar: View {
     @State private var errorMessage = ""
     
     var body: some View {
-        VStack(alignment: .leading) {
-                HStack {
-                    NavigationLink(destination: view_notes()) {
-                        Label("Guide", systemImage: "note.text")
-                    }
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                NavigationLink(destination: view_notes()) {
+                    Label("Guide", systemImage: "note.text")
+                        .font(.headline)
                 }
-                .padding(.leading, 15)
-                
-                
-                Text("\(loginViewModel.currentUser?.username ?? "My")'s Bar Items")
-                    .font(.title)
-                    .padding(.top, 15)
-                    .padding(.leading, 15)
-                
-                List {
-                    ForEach(BarItemCategory.allCases, id: \.self) { category in
-                        let itemsInCategory = (bars.first?.myBarItems ?? []).filter { $0.category == category }
-                        if !itemsInCategory.isEmpty {
-                            
-                            Section {
-                                VStack(alignment: .leading) {
-                                    ForEach(itemsInCategory) { item in
-                                        HStack {
-                                            Text(item.name.capitalized)
-                                            
-                                            Spacer()
-                                            
-                                            Divider()
-                                            
-                                            Button(action: {
-                                                withAnimation {
-                                                    bars.first?.myBarItems.removeAll { $0.id == item.id }
-                                                }
-                                            }) {
-                                                Image(systemName: "minus.circle.fill")
-                                                    .foregroundStyle(.colorSet5)
-                                            }
-                                            .buttonStyle(PlainButtonStyle())
-                                        }
-                                    }
-                                }
-                            }header: {
-                                Text(category.rawValue.capitalized)
-                                    .font(.headline)
-                            }
-                        }
-                    }
-                    .listRowBackground(Color.clear)
-                    .background(Color.clear)
-                }
-                .scrollContentBackground(.hidden)
-                
-                Divider()
-                
-                HStack(alignment: .lastTextBaseline) {
-                    VStack(alignment: .leading){
-                        Text("Add a new item")
-                            .font(.callout)
-                            .foregroundStyle(Color.colorSet4)
-                        TextField("New Bar Item Name", text: $newItemName)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                    }
-                    
-                    VStack(alignment: .trailing){
-                        Text("Category")
-                            .font(.callout)
-                            .foregroundStyle(Color.colorSet4)
-                        Picker("Category", selection: $newItemCategory) {
-                            Text("Auto-assign").tag(nil as BarItemCategory?)
-                            ForEach(BarItemCategory.allCases, id: \.self) { category in
-                                Text(category.rawValue.capitalized).tag(category as BarItemCategory?)
-                            }
-                        }
-                    }
-                    
-                    Button("Add") {
-                        add_item()
-                    }
-                    .disabled(newItemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                }
-                .padding()
+                Spacer()
             }
-        .navigationTitle("\(loginViewModel.currentUser?.username ?? "My")'s Bar")
+            .padding(.horizontal, 15)
+            .padding(.top, 10)
+            
+            if let bar = bars.first {
+                Text("\(loginViewModel.currentUser?.username.components(separatedBy: " ").first ?? "My")'s Bar Items")
+                    .font(.largeTitle.weight(.bold))
+                    .padding(.horizontal, 15)
+                
+                if bar.myBarItems.isEmpty {
+                    
+                    Spacer()
+                    
+                    HStack(){
+                        Spacer()
+                        
+                        Text("Bar is Empty")
+                            .foregroundStyle(.secondary)
+                        
+                        Spacer()
+                    }
+                    
+                    Spacer()
+                    
+                } else {
+                    barItemList(bar: bar)
+                }
+                
+            } else {
+                Spacer()
+                
+                HStack(){
+                    Spacer()
+                    
+                    Text("No Bar Found")
+                        .foregroundStyle(.secondary)
+                    
+                    Spacer()
+                }
+                
+                Spacer()
+            }
+            
+            Divider()
+            
+            HStack(alignment: .lastTextBaseline) {
+                VStack(alignment: .leading){
+                    Text("Add a new item")
+                        .font(.callout)
+                        .foregroundStyle(Color.colorSet4)
+                    TextField("New Bar Item Name", text: $newItemName)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                }
+                
+                VStack(alignment: .trailing){
+                    Text("Category")
+                        .font(.callout)
+                        .foregroundStyle(Color.colorSet4)
+                    Picker("Category", selection: $newItemCategory) {
+                        Text("Auto-assign").tag(nil as BarItemCategory?)
+                        ForEach(BarItemCategory.allCases, id: \.self) { category in
+                            Text(category.rawValue.capitalized).tag(category as BarItemCategory?)
+                        }
+                    }
+                }
+                
+                Button(action: add_item) {
+                    Text("Add")
+                        .frame(minWidth: 25)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(newItemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+            .padding()
+        }
+        .navigationTitle("\(loginViewModel.currentUser?.username.components(separatedBy: " ").first ?? "My")'s Bar")
         .background(Color.colorSet2)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    path.append("settings")
+                } label: {
+                    Label("User Settings", systemImage: "person.circle")
+                }
+            }
+        }
         .tint(Color.colorSet4)
         .alert("Add Error", isPresented: $showError) {
             Button("OK", role: .cancel) { }
@@ -144,15 +155,15 @@ private extension view_personalBar {
 }
 
 #Preview {
-        view_personalBar()
-            .environmentObject({
-                let vm = LoginViewModel()
-                vm.currentUser = LoggedInUser(
-                    username: "PreviewUser",
-                    addPermission: false,
-                    editPermissions: false,
-                    adminRights: false
-                )
-                return vm
-            }())
+    view_personalBar(path: .constant([]))
+        .environmentObject({
+            let vm = LoginViewModel()
+            vm.currentUser = LoggedInUser(
+                username: "PreviewUser",
+                addPermission: false,
+                editPermissions: false,
+                adminRights: false
+            )
+            return vm
+        }())
 }

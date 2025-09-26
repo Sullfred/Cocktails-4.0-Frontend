@@ -65,9 +65,19 @@ class LoginViewModel: ObservableObject {
         }
     }
     
-    func logout() {
+    func logout() async {
+        let keychain = KeychainSwift()
+        guard let token = keychain.get("userToken") else { return}
+        do {
+            try await CocktailAPI.shared.logout(userToken: token)
+        } catch {
+            ToastManager.shared.show(style: .error, message: error.localizedDescription)
+        }
+        
+        keychain.delete("userToken")
         isLoggedIn = false
         currentUser = nil
         UserDefaults.standard.removeObject(forKey: userDefaultsKey)
+        
     }
 }

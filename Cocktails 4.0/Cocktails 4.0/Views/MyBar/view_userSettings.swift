@@ -9,6 +9,7 @@ import SwiftUI
 import KeychainSwift
 
 struct view_userSettings: View {
+    @Environment(\.modelContext) private var context
     @EnvironmentObject var loginViewModel: LoginViewModel
     
     @State private var showLogoutAlert = false
@@ -93,7 +94,9 @@ struct view_userSettings: View {
                             title: Text("Delete Account"),
                             message: Text("Are you sure you want to delete your account? This action cannot be undone."),
                             primaryButton: .destructive(Text("Delete")) {
-                                print("Delete Account confirmed")
+                                Task {
+                                    await loginViewModel.deleteUser(context: context)
+                                }
                             },
                             secondaryButton: .cancel()
                         )
@@ -112,7 +115,7 @@ struct view_userSettings: View {
                             message: Text("Are you sure you want to log out?"),
                             primaryButton: .destructive(Text("Logout")) {
                                 Task {
-                                    await loginViewModel.logout()
+                                    await loginViewModel.logout(context: context)
                                 }
                             },
                             secondaryButton: .cancel()
@@ -144,6 +147,7 @@ private extension view_userSettings {
         .environmentObject({
             let vm = LoginViewModel()
             vm.currentUser = LoggedInUser(
+                id: UUID(),
                 username: "Daniel Vang Kleist",
                 addPermission: true,
                 editPermissions: true,

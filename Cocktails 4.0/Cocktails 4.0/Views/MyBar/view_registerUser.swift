@@ -63,7 +63,7 @@ struct view_registerUser: View {
                 // Confirm Password
                 ZStack(alignment: .trailing) {
                     Group {
-                        if viewModel.showPassword {
+                        if viewModel.showConfirmPassword {
                             TextField("Confirm Password", text: $viewModel.confirmPassword)
                         } else {
                             SecureField("Confirm Password", text: $viewModel.confirmPassword)

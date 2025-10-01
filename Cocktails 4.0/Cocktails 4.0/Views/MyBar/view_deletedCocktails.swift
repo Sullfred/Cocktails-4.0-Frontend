@@ -12,21 +12,17 @@ struct view_deletedCocktails: View {
     @Environment(\.modelContext) private var context
     @Query private var myBars: [MyBar]
     
-    @State var selectedCocktails = [DeletedCocktail?]()
+    @State var selectedCocktails = [RemovedCocktail?]()
 
     var body: some View {
         ZStack{
             if let myBar = myBars.first {
-                if myBar.deletedCocktails.isEmpty {
+                if myBar.removedCocktails.isEmpty {
                     Text("No Removed cocktails")
                         .foregroundStyle(.secondary)
                 } else {
-                    VStack {
-                        Text("Removed Cocktails")
-                            .font(.title)
-                            .padding(.bottom, 15)
-                
-                        MultiSelectButtonView(myBar.deletedCocktails, $selectedCocktails) { item in
+                    ScrollView {
+                        MultiSelectButtonView(myBar.removedCocktails, $selectedCocktails) { item in
                             
                             HStack(alignment: .center) {
                                 Image(systemName: selectedCocktails.contains(item) ? "checkmark.square.fill" : "square")
@@ -66,6 +62,7 @@ struct view_deletedCocktails: View {
                         .tint(Color.colorSet5)
                     }
                     .padding()
+                    .navigationTitle("Removed Cocktails")
                 }
             } else {
                 Text("No Removed cocktails")
@@ -86,8 +83,8 @@ private extension view_deletedCocktails {
     func undoDeletes() {
         if let myBar = myBars.first {
             selectedCocktails.forEach { item in
-                if let index = myBar.deletedCocktails.firstIndex(where: {$0.id == item?.id}) {
-                    myBar.deletedCocktails.remove(at: index)
+                if let index = myBar.removedCocktails.firstIndex(where: {$0.id == item?.id}) {
+                    myBar.removedCocktails.remove(at: index)
                 }
             }
             selectedCocktails = []

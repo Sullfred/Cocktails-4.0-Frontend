@@ -11,26 +11,30 @@ import SwiftUI
 
 @Model
 class MyBar {
+    var id: UUID = UUID()
+    var userId: UUID?
     var myBarItems: [MyBarItem]
     var favoriteCocktails: [String]
-    var deletedCocktails: [DeletedCocktail]
+    var removedCocktails: [RemovedCocktail]
     
-    init(myBarItems: [MyBarItem] = [], favoriteCocktails: [String] = [], deletedCocktails: [DeletedCocktail] = []) {
+    init(userId: UUID? = nil, myBarItems: [MyBarItem] = [], favoriteCocktails: [String] = [], deletedCocktails: [RemovedCocktail] = []) {
+        self.userId = userId
         self.myBarItems = myBarItems
         self.favoriteCocktails = favoriteCocktails
-        self.deletedCocktails = deletedCocktails
+        self.removedCocktails = deletedCocktails
     }
 }
 
-struct DeletedCocktail: Codable, Hashable, Identifiable {
+struct RemovedCocktail: Codable, Hashable, Identifiable {
     var id: String
     var name: String
     var creator: String
-    var date: Date = Date.now
+    var date: Date
     
-    init(id: String, name: String, creator: String) {
+    init(id: String, name: String, creator: String, date: Date = Date.now) {
         self.id = id
         self.name = name
         self.creator = creator
+        self.date = date
     }
 }

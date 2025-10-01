@@ -74,6 +74,13 @@
             ReferencedContainer = "container:Cocktails 4.0.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "SERVER_URL_DEV"
+            value = "http://127.0.0.1:8080"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"

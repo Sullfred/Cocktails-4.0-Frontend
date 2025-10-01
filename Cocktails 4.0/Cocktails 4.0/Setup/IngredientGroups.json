@@ -1,0 +1,16 @@
+{
+  "brandy": ["cognac",],
+  "bourbon": ["bourbon whiskey", "bourbon whisky"],
+  "rye": ["rye whiskey", "rye whisky"],
+  "scotch": ["scotch whiskey", "scotch whisky"],
+  "whiskey": ["bourbon", "rye"],
+  "rum": ["dark rum", "spiced rum", "gold rum", "aged rum", "pot still rum", "overproof rum", "black rum", "navy rum", "flavored rum", "blended rum", "demerara rum", "jamaican rum", "black blended rum", "cuban rum", "dominican rum", "martinique rum", "rhum agricole", "column still rum", "cane rhum"],
+  "gin": ["london dry gin", "old tom gin", "navy strength gin", "plymouth gin", "genever"],
+  "creme de cacao": ["white creme de cacao", "brown creme de cacao"],
+  "tequila": ["blanco tequila", "silver tequila", "reposado tequila", "anejo tequila", "extra anejo tequila", "gold tequila", "plata tequila"],
+  "orange liqueur": ["cointreau", "grand marnier", "dry curacao", "curacao", "triple sec"],
+  "coffee liqueur": ["kahlua", "tia maria", "patron XO cafe", "mr black"],
+  "simple syrup": ["simple sirup", "sukkersirup", "demerara syrup", "demerara sirup"],
+  "calvados": ["applejack"],
+  "sparkling water": ["seltzer", "danskvand", "soda water"]
+}

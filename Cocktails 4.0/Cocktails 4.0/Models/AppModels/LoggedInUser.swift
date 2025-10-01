@@ -8,6 +8,7 @@
 import Foundation
 
 struct LoggedInUser: Codable {
+    let id: UUID
     let username: String
     let addPermission: Bool
     let editPermissions: Bool

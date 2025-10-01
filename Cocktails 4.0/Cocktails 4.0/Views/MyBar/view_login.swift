@@ -9,6 +9,8 @@ import SwiftUI
 
 struct view_login: View {
     @EnvironmentObject var loginViewModel: LoginViewModel
+    @EnvironmentObject var myBarViewModel: MyBarViewModel
+    
     @State private var isPasswordVisible: Bool = false
     
     var body: some View {
@@ -62,11 +64,7 @@ struct view_login: View {
             VStack(spacing: 16) {
                 Button(action: {
                     Task {
-                        await loginViewModel.login()
-                        
-                        // Reset username and password after a login
-                        loginViewModel.username = ""
-                        loginViewModel.password = ""
+                        await loginViewModel.login(myBarViewModel: myBarViewModel)
                     }
                 }) {
                     ZStack {

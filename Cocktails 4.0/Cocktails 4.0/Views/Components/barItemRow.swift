@@ -69,7 +69,7 @@ private extension barItemRow {
 
 #Preview {
     let barItem = MyBarItem(name: "sparkling water", category: .mixer)
-    let previewBar = MyBar(myBarItems: [MyBarItem(name: "vodka", category: .liquor)])
+    let previewBar = MyBar(userId: UUID(), myBarItems: [MyBarItem(name: "vodka", category: .liquor)])
     
     barItemRow(barItem: barItem, bar: previewBar)
 }

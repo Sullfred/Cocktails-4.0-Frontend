@@ -25,7 +25,7 @@ struct view_cocktailsListSorted: View {
     @Query private var bars: [MyBar]
     
     private var filteredCocktails: [Cocktail] {
-        let barItems = Set(bars.first?.myBarItems.map { $0.name.lowercased() } ?? [])
+        let barItems = Set(bars.first?.myBarItems.map { canonicalName(for: $0.name) } ?? [])
         let favorites = Set(bars.first?.favoriteCocktails ?? [])
         
         return allCocktails.filter { cocktail in
@@ -36,7 +36,7 @@ struct view_cocktailsListSorted: View {
             })
             &&
             (!showCraftableOnly || cocktail.ingredients.allSatisfy { ingredient in
-                barItems.contains(ingredient.name.lowercased())
+                matchesIngredient(ingredient.name, barItems: barItems)
             })
             &&
             (!showFavoritesOnly || favorites.contains(cocktail.id.uuidString))
@@ -70,8 +70,8 @@ struct view_cocktailsListSorted: View {
             .listRowBackground(Color.clear)
         }
         .refreshable {
-            if await CocktailAPI.shared.checkServerConnection() {
-                await CocktailAPI.shared.fetchCocktails(context: context)
+            if await CocktailService.shared.checkServerConnection() {
+                await CocktailService.shared.fetchCocktails(context: context)
             }
         }
     }
@@ -96,6 +96,32 @@ struct view_cocktailsListSorted: View {
             }
         }, sort: sortOrder)
     }
+}
+
+private extension view_cocktailsListSorted {
+    func canonicalName(for ingredient: String) -> String {
+        let lowercased = ingredient.lowercased()
+        let ingredientGroups = loadIngredientGroups()
+        for (canonical, variants) in ingredientGroups {
+            if canonical == lowercased || variants.contains(lowercased) {
+                return canonical
+            }
+        }
+        return lowercased
+    }
+    
+    func matchesIngredient(_ ingredient: String, barItems: Set<String>) -> Bool {
+        let canonicalIngredientName = canonicalName(for: ingredient)
+        if barItems.contains(canonicalIngredientName) {
+            return true
+        }
+        for barItem in barItems {
+            if barItem.contains(canonicalIngredientName) || canonicalIngredientName.contains(barItem) {
+                return true
+            }
+        }
+        return false
+    }
     
     func deleteCocktail(_ indexSet: IndexSet) {
         for index in indexSet {
@@ -105,9 +131,22 @@ struct view_cocktailsListSorted: View {
     }
 
     func removeFromList(_ cocktail: Cocktail) {
-        bars.first?.deletedCocktails.append(DeletedCocktail(id: cocktail.id.uuidString, name: cocktail.name, creator: cocktail.creator))
+        bars.first?.removedCocktails.append(RemovedCocktail(id: cocktail.id.uuidString, name: cocktail.name, creator: cocktail.creator))
         context.delete(cocktail)
         try? context.save()
+    }
+    
+    func loadIngredientGroups() -> [String: [String]] {
+        guard let url = Bundle.main.url(forResource: "IngredientGroups", withExtension: "json") else {
+            return [:]
+        }
+        do {
+            let data = try Data(contentsOf: url)
+            let groups = try JSONDecoder().decode([String: [String]].self, from: data)
+            return groups
+        } catch {
+            return [:]
+        }
     }
 }
 
@@ -119,6 +158,7 @@ struct view_cocktailsListSorted: View {
     .environmentObject({
         let vm = LoginViewModel()
         vm.currentUser = LoggedInUser(
+            id: UUID(),
             username: "Daniel Vang Kleist",
             addPermission: false,
             editPermissions: false,

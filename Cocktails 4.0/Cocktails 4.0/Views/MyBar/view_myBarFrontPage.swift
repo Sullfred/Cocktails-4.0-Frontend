@@ -6,10 +6,16 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct view_myBarFrontPage: View {
     @EnvironmentObject var loginViewModel: LoginViewModel
     @State private var path: [String] = []
+    @StateObject private var myBarViewModel: MyBarViewModel
+
+    init(context: ModelContext) {
+        _myBarViewModel = StateObject(wrappedValue: MyBarViewModel(context: context))
+    }
     
     var body: some View {
         NavigationStack(path: $path) {
@@ -17,9 +23,11 @@ struct view_myBarFrontPage: View {
                 if loginViewModel.isLoggedIn {
                     view_personalBar(path: $path)
                         .environmentObject(loginViewModel)
+                        .environmentObject(myBarViewModel)
                 } else {
                     view_login()
                         .environmentObject(loginViewModel)
+                        .environmentObject(myBarViewModel)
                 }
             }
             .navigationDestination(for: String.self) { value in

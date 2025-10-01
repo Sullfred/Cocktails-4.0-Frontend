@@ -48,5 +48,6 @@ struct barItemList: View {
 
 #Preview {
     let previewBar = MyBar(myBarItems: [MyBarItem(name: "vodka", category: .liquor)])
+    
     barItemList(bar: previewBar)
 }

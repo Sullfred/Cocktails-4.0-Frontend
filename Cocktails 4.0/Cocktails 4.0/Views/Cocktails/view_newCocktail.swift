@@ -13,7 +13,7 @@ import PhotosUI
 struct view_newCocktail: View {
     @Environment(\.modelContext) var modelContext
     @Environment(\.dismiss) var dismiss
-    @StateObject private var api = CocktailAPI.shared
+    @StateObject private var api = CocktailService.shared
     
     @State var selectedPhoto : PhotosPickerItem?
     

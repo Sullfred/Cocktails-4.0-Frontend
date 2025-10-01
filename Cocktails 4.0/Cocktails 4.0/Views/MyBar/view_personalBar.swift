@@ -9,10 +9,11 @@ import SwiftUI
 import SwiftData
 
 struct view_personalBar: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.modelContext) private var context
     @Query private var bars: [MyBar]
     
     @EnvironmentObject var loginViewModel: LoginViewModel
+    @EnvironmentObject var myBarViewModel: MyBarViewModel
     
     @Binding var path: [String]
     
@@ -34,13 +35,14 @@ struct view_personalBar: View {
             .padding(.horizontal, 15)
             .padding(.top, 10)
             
-            if let bar = bars.first {
+            if let bar = bars.first(where: {$0.userId == loginViewModel.currentUser?.id}) {
                 Text("\(loginViewModel.currentUser?.username.components(separatedBy: " ").first ?? "My")'s Bar Items")
                     .font(.largeTitle.weight(.bold))
                     .padding(.horizontal, 15)
                 
                 if bar.myBarItems.isEmpty {
                     
+                    // Center text
                     Spacer()
                     
                     HStack(){
@@ -61,15 +63,25 @@ struct view_personalBar: View {
             } else {
                 Spacer()
                 
-                HStack(){
+                HStack {
                     Spacer()
                     
-                    Text("No Bar Found")
-                        .foregroundStyle(.secondary)
+                    VStack {
+                        Text("No Bar Found")
+                            .foregroundStyle(.secondary)
+                        Button(action: {
+                            Task {
+                                await myBarViewModel.getPersonalBar()
+                            }
+                        }) {
+                            Text("Retry")
+                                .font(.body)
+                        }
+                        .buttonStyle(.bordered)
+                    }
                     
                     Spacer()
                 }
-                
                 Spacer()
             }
             
@@ -128,29 +140,19 @@ struct view_personalBar: View {
 
 private extension view_personalBar {
     func add_item() {
-        do {
-            let trimmedName = newItemName.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !trimmedName.isEmpty else { return }
-            let newItem = MyBarItem(name: trimmedName.lowercased())
-            if let selectedCategory = newItemCategory {
-                newItem.category = selectedCategory
-            } else {
-                newItem.assignCategoryBasedOnName()
-            }
-            if let bar = bars.first {
-                bar.myBarItems.append(newItem)
-            } else {
-                let newBar = MyBar()
-                newBar.myBarItems.append(newItem)
-                modelContext.insert(newBar)
-            }
-            try modelContext.save()
-            newItemName = ""
-            newItemCategory = nil
-        } catch {
-            errorMessage = "Failed to save bar item: \(error.localizedDescription)"
-            showError = true
+        let trimmedName = newItemName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else { return }
+        let newItem = MyBarItem(name: trimmedName.lowercased())
+        if let selectedCategory = newItemCategory {
+            newItem.category = selectedCategory
+        } else {
+            newItem.assignCategoryBasedOnName()
         }
+        Task {
+            await myBarViewModel.addBarItem(newItem)
+        }
+        newItemName = ""
+        newItemCategory = nil
     }
 }
 
@@ -159,6 +161,7 @@ private extension view_personalBar {
         .environmentObject({
             let vm = LoginViewModel()
             vm.currentUser = LoggedInUser(
+                id: UUID(),
                 username: "PreviewUser",
                 addPermission: false,
                 editPermissions: false,

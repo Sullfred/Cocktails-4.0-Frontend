@@ -13,7 +13,7 @@ struct ContentView: View {
         UITabBar.appearance().backgroundColor = UIColor.white
     }
     
-    @Environment(\.modelContext) var modelContext
+    @Environment(\.modelContext) var context
     @StateObject private var loginViewModel = LoginViewModel()
 
     var body: some View {
@@ -23,7 +23,7 @@ struct ContentView: View {
                     Label("Cocktails", systemImage: "list.bullet")
                 }
                 .environmentObject(loginViewModel)
-            view_myBarFrontPage()
+            view_myBarFrontPage(context: context)
                 .tabItem {
                     Label("My Bar", systemImage: "wineglass")
                 }

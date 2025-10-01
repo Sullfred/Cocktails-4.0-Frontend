@@ -5,6 +5,8 @@
 //  Created by Daniel Vang Kleist on 23/09/2025.
 //
 
+import Foundation
+
 struct LoginRequestDTO: Codable {
     let username: String
     let password: String
@@ -16,6 +18,7 @@ struct LoginResponse: Codable {
 }
 
 struct UserDTO: Codable {
+    let id: UUID
     let username: String
     let addPermission: Bool
     let editPermissions: Bool

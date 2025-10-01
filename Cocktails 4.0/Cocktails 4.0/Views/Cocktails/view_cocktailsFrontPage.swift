@@ -151,6 +151,7 @@ extension IngredientTag {
         .environmentObject({
             let vm = LoginViewModel()
             vm.currentUser = LoggedInUser(
+                id: UUID(),
                 username: "Daniel Vang Kleist",
                 addPermission: false,
                 editPermissions: false,

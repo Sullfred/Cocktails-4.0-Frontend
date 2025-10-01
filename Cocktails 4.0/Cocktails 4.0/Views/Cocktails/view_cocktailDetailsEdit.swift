@@ -12,7 +12,7 @@ import PhotosUI
 struct view_cocktailDetailsEdit: View {
     @Environment(\.modelContext) var modelContext
     @Environment(\.dismiss) var dismiss
-    @StateObject private var api = CocktailAPI.shared
+    @StateObject private var api = CocktailService.shared
     
     var cocktail: Cocktail
     @State private var draft: CocktailDraft

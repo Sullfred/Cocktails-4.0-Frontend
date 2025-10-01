@@ -31,10 +31,11 @@ class RegisterViewModel: ObservableObject {
             isLoading = false
         }
         do {
-            try await CocktailAPI.shared.createUser(username: username, password: password, confirmPassword: confirmPassword)
+            try await UserService.shared.createUser(username: username, password: password, confirmPassword: confirmPassword)
             didRegister = true
         } catch {
-            errorMessage = error.localizedDescription
+            let message = ErrorHandler.normalize(error)
+            errorMessage = message.localizedDescription
         }
     }
 }

@@ -1,5 +1,5 @@
 //
-//  CocktailAPI.swift
+//  CocktailService.swift
 //  Cocktails 4.0
 //
 //  Created by Daniel Vang Kleist on 27/08/2025.
@@ -46,17 +46,16 @@ func removeCachedImage(for id: UUID) {
 
 // MARK: - Server Communication
 @MainActor
-class CocktailAPI: ObservableObject {
-    static let shared = CocktailAPI()
-    private let baseURL = URL(string: "http://127.0.0.1:8080")!
+class CocktailService: ObservableObject {
+    static let shared = CocktailService()
+    private let baseURL = ServiceConfig.baseURL // For handling imageURL
+    private let serviceURL = ServiceConfig.baseURL.appending(path: Endpoints.cocktails)
     
     @Published private var pendingUploads: [Cocktail] = []
     @Published private var pendingDeletes: [Cocktail] = []
     @Published private var pendingUpdates: [Cocktail] = []
     
     private init() {}
-    
-    // MARK: - Cocktails
     // Functions to add cocktails to pending list
     func createCocktail(_ cocktail: Cocktail) async {
         pendingUploads.append(cocktail)
@@ -71,7 +70,7 @@ class CocktailAPI: ObservableObject {
     }
     
     func fetchCocktails(context: ModelContext) async {
-        let url = baseURL.appendingPathComponent("cocktails")
+        let url = serviceURL
         
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
@@ -86,13 +85,13 @@ class CocktailAPI: ObservableObject {
             let myBar = try? context.fetch(myBarDescriptor).first
             
             // Check for MyBar before clean up as deletedCocktailIDs is needed later
-            let deletedCocktailIDs = Set(myBar?.deletedCocktails.map { $0.id } ?? [])
+            let deletedCocktailIDs = Set(myBar?.removedCocktails.map { $0.id } ?? [])
             
             // Clean up myBar: remove any with id not in dtoIDs
             if let myBar = myBar {
                 let dtoIDs = Set(cocktailDTOs.map { $0.id })
-                let filteredDeleted = myBar.deletedCocktails.filter { dtoIDs.contains(UUID(uuidString: $0.id) ?? UUID()) }
-                myBar.deletedCocktails = filteredDeleted
+                let filteredDeleted = myBar.removedCocktails.filter { dtoIDs.contains(UUID(uuidString: $0.id) ?? UUID()) }
+                myBar.removedCocktails = filteredDeleted
                 let filteredFavorites = myBar.favoriteCocktails.filter { dtoIDs.contains(UUID(uuidString: $0) ?? UUID()) }
                 myBar.favoriteCocktails = filteredFavorites
             }
@@ -221,7 +220,7 @@ class CocktailAPI: ObservableObject {
             do {
                 // Upload cocktail
                 let cocktailDTO = CocktailDTO(from: cocktail)
-                let url = baseURL.appendingPathComponent("cocktails")
+                let url = serviceURL
                 var request = URLRequest(url: url)
                 
                 request.httpMethod = "POST"
@@ -236,7 +235,7 @@ class CocktailAPI: ObservableObject {
                 
                 // Upload image if exists
                 if let imageData = cocktail.image {
-                    let imageURL = baseURL.appendingPathComponent("cocktails/\(cocktail.id)/image")
+                    let imageURL = serviceURL.appending(path: "\(cocktail.id)/image")
                     var imageRequest = URLRequest(url: imageURL)
                     imageRequest.httpMethod = "POST"
                     
@@ -272,7 +271,7 @@ class CocktailAPI: ObservableObject {
     func syncPendingDeletes() async {
         for cocktail in pendingDeletes {
             let id = cocktail.id
-            let url = baseURL.appendingPathComponent("cocktails/\(id.uuidString)")
+            let url = serviceURL.appending(path: "\(id.uuidString)")
             var request = URLRequest(url: url)
             
             request.httpMethod = "DELETE"
@@ -301,7 +300,7 @@ class CocktailAPI: ObservableObject {
             do {
                 let id = cocktail.id
                 let cocktailDTO = CocktailDTO(from: cocktail)
-                let url = baseURL.appendingPathComponent("cocktails/\(id.uuidString)")
+                let url = serviceURL.appending(path: "\(id.uuidString)")
                 
                 var request = URLRequest(url: url)
                 
@@ -316,7 +315,7 @@ class CocktailAPI: ObservableObject {
                         // After successful PUT, handle image upload or deletion
                         if let imageData = cocktail.image {
                             // Upload image
-                            let imageURL = baseURL.appendingPathComponent("cocktails/\(cocktail.id)/image")
+                            let imageURL = serviceURL.appending(path: "\(cocktail.id)/image")
                             var imageRequest = URLRequest(url: imageURL)
                             imageRequest.httpMethod = "POST"
                             
@@ -345,7 +344,7 @@ class CocktailAPI: ObservableObject {
                         } else {
                             // If image is nil but previously had an image, delete the image on the server and clear local image and imageURL
                             if cocktail.imageURL != nil {
-                                let deleteImageURL = baseURL.appendingPathComponent("cocktails/\(cocktail.id)/image")
+                                let deleteImageURL = serviceURL.appending(path: "\(cocktail.id)/image")
                                 var deleteRequest = URLRequest(url: deleteImageURL)
                                 deleteRequest.httpMethod = "DELETE"
                                 
@@ -374,7 +373,7 @@ class CocktailAPI: ObservableObject {
                         // Clean up myBar
                         let myBarDescriptor = FetchDescriptor<MyBar>()
                         if let myBar = try? context.fetch(myBarDescriptor).first {
-                            let deletedCocktailIDs = Set(myBar.deletedCocktails.map { $0.id })
+                            let deletedCocktailIDs = Set(myBar.removedCocktails.map { $0.id })
                             let favoriteCocktailIDs = Set(myBar.favoriteCocktails)
                             
                             if favoriteCocktailIDs.contains(id.uuidString) {
@@ -385,8 +384,8 @@ class CocktailAPI: ObservableObject {
                             // If cocktail already has been deleted locally we remove it from deletedCocktails
                             // Else we remove it from the context
                             if deletedCocktailIDs.contains(id.uuidString) {
-                                let filteredDeleted = myBar.deletedCocktails.filter { $0.id != id.uuidString }
-                                myBar.deletedCocktails = filteredDeleted
+                                let filteredDeleted = myBar.removedCocktails.filter { $0.id != id.uuidString }
+                                myBar.removedCocktails = filteredDeleted
                             } else {
                                 let cocktailDescriptor = FetchDescriptor<Cocktail>(predicate: #Predicate {$0.id == id} )
                                 if let localCocktail = try? context.fetch(cocktailDescriptor).first {
@@ -414,7 +413,7 @@ class CocktailAPI: ObservableObject {
     
     // Check if the server is reachable by sending a HEAD request to the cocktails endpoint
     func checkServerConnection() async -> Bool {
-        let url = baseURL.appendingPathComponent("cocktails")
+        let url = serviceURL
         var request = URLRequest(url: url)
         request.httpMethod = "HEAD"
         
@@ -424,92 +423,8 @@ class CocktailAPI: ObservableObject {
                 return (200...299).contains(httpResponse.statusCode)
             }
         } catch {
-            ToastManager.shared.show(style: .error, message: "No server connection!")
+            ErrorHandler.handle(error)
         }
         return false
-    }
-    
-    
-    // MARK: - Users
-    func createUser(username: String, password: String, confirmPassword: String) async throws {
-        let dto = CreateUserDTO(username: username, password: password, confirmPassword: confirmPassword)
-        let url = baseURL.appendingPathComponent("users/register")
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(dto)
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw NSError(domain: "CocktailAPI", code: 1, userInfo: [NSLocalizedDescriptionKey: "No response from server"])
-        }
-        if !(200...299).contains(httpResponse.statusCode) {
-            // Try to decode Vapor's Abort error message
-            var errorMessage: String = "Failed to register user"
-            if let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-                let reason = json["reason"] as? String {
-                errorMessage = reason
-            } else if let string = String(data: data, encoding: .utf8), !string.isEmpty {
-                errorMessage = string
-            }
-            throw NSError(domain: "CocktailAPI", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: errorMessage])
-        }
-    }
-    
-    func login(username: String, password: String) async throws -> LoginResponse {
-        let url = baseURL.appendingPathComponent("users/login")
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-
-        // Encode username and password in Basic Auth header
-        let loginString = "\(username):\(password)"
-        guard let loginData = loginString.data(using: .utf8) else {
-            throw NSError(domain: "CocktailAPI", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to encode credentials"])
-        }
-        let base64Login = loginData.base64EncodedString()
-        request.setValue("Basic \(base64Login)", forHTTPHeaderField: "Authorization")
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw NSError(domain: "CocktailAPI", code: 1, userInfo: [NSLocalizedDescriptionKey: "No response from server"])
-        }
-        // Decode abort message for showing errors
-        if !(200...299).contains(httpResponse.statusCode) {
-            var errorMessage: String = "Failed to login"
-            if let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-               let reason = json["reason"] as? String {
-                errorMessage = reason
-            } else if let string = String(data: data, encoding: .utf8), !string.isEmpty {
-                errorMessage = string
-            }
-            throw NSError(domain: "CocktailAPI", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: errorMessage])
-        }
-        let loginResponse = try JSONDecoder().decode(LoginResponse.self, from: data)
-        return loginResponse
-    }
-    
-    func logout(userToken: String) async throws {
-        let url = baseURL.appendingPathComponent("users/logout")
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("Bearer \(userToken)", forHTTPHeaderField: "Authorization")
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw NSError(domain: "CocktailAPI", code: 1, userInfo: [NSLocalizedDescriptionKey: "No response from server"])
-        }
-        
-        if !(200...299).contains(httpResponse.statusCode) {
-            // Try to decode Vapor's Abort error message
-            var errorMessage: String = "Failed to Logout user"
-            if let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-                let reason = json["reason"] as? String {
-                errorMessage = reason
-            } else if let string = String(data: data, encoding: .utf8), !string.isEmpty {
-                errorMessage = string
-            }
-            throw NSError(domain: "CocktailAPI", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: errorMessage])
-        }
     }
 }

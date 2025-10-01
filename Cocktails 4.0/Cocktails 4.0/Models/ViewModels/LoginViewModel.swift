@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 import KeychainSwift
+import SwiftData
 
 @MainActor
 class LoginViewModel: ObservableObject {
@@ -33,7 +34,7 @@ class LoginViewModel: ObservableObject {
         }
     }
     
-    func login() async {
+    func login(myBarViewModel: MyBarViewModel) async {
         isLoading = true
         errorMessage = nil
         defer {
@@ -41,7 +42,7 @@ class LoginViewModel: ObservableObject {
         }
         
         do {
-            let response = try await CocktailAPI.shared.login(username: username, password: password)
+            let response = try await UserService.shared.login(username: username, password: password)
             
             // save data from response
             let keychain = KeychainSwift()
@@ -50,6 +51,7 @@ class LoginViewModel: ObservableObject {
             keychain.set(token, forKey: "userToken")
             
             let loggedInUser = LoggedInUser(
+                id: response.user.id,
                 username: response.user.username,
                 addPermission: response.user.addPermission,
                 editPermissions: response.user.editPermissions,
@@ -60,24 +62,65 @@ class LoginViewModel: ObservableObject {
             }
             currentUser = loggedInUser
             isLoggedIn = true
+            
+            // Get users personal bar after login
+            await myBarViewModel.getPersonalBar()
+            
         } catch {
-            errorMessage = error.localizedDescription
+            let message = ErrorHandler.normalize(error)
+            errorMessage = message.localizedDescription
         }
     }
     
-    func logout() async {
+    func logout(context: ModelContext) async {
         let keychain = KeychainSwift()
-        guard let token = keychain.get("userToken") else { return}
+        guard let token = keychain.get("userToken")
+        else {
+            return
+        }
+        
         do {
-            try await CocktailAPI.shared.logout(userToken: token)
+            try await UserService.shared.logout(userToken: token)
         } catch {
             ToastManager.shared.show(style: .error, message: error.localizedDescription)
+        }
+        
+        // Delete personal bar from context
+        let cureentUserId = self.currentUser?.id
+        if let bar = try? context.fetch(FetchDescriptor<MyBar>(predicate: #Predicate { $0.userId == cureentUserId })).first {
+            context.delete(bar)
+            try? context.save()
         }
         
         keychain.delete("userToken")
         isLoggedIn = false
         currentUser = nil
         UserDefaults.standard.removeObject(forKey: userDefaultsKey)
+    }
+    
+    func deleteUser(context: ModelContext) async {
+        let keychain = KeychainSwift()
+        guard let token = keychain.get("userToken")
+        else {
+            return
+        }
         
+        do {
+            try await UserService.shared.deleteUser(userToken: token)
+        } catch {
+            ToastManager.shared.show(style: .error, message: error.localizedDescription)
+        }
+        
+        // Delete personal bar from context
+        let cureentUserId = self.currentUser?.id
+        if let bar = try? context.fetch(FetchDescriptor<MyBar>(predicate: #Predicate { $0.userId == cureentUserId })).first {
+            context.delete(bar)
+            try? context.save()
+        }
+        
+        keychain.delete("userToken")
+        isLoggedIn = false
+        currentUser = nil
+        UserDefaults.standard.removeObject(forKey: userDefaultsKey)
     }
 }

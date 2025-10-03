@@ -3,7 +3,9 @@ import SwiftData
 
 struct view_cocktailsList: View {
     @Environment(\.modelContext) private var modelContext
+    
     @EnvironmentObject var loginViewModel: LoginViewModel
+    @EnvironmentObject var myBarViewModel: MyBarViewModel
 
     @State private var path: [Cocktail] = []
     @State private var sortOrder = [
@@ -19,6 +21,7 @@ struct view_cocktailsList: View {
     var body: some View {
         view_cocktailsListSorted(sortOrder: sortOrder, searchText: searchText, showFavoritesOnly: showFavoritesOnly, showCraftableOnly: showCraftableOnly, selectedCategory: selectedCategory, baseSpirit: baseSpirit)
             .environmentObject(loginViewModel)
+            .environmentObject(myBarViewModel)
             .navigationTitle(selectedCategory != nil ? selectedCategory?.rawValue ?? "error" : "All Cocktails")
             .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always)) //Will fix flicker when navigating
             .background(Color.colorSet2)
@@ -37,7 +40,9 @@ struct view_cocktailsList: View {
                             
                             Toggle("Show Favorites only", systemImage: showFavoritesOnly ? "heart.fill" : "heart", isOn: $showFavoritesOnly)
                             
-                            Toggle("Show Craftables only", systemImage: showCraftableOnly ? "wineglass.fill" : "wineglass", isOn: $showCraftableOnly)
+                            if loginViewModel.currentUser != nil {
+                                Toggle("Show Craftables only", systemImage: showCraftableOnly ? "wineglass.fill" : "wineglass", isOn: $showCraftableOnly)
+                            }
                         }
                         
                         Section("Sort by") {

@@ -10,7 +10,6 @@ import SwiftData
 
 struct view_personalBar: View {
     @Environment(\.modelContext) private var context
-    @Query private var bars: [MyBar]
     
     @EnvironmentObject var loginViewModel: LoginViewModel
     @EnvironmentObject var myBarViewModel: MyBarViewModel
@@ -35,32 +34,7 @@ struct view_personalBar: View {
             .padding(.horizontal, 15)
             .padding(.top, 10)
             
-            if let bar = bars.first(where: {$0.userId == loginViewModel.currentUser?.id}) {
-                Text("\(loginViewModel.currentUser?.username.components(separatedBy: " ").first ?? "My")'s Bar Items")
-                    .font(.largeTitle.weight(.bold))
-                    .padding(.horizontal, 15)
-                
-                if bar.myBarItems.isEmpty {
-                    
-                    // Center text
-                    Spacer()
-                    
-                    HStack(){
-                        Spacer()
-                        
-                        Text("Bar is Empty")
-                            .foregroundStyle(.secondary)
-                        
-                        Spacer()
-                    }
-                    
-                    Spacer()
-                    
-                } else {
-                    barItemList(bar: bar)
-                }
-                
-            } else {
+            if (myBarViewModel.personalBar.userId != loginViewModel.currentUser?.id) {
                 Spacer()
                 
                 HStack {
@@ -83,6 +57,31 @@ struct view_personalBar: View {
                     Spacer()
                 }
                 Spacer()
+            } else {
+                Text("\(loginViewModel.currentUser?.username.components(separatedBy: " ").first ?? "My")'s Bar Items")
+                    .font(.largeTitle.weight(.bold))
+                    .padding(.horizontal, 15)
+                
+                if myBarViewModel.personalBar.myBarItems.isEmpty {
+                    
+                    // Center text
+                    Spacer()
+                    
+                    HStack(){
+                        Spacer()
+                        
+                        Text("Bar is Empty")
+                            .foregroundStyle(.secondary)
+                        
+                        Spacer()
+                    }
+                    
+                    Spacer()
+                    
+                } else {
+                    barItemList()
+                        .environmentObject(myBarViewModel)
+                }
             }
             
             Divider()
@@ -148,11 +147,15 @@ private extension view_personalBar {
         } else {
             newItem.assignCategoryBasedOnName()
         }
-        Task {
-            await myBarViewModel.addBarItem(newItem)
-        }
+        
+       
+            Task {
+                await myBarViewModel.addBarItem(newItem)
+            }
+
         newItemName = ""
         newItemCategory = nil
+        
     }
 }
 

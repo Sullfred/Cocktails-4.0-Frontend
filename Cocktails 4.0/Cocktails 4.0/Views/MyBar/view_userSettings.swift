@@ -11,6 +11,7 @@ import KeychainSwift
 struct view_userSettings: View {
     @Environment(\.modelContext) private var context
     @EnvironmentObject var loginViewModel: LoginViewModel
+    @EnvironmentObject var myBarViewModel: MyBarViewModel
     
     @State private var showLogoutAlert = false
     @State private var showDeleteAlert = false
@@ -115,7 +116,7 @@ struct view_userSettings: View {
                             message: Text("Are you sure you want to log out?"),
                             primaryButton: .destructive(Text("Logout")) {
                                 Task {
-                                    await loginViewModel.logout(context: context)
+                                    await loginViewModel.logout(myBarViewModel: myBarViewModel)
                                 }
                             },
                             secondaryButton: .cancel()

@@ -12,9 +12,7 @@ import KeychainSwift
 
 @MainActor
 final class MyBarViewModel: ObservableObject {
-    @Published var myBarItems: [MyBarItem] = []
-    @Published var favoriteCocktails: [String] = []
-    @Published var deletedCocktails: [RemovedCocktail] = []
+    @Published var personalBar = MyBar()
     @Published var errorMessage: String?
 
     private let service: MyBarService
@@ -25,6 +23,49 @@ final class MyBarViewModel: ObservableObject {
         self.context = context
         self.service = MyBarService(context: context)
         self.pendingActionService = PendingActionService(context: context)
+        
+        fetchData()
+    }
+    
+    // Get the local personal bar, if the user is logged in we get the users bar, else the default bar
+    func fetchData() {
+        do {
+            let bars = try context.fetch(FetchDescriptor<MyBar>())
+            
+            // Try to get logged in user and make the personal bar the users bar if it exists
+            if let data = UserDefaults.standard.data(forKey: "loggedInUser"),
+               let loggedInUser = try? JSONDecoder().decode(LoggedInUser.self, from: data) {
+                
+                if let userBar = bars.first(where: { $0.userId == loggedInUser.id }) {
+                    personalBar = userBar
+                } else if let firstBar = bars.first {
+                    personalBar = firstBar
+                }
+                
+            } else if let firstBar = bars.first {
+                personalBar = firstBar
+            }
+            
+        } catch {
+            ErrorHandler.handle(ErrorOutput.customError(message: "No Bar found"))
+        }
+    }
+    
+    func changeToGuestBar() {
+        do {
+            let bars = try context.fetch(FetchDescriptor<MyBar>())
+            
+            if let firstBar = bars.first {
+                if let userBar = bars.first(where: {$0.userId == personalBar.userId}) {
+                    personalBar = firstBar
+                    context.delete(userBar)
+                    try context.save()
+                }
+            }
+            
+        } catch {
+            ErrorHandler.handle(ErrorOutput.customError(message: "No Bar found"))
+        }
     }
 
     func getPersonalBar() async {
@@ -36,7 +77,8 @@ final class MyBarViewModel: ObservableObject {
                 return
             }
             
-            try await service.fetchMyBar(context: context, userToken: token)
+            let userBar = try await service.fetchMyBar(context: context, userToken: token)
+            personalBar = userBar
         } catch {
             errorMessage = ErrorHandler.normalize(error).localizedDescription
         }
@@ -44,11 +86,14 @@ final class MyBarViewModel: ObservableObject {
 
     func addBarItem(_ barItem: MyBarItem) async {
         // update local state
-        myBarItems.append(barItem)
+        do {
+            personalBar.myBarItems.append(barItem)
+            try context.save()
+        } catch {
+            errorMessage = ErrorHandler.normalize(error).localizedDescription
+        }
         
         do {
-            // For testing purpose
-            pendingActionService.clearAll()
             // Add item to pending queue
             let dto = MyBarItemDTO(from: barItem)
             pendingActionService.addAction(.addBarItem, payload: dto)
@@ -66,13 +111,19 @@ final class MyBarViewModel: ObservableObject {
         }
     }
 
-    func deleteBarItem(_ item: MyBarItem) async {
+    func deleteBarItem(_ barItem: MyBarItem) async {
         // update local state
-        myBarItems.removeAll { $0.id == item.id }
+        do {
+            personalBar.myBarItems.removeAll { $0.id == barItem.id }
+            try context.save()
+        } catch {
+            errorMessage = ErrorHandler.normalize(error).localizedDescription
+        }
         
         do {
             // Add item to pending queue
-            pendingActionService.addAction(.deleteBarItem, payload: MyBarItemDTO(from: item))
+            let dto = MyBarItemDTO(from: barItem)
+            pendingActionService.addAction(.deleteBarItem, payload: dto)
             
             // get userToken
             let keychain = KeychainSwift()
@@ -90,8 +141,13 @@ final class MyBarViewModel: ObservableObject {
 
     func addFavorite(cocktailID: String) async {
         // update local state
-        if !favoriteCocktails.contains(cocktailID) {
-            favoriteCocktails.append(cocktailID)
+        if !personalBar.favoriteCocktails.contains(cocktailID) {
+            do {
+                personalBar.favoriteCocktails.append(cocktailID)
+                try context.save()
+            } catch {
+                errorMessage = ErrorHandler.normalize(error).localizedDescription
+            }
         }
         
         do {
@@ -114,7 +170,12 @@ final class MyBarViewModel: ObservableObject {
 
     func deleteFavorite(cocktailID: String) async {
         // update local state
-        favoriteCocktails.removeAll { $0 == cocktailID }
+        do {
+            personalBar.favoriteCocktails.removeAll{ $0 == cocktailID }
+            try context.save()
+        } catch {
+            errorMessage = ErrorHandler.normalize(error).localizedDescription
+        }
         
         do {
             // Add item to pending queue
@@ -134,13 +195,19 @@ final class MyBarViewModel: ObservableObject {
         }
     }
 
-    func addRemoved(_ deleted: RemovedCocktail) async {
+    func addRemoved(_ removed: RemovedCocktail) async {
         // update local state
-        deletedCocktails.append(deleted)
+        do {
+            personalBar.removedCocktails.append(removed)
+            try context.save()
+        } catch {
+            errorMessage = ErrorHandler.normalize(error).localizedDescription
+        }
         
         do {
             // Add item to pending queue
-            pendingActionService.addAction(.addRemoved, payload: RemovedCocktailDTO(from: deleted))
+            let dto = RemovedCocktailDTO(from: removed)
+            pendingActionService.addAction(.addRemoved, payload: dto)
             
             // get userToken
             let keychain = KeychainSwift()
@@ -156,13 +223,19 @@ final class MyBarViewModel: ObservableObject {
         }
     }
 
-    func deleteRemoved(_ deleted: RemovedCocktail) async {
+    func deleteRemoved(_ removed: RemovedCocktail) async {
         // update local state
-        deletedCocktails.removeAll { $0.id == deleted.id }
+        do {
+            personalBar.removedCocktails.removeAll{ $0.id == removed.id }
+            try context.save()
+        } catch {
+            errorMessage = ErrorHandler.normalize(error).localizedDescription
+        }
         
         do {
             // Add item to pending queue
-            pendingActionService.addAction(.deleteRemoved, payload: RemovedCocktailDTO(from: deleted))
+            let dto = RemovedCocktailDTO(from: removed)
+            pendingActionService.addAction(.deleteRemoved, payload: dto)
             
             // get userToken
             let keychain = KeychainSwift()

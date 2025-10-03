@@ -19,7 +19,7 @@ class MyBarService: ObservableObject {
     }
     
     // Get the users personal bar
-    func fetchMyBar(context: ModelContext, userToken: String) async throws {
+    func fetchMyBar(context: ModelContext, userToken: String) async throws -> MyBar {
         let url = serviceURL
         var request = URLRequest(url: url)
 
@@ -32,7 +32,10 @@ class MyBarService: ObservableObject {
             throw error
         }
         
-        let myBarDTO = try JSONDecoder().decode(MyBarDTO.self, from: data)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        
+        let myBarDTO = try decoder.decode(MyBarDTO.self, from: data)
         let personalBar = MyBar(from: myBarDTO)
 
         do {
@@ -41,6 +44,8 @@ class MyBarService: ObservableObject {
         } catch {
             throw ErrorOutput.customError(message: "Error occurred when trying to save context")
         }
+        
+        return personalBar
     }
     
     func syncAddBarItem(userToken: String) async throws {
@@ -153,22 +158,24 @@ class MyBarService: ObservableObject {
         let url = serviceURL.appending(path: "removed")
         let actions = pendingActionService.fetchActions(ofType: .addRemoved)
         
+        // JSON encoder with ISO8601 date format - Vapor expect date as string, swift uses number by default
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        
         for action in actions {
-            guard let dto = action.decodePayload(as: RemovedCocktailDTO.self)
-            else {
+            guard let dto = action.decodePayload(as: RemovedCocktailDTO.self) else {
                 continue
             }
             
             var request = URLRequest(url: url)
-            
             request.httpMethod = "POST"
             request.setValue("Bearer \(userToken)", forHTTPHeaderField: "Authorization")
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             
-            let body = try JSONEncoder().encode(dto)
+            // Encode body
+            let body = try encoder.encode(dto)
             request.httpBody = body
             
-            // Await and handle response from server
             let (data, response) = try await URLSession.shared.data(for: request)
             if let error = ErrorHandler.mapHTTPResponse(response, data: data) {
                 throw error

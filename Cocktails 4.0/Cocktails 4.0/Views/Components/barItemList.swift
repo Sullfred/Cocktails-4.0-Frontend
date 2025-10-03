@@ -8,13 +8,13 @@
 import SwiftUI
 
 struct barItemList: View {
-    var bar: MyBar
+    @EnvironmentObject var myBarViewModel: MyBarViewModel
     
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 20, pinnedViews: [.sectionHeaders]) {
                 ForEach(BarItemCategory.allCases, id: \.self) { category in
-                    let itemsInCategory = (bar.myBarItems).filter { $0.category == category }
+                    let itemsInCategory = (myBarViewModel.personalBar.myBarItems).filter { $0.category == category }.sorted(by: {$0.name < $1.name})
                     Section(header: categoryHeader(category)) {
                     if itemsInCategory.isEmpty {
                         Text("No items in \(category.rawValue.capitalized).")
@@ -22,7 +22,8 @@ struct barItemList: View {
                             .padding(.vertical, 8)
                         } else {
                             ForEach(itemsInCategory) { item in
-                                barItemRow(barItem: item, bar: bar)
+                                barItemRow(barItem: item)
+                                    .environmentObject(myBarViewModel)
                             }
                         }
                     }
@@ -46,8 +47,3 @@ struct barItemList: View {
             .padding(.leading, 8)
     }
 
-#Preview {
-    let previewBar = MyBar(myBarItems: [MyBarItem(name: "vodka", category: .liquor)])
-    
-    barItemList(bar: previewBar)
-}

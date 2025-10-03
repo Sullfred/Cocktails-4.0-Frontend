@@ -11,12 +11,15 @@ import SwiftData
 
 struct view_cocktailDetails: View {
     @EnvironmentObject var loginViewModel: LoginViewModel
+    @EnvironmentObject var myBarViewModel: MyBarViewModel
+    
     var cocktail: Cocktail
     
     @State private var isEditing: Bool = false
     
     var body: some View {
         view_cocktailDetailsInfo(cocktail: cocktail)
+            .environmentObject(myBarViewModel)
             .toolbar {
                 if (loginViewModel.currentUser?.editPermissions ?? false) == true {
                     ToolbarItem(placement: .navigationBarTrailing) {

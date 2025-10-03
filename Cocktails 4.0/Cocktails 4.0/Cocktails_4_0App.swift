@@ -15,10 +15,9 @@ struct Cocktails_4_0App: App {
     
     @StateObject private var toastManager = ToastManager.shared
 
-
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(context: sharedModelContainer.container.mainContext)
                 .environmentObject(toastManager)
                 .toastView(toast: $toastManager.toast)
                 .task {

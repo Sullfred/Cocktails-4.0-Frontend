@@ -72,7 +72,7 @@ class LoginViewModel: ObservableObject {
         }
     }
     
-    func logout(context: ModelContext) async {
+    func logout(myBarViewModel: MyBarViewModel) async {
         let keychain = KeychainSwift()
         guard let token = keychain.get("userToken")
         else {
@@ -86,11 +86,7 @@ class LoginViewModel: ObservableObject {
         }
         
         // Delete personal bar from context
-        let cureentUserId = self.currentUser?.id
-        if let bar = try? context.fetch(FetchDescriptor<MyBar>(predicate: #Predicate { $0.userId == cureentUserId })).first {
-            context.delete(bar)
-            try? context.save()
-        }
+        myBarViewModel.changeToGuestBar()
         
         keychain.delete("userToken")
         isLoggedIn = false

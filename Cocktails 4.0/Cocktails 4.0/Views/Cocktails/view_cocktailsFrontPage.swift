@@ -9,6 +9,7 @@ import SwiftUI
 
 struct view_cocktailsFrontPage: View {
     @EnvironmentObject var loginViewModel: LoginViewModel
+    @EnvironmentObject var myBarViewModel: MyBarViewModel
     
     private let columns = [
         GridItem(.flexible()),
@@ -26,6 +27,7 @@ struct view_cocktailsFrontPage: View {
                 NavigationLink {
                     view_cocktailsList(selectedCategory: nil) // Show all cocktails
                         .environmentObject(loginViewModel)
+                        .environmentObject(myBarViewModel)
                 } label: {
                     CategoryCard(
                         title: "All Cocktails",
@@ -43,6 +45,7 @@ struct view_cocktailsFrontPage: View {
                         NavigationLink {
                             view_cocktailsList(selectedCategory: category)
                                 .environmentObject(loginViewModel)
+                                .environmentObject(myBarViewModel)
                         } label: {
                             CategoryCard(
                                 title: category.rawValue,
@@ -64,6 +67,7 @@ struct view_cocktailsFrontPage: View {
                         NavigationLink {
                             view_cocktailsList(selectedCategory: nil, baseSpirit: tag)
                                 .environmentObject(loginViewModel)
+                                .environmentObject(myBarViewModel)
                         } label: {
                             CategoryCard(
                                 title: tag.rawValue,
@@ -77,7 +81,7 @@ struct view_cocktailsFrontPage: View {
                 .padding()
                 
                 HStack {
-                    NavigationLink(destination: view_deletedCocktails()) {
+                    NavigationLink(destination: view_removedCocktails().environmentObject(myBarViewModel)) {
                         Label("Removed cocktails", systemImage: "trash.square")
                     }
                     Spacer()

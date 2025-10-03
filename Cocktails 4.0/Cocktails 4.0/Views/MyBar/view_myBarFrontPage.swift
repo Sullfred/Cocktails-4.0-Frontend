@@ -10,12 +10,8 @@ import SwiftData
 
 struct view_myBarFrontPage: View {
     @EnvironmentObject var loginViewModel: LoginViewModel
+    @EnvironmentObject var myBarViewModel: MyBarViewModel
     @State private var path: [String] = []
-    @StateObject private var myBarViewModel: MyBarViewModel
-
-    init(context: ModelContext) {
-        _myBarViewModel = StateObject(wrappedValue: MyBarViewModel(context: context))
-    }
     
     var body: some View {
         NavigationStack(path: $path) {
@@ -34,6 +30,7 @@ struct view_myBarFrontPage: View {
                 if value == "settings" {
                     view_userSettings()
                         .environmentObject(loginViewModel)
+                        .environmentObject(myBarViewModel)
                 }
             }
         }

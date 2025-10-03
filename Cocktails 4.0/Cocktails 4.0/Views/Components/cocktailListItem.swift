@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct cocktailListItem: View {
-    @Query var bars: [MyBar]
+    @EnvironmentObject var myBarViewModel: MyBarViewModel
     
     var cocktail: Cocktail
     
@@ -24,10 +24,9 @@ struct cocktailListItem: View {
                 
                 Spacer()
                 
-                if let bar = bars.first {
-                    if isFavorite(cocktail: cocktail, myBar: bar) {
-                        Label("", systemImage: "heart.fill")
-                    }
+                
+                if isFavorite(cocktail: cocktail, myBar: myBarViewModel.personalBar) {
+                    Label("", systemImage: "heart.fill")
                 }
             }
             // Optional creator

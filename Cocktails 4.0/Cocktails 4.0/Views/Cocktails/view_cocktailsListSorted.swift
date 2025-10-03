@@ -10,7 +10,9 @@ import SwiftData
 
 struct view_cocktailsListSorted: View {
     @Environment(\.modelContext) private var context
+    
     @EnvironmentObject var loginViewModel: LoginViewModel
+    @EnvironmentObject var myBarViewModel: MyBarViewModel
     
     let selectedCategory: CocktailCategory?
     var baseSpirit: IngredientTag?
@@ -22,11 +24,10 @@ struct view_cocktailsListSorted: View {
         SortDescriptor(\Cocktail.name),
         SortDescriptor(\Cocktail.creator)
     ]) var allCocktails: [Cocktail]
-    @Query private var bars: [MyBar]
     
     private var filteredCocktails: [Cocktail] {
-        let barItems = Set(bars.first?.myBarItems.map { canonicalName(for: $0.name) } ?? [])
-        let favorites = Set(bars.first?.favoriteCocktails ?? [])
+        let barItems = Set(myBarViewModel.personalBar.myBarItems.map { canonicalName(for: $0.name) })
+        let favorites = Set(myBarViewModel.personalBar.favoriteCocktails)
         
         return allCocktails.filter { cocktail in
             (selectedCategory == nil || cocktail.cocktailCategory == selectedCategory)
@@ -47,15 +48,19 @@ struct view_cocktailsListSorted: View {
                     ingredient.name.localizedStandardContains(term)
                 }
             })
+            && !myBarViewModel.personalBar.removedCocktails.contains(where: {$0.id == cocktail.id.uuidString})
         }
     }
     
     var body: some View {
         List {
             ForEach(filteredCocktails) { cocktail in
-                NavigationLink(destination: view_cocktailDetails(cocktail: cocktail).environmentObject(loginViewModel)) {
+                NavigationLink(destination: view_cocktailDetails(cocktail: cocktail)
+                    .environmentObject(loginViewModel)
+                    .environmentObject(myBarViewModel)) {
                     VStack(alignment: .leading) {
                         cocktailListItem(cocktail: cocktail)
+                            .environmentObject(myBarViewModel)
                     }
                 }
                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
@@ -131,9 +136,10 @@ private extension view_cocktailsListSorted {
     }
 
     func removeFromList(_ cocktail: Cocktail) {
-        bars.first?.removedCocktails.append(RemovedCocktail(id: cocktail.id.uuidString, name: cocktail.name, creator: cocktail.creator))
-        context.delete(cocktail)
-        try? context.save()
+        Task {
+            let removed = RemovedCocktail(id: cocktail.id.uuidString, name: cocktail.name, creator: cocktail.creator)
+            await myBarViewModel.addRemoved(removed)
+        }
     }
     
     func loadIngredientGroups() -> [String: [String]] {

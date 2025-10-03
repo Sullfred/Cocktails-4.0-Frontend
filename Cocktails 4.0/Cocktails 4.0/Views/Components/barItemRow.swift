@@ -9,9 +9,9 @@ import SwiftUI
 
 struct barItemRow: View {
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject var myBarViewModel: MyBarViewModel
     
     var barItem: MyBarItem
-    var bar: MyBar
     
     @State private var deleteConfirmationItem: MyBarItem? = nil
     @State private var showError = false
@@ -27,7 +27,7 @@ struct barItemRow: View {
             
             Button(action: {
                 withAnimation {
-                    bar.myBarItems.removeAll { $0.id == barItem.id }
+                    deleteItem(barItem)
                 }
             }) {
                 Image(systemName: "minus.circle.fill")
@@ -55,21 +55,10 @@ struct barItemRow: View {
 
 private extension barItemRow {
     func deleteItem(_ item: MyBarItem) {
-            withAnimation {
-                bar.myBarItems.removeAll { $0.id == item.id }
-            }
-            do {
-                try modelContext.save()
-            } catch {
-                errorMessage = "Failed to delete item: \(error.localizedDescription)"
-                showError = true
-            }
+                Task {
+                    await myBarViewModel.deleteBarItem(barItem)
+                }
     }
 }
 
-#Preview {
-    let barItem = MyBarItem(name: "sparkling water", category: .mixer)
-    let previewBar = MyBar(userId: UUID(), myBarItems: [MyBarItem(name: "vodka", category: .liquor)])
-    
-    barItemRow(barItem: barItem, bar: previewBar)
-}
+

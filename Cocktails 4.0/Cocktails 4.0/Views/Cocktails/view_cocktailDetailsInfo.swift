@@ -10,8 +10,8 @@ import SwiftData
 
 struct view_cocktailDetailsInfo: View {
     @Environment(\.modelContext) var modelContext
-    @Query var bars: [MyBar]
-
+    @EnvironmentObject var myBarViewModel: MyBarViewModel
+    
     var cocktail : Cocktail
     
     @State private var selectedMeasurement: UnitVolume = .milliliters
@@ -95,16 +95,28 @@ struct view_cocktailDetailsInfo: View {
         .containerRelativeFrame([.horizontal, .vertical])
         .background(.colorSet2)
         .toolbar{
-            if let bar = bars.first {
+            ToolbarItem {
                 Button(action: {
-                    toggleFavorite(cocktail: cocktail, myBar: bar)
+                    toggleFavorite(cocktailId: cocktail.id.uuidString)
                 }) {
                     Label(
                         "Toggle favorite",
-                        systemImage: isFavorite(cocktail: cocktail, myBar: bar) ? "heart.fill" : "heart"
+                        systemImage: isFavorite(cocktail: cocktail, myBar: myBarViewModel.personalBar) ? "heart.fill" : "heart"
                     )
                 }
                 .contentTransition(.symbolEffect(.replace))
+            }
+        }
+    }
+}
+
+private extension view_cocktailDetailsInfo {
+    func toggleFavorite(cocktailId: String) {
+        Task {
+            if myBarViewModel.personalBar.favoriteCocktails.contains(cocktailId) {
+                await myBarViewModel.deleteFavorite(cocktailID: cocktailId)
+            } else {
+                await myBarViewModel.addFavorite(cocktailID: cocktailId)
             }
         }
     }

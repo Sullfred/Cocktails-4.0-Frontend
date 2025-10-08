@@ -12,7 +12,7 @@ enum ErrorOutput: Error, LocalizedError {
     case serverError(statusCode: Int, message: String? = nil)
     case decodingError(Error)
     case encodingError(message: String)
-    case unauthorized
+    case unauthorized(message: String)
     case notFound
     case unknown(Error?)
     case customError(message: String)
@@ -21,14 +21,14 @@ enum ErrorOutput: Error, LocalizedError {
         switch self {
         case .networkError(let err):
             return "Network error: \(err.localizedDescription)"
-        case .serverError(let code, let message):
-            return "Server error (\(code)): \(message ?? "No details")"
+        case .serverError(_, let message):
+            return "\(message ?? "No details")"
         case .decodingError(let err):
             return "Failed to process data: \(err.localizedDescription)"
         case .encodingError(let message):
             return "Encoding error: \(message)"
-        case .unauthorized:
-            return "Wrong Username or Password."
+        case .unauthorized(let message):
+            return "\(message)"
         case .notFound:
             return "Requested resource was not found."
         case .unknown(let err):
@@ -68,9 +68,17 @@ struct ErrorHandler {
     }
     
     // Handle errors from the server
-    // Parse the message to a string
+    // Parse the message to a string or extract from a known JSON error format
     static func parseErrorMessage(from data: Data?) -> String? {
         guard let data = data else { return nil }
+        
+        // Try to parse a known JSON error format
+        if let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+           let reason = json["reason"] as? String {
+            return reason
+        }
+        
+        // Fallback to plain string
         return String(data: data, encoding: .utf8)
     }
     
@@ -85,8 +93,6 @@ struct ErrorHandler {
         switch statusCode {
         case 200...299:
             return nil
-        case 401:
-            return .unauthorized
         case 404:
             return .notFound
         default:

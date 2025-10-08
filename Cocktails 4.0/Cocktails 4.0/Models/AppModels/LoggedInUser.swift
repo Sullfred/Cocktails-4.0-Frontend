@@ -9,7 +9,7 @@ import Foundation
 
 struct LoggedInUser: Codable {
     let id: UUID
-    let username: String
+    var username: String
     let addPermission: Bool
     let editPermissions: Bool
     let adminRights: Bool

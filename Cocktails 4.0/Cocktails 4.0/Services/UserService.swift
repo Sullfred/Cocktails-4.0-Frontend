@@ -106,4 +106,44 @@ class UserService: ObservableObject {
             throw error
         }
     }
+    
+    func updateUsername(userToken: String, newUsername: String) async throws {
+        let url = serviceURL.appending(path: "updateUsername")
+        let dto = UpdateUsernameDTO(newUsername: newUsername)
+        
+        var request = URLRequest(url: url)
+        
+        request.httpMethod = "PATCH"
+        request.setValue("Bearer \(userToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body = try JSONEncoder().encode(dto)
+        request.httpBody = body
+        
+        // Await and handle response from server
+        let (data, response) = try await URLSession.shared.data(for: request)
+        if let error = ErrorHandler.mapHTTPResponse(response, data: data) {
+            throw error
+        }
+    }
+    
+    func updatePassword(userToken: String, currentPassword: String, newPassword: String, confirmNewPassword: String) async throws {
+        let url = serviceURL.appending(path: "updatePassword")
+        let dto = UpdatePasswordDTO(currentPassword: currentPassword, newPassword: newPassword, confirmNewPassword: confirmNewPassword)
+        
+        var request = URLRequest(url: url)
+        
+        request.httpMethod = "PATCH"
+        request.setValue("Bearer \(userToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body = try JSONEncoder().encode(dto)
+        request.httpBody = body
+        
+        // Await and handle response from server
+        let (data, response) = try await URLSession.shared.data(for: request)
+        if let error = ErrorHandler.mapHTTPResponse(response, data: data) {
+            throw error
+        }
+    }
 }

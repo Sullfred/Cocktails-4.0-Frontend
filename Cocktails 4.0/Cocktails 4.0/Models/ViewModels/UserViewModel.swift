@@ -1,5 +1,5 @@
 //
-//  LoginViewModel.swift
+//  UserViewModel.swift
 //  Cocktails 4.0
 //
 //  Created by Daniel Vang Kleist on 23/09/2025.
@@ -11,7 +11,7 @@ import KeychainSwift
 import SwiftData
 
 @MainActor
-class LoginViewModel: ObservableObject {
+class UserViewModel: ObservableObject {
     @Published var username: String = ""
     @Published var password: String = ""
     @Published var isLoading: Bool = false
@@ -104,7 +104,7 @@ class LoginViewModel: ObservableObject {
         do {
             try await UserService.shared.deleteUser(userToken: token)
         } catch {
-            ToastManager.shared.show(style: .error, message: error.localizedDescription)
+            ErrorHandler.handle(error)
         }
         
         // Delete personal bar from context
@@ -118,5 +118,48 @@ class LoginViewModel: ObservableObject {
         isLoggedIn = false
         currentUser = nil
         UserDefaults.standard.removeObject(forKey: userDefaultsKey)
+    }
+    
+    func updateUsername(newUsername: String) async -> Bool {
+        errorMessage = nil
+        
+        let keychain = KeychainSwift()
+        guard let token = keychain.get("userToken")
+        else {
+            return false
+        }
+        
+        do {
+            try await UserService.shared.updateUsername(userToken: token, newUsername: newUsername)
+            
+            // update user info in the userdefaults
+            currentUser?.username = newUsername
+            if let currentUser = currentUser, let encoded = try? JSONEncoder().encode(currentUser) {
+                UserDefaults.standard.set(encoded, forKey: userDefaultsKey)
+            }
+            return true
+        } catch {
+            let message = ErrorHandler.normalize(error)
+            errorMessage = message.localizedDescription
+            return false
+        }
+    }
+    
+    func updatePassword(currentPassword: String, newPassword: String, confirmNewPassword: String) async -> Bool {
+        errorMessage = nil
+        
+        let keychain = KeychainSwift()
+        guard let token = keychain.get("userToken")
+        else {
+            return false
+        }
+        do {
+            try await UserService.shared.updatePassword(userToken: token, currentPassword: currentPassword, newPassword: newPassword, confirmNewPassword: confirmNewPassword)
+            return true
+        } catch {
+            let message = ErrorHandler.normalize(error)
+            errorMessage = message.localizedDescription
+            return false
+        }
     }
 }

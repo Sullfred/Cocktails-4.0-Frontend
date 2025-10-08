@@ -91,6 +91,14 @@ private extension view_removedCocktails {
 }
 
 #Preview {
+    // Create an in-memory model container for previews
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: MyBar.self, configurations: config)
+    let context = container.mainContext
+    
+    let myBarVM = MyBarViewModel(context: context)
+    
     view_removedCocktails()
         .modelContainer(for: MyBar.self, inMemory: true)
+        .environmentObject(myBarVM)
 }

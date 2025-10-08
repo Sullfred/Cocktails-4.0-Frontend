@@ -4,7 +4,7 @@ import SwiftData
 struct view_cocktailsList: View {
     @Environment(\.modelContext) private var modelContext
     
-    @EnvironmentObject var loginViewModel: LoginViewModel
+    @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var myBarViewModel: MyBarViewModel
 
     @State private var path: [Cocktail] = []
@@ -20,14 +20,14 @@ struct view_cocktailsList: View {
 
     var body: some View {
         view_cocktailsListSorted(sortOrder: sortOrder, searchText: searchText, showFavoritesOnly: showFavoritesOnly, showCraftableOnly: showCraftableOnly, selectedCategory: selectedCategory, baseSpirit: baseSpirit)
-            .environmentObject(loginViewModel)
+            .environmentObject(userViewModel)
             .environmentObject(myBarViewModel)
             .navigationTitle(selectedCategory != nil ? selectedCategory?.rawValue ?? "error" : "All Cocktails")
             .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always)) //Will fix flicker when navigating
             .background(Color.colorSet2)
             .scrollContentBackground(.hidden)
             .toolbar {
-                if (loginViewModel.currentUser?.addPermission ?? false) == true {
+                if (userViewModel.currentUser?.addPermission ?? false) == true {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         NavigationLink(destination: view_newCocktail()) {
                             Label("Add Cocktail", systemImage: "plus")
@@ -40,7 +40,7 @@ struct view_cocktailsList: View {
                             
                             Toggle("Show Favorites only", systemImage: showFavoritesOnly ? "heart.fill" : "heart", isOn: $showFavoritesOnly)
                             
-                            if loginViewModel.currentUser != nil {
+                            if userViewModel.currentUser != nil {
                                 Toggle("Show Craftables only", systemImage: showCraftableOnly ? "wineglass.fill" : "wineglass", isOn: $showCraftableOnly)
                             }
                         }
@@ -83,9 +83,16 @@ struct view_cocktailsList: View {
 }
 
 #Preview {
-    view_cocktailsList(selectedCategory: nil, baseSpirit: nil)
+    // Create an in-memory model container for previews
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: MyBar.self, configurations: config)
+    let context = container.mainContext
+    
+    let myBarVM = MyBarViewModel(context: context)
+    
+    return view_cocktailsList(selectedCategory: nil, baseSpirit: nil)
         .environmentObject({
-            let vm = LoginViewModel()
+            let vm = UserViewModel()
             vm.currentUser = LoggedInUser(
                 id: UUID(),
                 username: "Daniel Vang Kleist",
@@ -95,4 +102,5 @@ struct view_cocktailsList: View {
             )
             return vm
         }())
+        .environmentObject(myBarVM)
 }

@@ -11,7 +11,7 @@ import SwiftData
 struct view_personalBar: View {
     @Environment(\.modelContext) private var context
     
-    @EnvironmentObject var loginViewModel: LoginViewModel
+    @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var myBarViewModel: MyBarViewModel
     
     @Binding var path: [String]
@@ -34,7 +34,7 @@ struct view_personalBar: View {
             .padding(.horizontal, 15)
             .padding(.top, 10)
             
-            if (myBarViewModel.personalBar.userId != loginViewModel.currentUser?.id) {
+            if (myBarViewModel.personalBar.userId != userViewModel.currentUser?.id) {
                 Spacer()
                 
                 HStack {
@@ -58,7 +58,7 @@ struct view_personalBar: View {
                 }
                 Spacer()
             } else {
-                Text("\(loginViewModel.currentUser?.username.components(separatedBy: " ").first ?? "My")'s Bar Items")
+                Text("\(userViewModel.currentUser?.username.components(separatedBy: " ").first ?? "My")'s Bar Items")
                     .font(.largeTitle.weight(.bold))
                     .padding(.horizontal, 15)
                 
@@ -72,7 +72,7 @@ struct view_personalBar: View {
                         
                         Text("Bar is Empty")
                             .foregroundStyle(.secondary)
-                        
+                        // add a quick add with ingredients for my bar
                         Spacer()
                     }
                     
@@ -116,7 +116,7 @@ struct view_personalBar: View {
             }
             .padding()
         }
-        .navigationTitle("\(loginViewModel.currentUser?.username.components(separatedBy: " ").first ?? "My")'s Bar")
+        .navigationTitle("\(userViewModel.currentUser?.username.components(separatedBy: " ").first ?? "My")'s Bar")
         .background(Color.colorSet2)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -160,9 +160,16 @@ private extension view_personalBar {
 }
 
 #Preview {
+    // Create an in-memory model container for previews
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: MyBar.self, configurations: config)
+    let context = container.mainContext
+    
+    let myBarVM = MyBarViewModel(context: context)
+    
     view_personalBar(path: .constant([]))
         .environmentObject({
-            let vm = LoginViewModel()
+            let vm = UserViewModel()
             vm.currentUser = LoggedInUser(
                 id: UUID(),
                 username: "PreviewUser",
@@ -172,4 +179,5 @@ private extension view_personalBar {
             )
             return vm
         }())
+        .environmentObject(myBarVM)
 }

@@ -10,7 +10,7 @@ import SwiftData
 
 struct ContentView: View {
     @Environment(\.modelContext) var context
-    @StateObject private var loginViewModel = LoginViewModel()
+    @StateObject private var userViewModel = UserViewModel()
     @StateObject private var myBarViewModel: MyBarViewModel
     
     init(context: ModelContext) {
@@ -24,13 +24,13 @@ struct ContentView: View {
                 .tabItem {
                     Label("Cocktails", systemImage: "list.bullet")
                 }
-                .environmentObject(loginViewModel)
+                .environmentObject(userViewModel)
                 .environmentObject(myBarViewModel)
             view_myBarFrontPage()
                 .tabItem {
                     Label("My Bar", systemImage: "wineglass")
                 }
-                .environmentObject(loginViewModel)
+                .environmentObject(userViewModel)
                 .environmentObject(myBarViewModel)
         }
         .background(Color.colorSet2)
@@ -40,6 +40,10 @@ struct ContentView: View {
 
 /*
 #Preview {
-    ContentView()
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: MyBar.self, configurations: config)
+    let context = container.mainContext
+    
+    ContentView(context: context)
 }
 */

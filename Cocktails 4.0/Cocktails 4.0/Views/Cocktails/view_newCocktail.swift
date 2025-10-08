@@ -13,7 +13,7 @@ import PhotosUI
 struct view_newCocktail: View {
     @Environment(\.modelContext) var modelContext
     @Environment(\.dismiss) var dismiss
-    @StateObject private var api = CocktailService.shared
+    @StateObject private var service = CocktailService.shared
     
     @State var selectedPhoto : PhotosPickerItem?
     
@@ -243,8 +243,8 @@ private extension view_newCocktail {
             try modelContext.save()
             
             Task {
-                await api.createCocktail(newCocktail)
-                await api.syncPendingUploads(context: modelContext)
+                await service.createCocktail(newCocktail)
+                await service.syncPendingUploads(context: modelContext)
             }
             
             dismiss()

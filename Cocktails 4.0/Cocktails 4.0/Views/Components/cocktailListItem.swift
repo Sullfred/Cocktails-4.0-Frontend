@@ -71,6 +71,14 @@ struct cocktailListItem: View {
         cocktailCategory: .sour
     )
     
+    // Create an in-memory model container for previews
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: MyBar.self, configurations: config)
+    let context = container.mainContext
+    
+    let myBarVM = MyBarViewModel(context: context)
+    
     cocktailListItem(cocktail: testCocktail)
+        .environmentObject(myBarVM)
 }
 

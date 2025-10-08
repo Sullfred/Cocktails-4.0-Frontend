@@ -10,7 +10,7 @@ import SwiftUI
 import SwiftData
 
 struct view_cocktailDetails: View {
-    @EnvironmentObject var loginViewModel: LoginViewModel
+    @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var myBarViewModel: MyBarViewModel
     
     var cocktail: Cocktail
@@ -21,7 +21,7 @@ struct view_cocktailDetails: View {
         view_cocktailDetailsInfo(cocktail: cocktail)
             .environmentObject(myBarViewModel)
             .toolbar {
-                if (loginViewModel.currentUser?.editPermissions ?? false) == true {
+                if (userViewModel.currentUser?.editPermissions ?? false) == true {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button(action: {
                             isEditing = true
@@ -57,9 +57,16 @@ struct view_cocktailDetails: View {
         cocktailCategory: .sour
     )
     
+    // Create an in-memory model container for previews
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: MyBar.self, configurations: config)
+    let context = container.mainContext
+    
+    let myBarVM = MyBarViewModel(context: context)
+    
     view_cocktailDetails(cocktail: testCocktail)
         .environmentObject({
-            let vm = LoginViewModel()
+            let vm = UserViewModel()
             vm.currentUser = LoggedInUser(
                 id: UUID(),
                 username: "Daniel Vang Kleist",
@@ -69,4 +76,5 @@ struct view_cocktailDetails: View {
             )
             return vm
         }())
+        .environmentObject(myBarVM)
 }

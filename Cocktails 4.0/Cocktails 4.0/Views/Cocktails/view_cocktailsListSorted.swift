@@ -11,7 +11,7 @@ import SwiftData
 struct view_cocktailsListSorted: View {
     @Environment(\.modelContext) private var context
     
-    @EnvironmentObject var loginViewModel: LoginViewModel
+    @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var myBarViewModel: MyBarViewModel
     
     let selectedCategory: CocktailCategory?
@@ -19,6 +19,14 @@ struct view_cocktailsListSorted: View {
     var showCraftableOnly: Bool
     let searchTerms: [String]
     var showFavoritesOnly: Bool
+    
+    private var filteredCategory: [CocktailCategory] {
+        if let selected = selectedCategory {
+            return [selected]
+        } else {
+            return CocktailCategory.allCases
+        }
+    }
     
     @Query(sort: [
         SortDescriptor(\Cocktail.name),
@@ -54,26 +62,34 @@ struct view_cocktailsListSorted: View {
     
     var body: some View {
         List {
-            ForEach(filteredCocktails) { cocktail in
-                NavigationLink(destination: view_cocktailDetails(cocktail: cocktail)
-                    .environmentObject(loginViewModel)
-                    .environmentObject(myBarViewModel)) {
-                    VStack(alignment: .leading) {
-                        cocktailListItem(cocktail: cocktail)
-                            .environmentObject(myBarViewModel)
+            ForEach(filteredCategory, id: \.self) { category in
+                let cocktailsInCategory = filteredCocktails.filter { $0.cocktailCategory == category }
+                if !cocktailsInCategory.isEmpty {
+                    Section(header: selectedCategory == nil ? categoryHeader(category) : nil) {
+                        ForEach(cocktailsInCategory) { cocktail in
+                            NavigationLink(destination: view_cocktailDetails(cocktail: cocktail)
+                                .environmentObject(userViewModel)
+                                .environmentObject(myBarViewModel)) {
+                                    VStack(alignment: .leading) {
+                                        cocktailListItem(cocktail: cocktail)
+                                            .environmentObject(myBarViewModel)
+                                    }
+                                }
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    Button(role: .destructive) {
+                                        removeFromList(cocktail)
+                                    } label: {
+                                        Label("Remove from List", systemImage: "trash")
+                                    }
+                                    .tint(.red)
+                                }
+                        }
+                        .listRowBackground(Color.clear)
                     }
-                }
-                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                    Button(role: .destructive) {
-                        removeFromList(cocktail)
-                    } label: {
-                        Label("Remove from List", systemImage: "trash")
-                    }
-                    .tint(.red)
                 }
             }
-            .listRowBackground(Color.clear)
         }
+        .listStyle(.plain)
         .refreshable {
             if await CocktailService.shared.checkServerConnection() {
                 await CocktailService.shared.fetchCocktails(context: context)
@@ -101,6 +117,19 @@ struct view_cocktailsListSorted: View {
             }
         }, sort: sortOrder)
     }
+}
+
+@ViewBuilder
+private func categoryHeader(_ category: CocktailCategory) -> some View {
+    HStack {
+        Text(category.rawValue.capitalized)
+            .font(.title2)
+            .fontWeight(.semibold)
+            .foregroundColor(Color.colorSet4)
+        Spacer()
+    }
+    .padding(.vertical, 6)
+    .frame(maxWidth: .infinity, alignment: .leading)
 }
 
 private extension view_cocktailsListSorted {
@@ -134,7 +163,7 @@ private extension view_cocktailsListSorted {
             removeFromList(cocktail)
         }
     }
-
+    
     func removeFromList(_ cocktail: Cocktail) {
         Task {
             let removed = RemovedCocktail(id: cocktail.id.uuidString, name: cocktail.name, creator: cocktail.creator)
@@ -157,12 +186,19 @@ private extension view_cocktailsListSorted {
 }
 
 #Preview {
+    // Create an in-memory model container for previews
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: MyBar.self, configurations: config)
+    let context = container.mainContext
+    
+    let myBarVM = MyBarViewModel(context: context)
+    
     view_cocktailsListSorted(sortOrder: [
         SortDescriptor(\Cocktail.name),
         SortDescriptor(\Cocktail.creator)
     ], searchText: "", showFavoritesOnly: false, showCraftableOnly: false, selectedCategory: nil, baseSpirit: nil)
     .environmentObject({
-        let vm = LoginViewModel()
+        let vm = UserViewModel()
         vm.currentUser = LoggedInUser(
             id: UUID(),
             username: "Daniel Vang Kleist",
@@ -172,4 +208,5 @@ private extension view_cocktailsListSorted {
         )
         return vm
     }())
+    .environmentObject(myBarVM)
 }

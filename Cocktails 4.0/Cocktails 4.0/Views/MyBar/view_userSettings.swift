@@ -6,28 +6,31 @@
 //
 
 import SwiftUI
+import SwiftData
 import KeychainSwift
 
 struct view_userSettings: View {
     @Environment(\.modelContext) private var context
-    @EnvironmentObject var loginViewModel: LoginViewModel
+    @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var myBarViewModel: MyBarViewModel
     
+    @State private var isShowingChangeUsername = false
+    @State private var isShowingChangePassword = false
     @State private var showLogoutAlert = false
     @State private var showDeleteAlert = false
     
     var body: some View {
-        ZStack {
+        ScrollView {
             Color.colorSet2
                 .ignoresSafeArea()
             VStack(spacing: 24) {
                 // Account Info
-                GroupBox(label: Label("\(loginViewModel.currentUser?.username ?? "Account")", systemImage: "person.crop.circle")) {
+                GroupBox(label: Label("\(userViewModel.currentUser?.username ?? "Account")", systemImage: "person.crop.circle")) {
                     HStack() {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("User Permissions")
                                 .font(.title3)
-                            if let user = loginViewModel.currentUser {
+                            if let user = userViewModel.currentUser {
                                 if user.addPermission {
                                     Text("Adding cocktails")
                                         .font(.body)
@@ -62,24 +65,52 @@ struct view_userSettings: View {
                 }
                 
                 // User actions
-                VStack(spacing: 12) {
+                VStack(spacing: 6) {
                     Button {
-                        print("Change Username tapped")
+                        withAnimation {
+                            isShowingChangeUsername.toggle()
+                        }
                     } label: {
                         Text("Change Username")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(Color.colorSet4)
+                    
+                    ZStack {
+                        if isShowingChangeUsername {
+                            ChangeUsername(isShowingChangeUsername: $isShowingChangeUsername)
+                                .transition(.opacity.combined(with: .move(edge: .bottom)))
+                                .environmentObject(userViewModel)
+                        }
+                    }
+                    .frame(maxHeight: isShowingChangeUsername ? nil : 0)
+                    .clipped()
+                    .animation(.easeInOut, value: isShowingChangeUsername)
+                    
                     Button {
-                        print("Change Password tapped")
+                        withAnimation {
+                            isShowingChangePassword.toggle()
+                        }
                     } label: {
                         Text("Change Password")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(Color.colorSet4)
+                    
+                    ZStack {
+                        if isShowingChangePassword {
+                            ChangePassword(isShowingChangePassword: $isShowingChangePassword)
+                                .transition(.opacity.combined(with: .move(edge: .bottom)))
+                                .environmentObject(userViewModel)
+                        }
+                    }
+                    .frame(maxHeight: isShowingChangePassword ? nil : 0)
+                    .clipped()
+                    .animation(.easeInOut, value: isShowingChangePassword)
                 }
+                
                 // Destructive & Logout actions
                 VStack(spacing: 12) {
                     Button(role: .destructive) {
@@ -96,7 +127,7 @@ struct view_userSettings: View {
                             message: Text("Are you sure you want to delete your account? This action cannot be undone."),
                             primaryButton: .destructive(Text("Delete")) {
                                 Task {
-                                    await loginViewModel.deleteUser(context: context)
+                                    await userViewModel.deleteUser(context: context)
                                 }
                             },
                             secondaryButton: .cancel()
@@ -116,7 +147,7 @@ struct view_userSettings: View {
                             message: Text("Are you sure you want to log out?"),
                             primaryButton: .destructive(Text("Logout")) {
                                 Task {
-                                    await loginViewModel.logout(myBarViewModel: myBarViewModel)
+                                    await userViewModel.logout(myBarViewModel: myBarViewModel)
                                 }
                             },
                             secondaryButton: .cancel()
@@ -128,12 +159,13 @@ struct view_userSettings: View {
             .padding()
         }
         .navigationTitle("User Settings")
+        .background(Color.colorSet2)
     }
 }
 
 private extension view_userSettings {
     func permissionsText() -> String {
-        guard let user = loginViewModel.currentUser else { return "Unknown" }
+        guard let user = userViewModel.currentUser else { return "Unknown" }
         var perms: [String] = []
         if user.addPermission { perms.append("Add") }
         if user.editPermissions { perms.append("Edit") }
@@ -144,9 +176,16 @@ private extension view_userSettings {
 }
 
 #Preview {
+    // Create an in-memory model container for previews
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: MyBar.self, configurations: config)
+    let context = container.mainContext
+    
+    let myBarVM = MyBarViewModel(context: context)
+    
     view_userSettings()
         .environmentObject({
-            let vm = LoginViewModel()
+            let vm = UserViewModel()
             vm.currentUser = LoggedInUser(
                 id: UUID(),
                 username: "Daniel Vang Kleist",
@@ -156,4 +195,5 @@ private extension view_userSettings {
             )
             return vm
         }())
+        .environmentObject(myBarVM)
 }

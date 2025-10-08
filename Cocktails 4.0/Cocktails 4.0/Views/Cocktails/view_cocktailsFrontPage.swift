@@ -6,9 +6,10 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct view_cocktailsFrontPage: View {
-    @EnvironmentObject var loginViewModel: LoginViewModel
+    @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var myBarViewModel: MyBarViewModel
     
     private let columns = [
@@ -26,7 +27,7 @@ struct view_cocktailsFrontPage: View {
             ScrollView {
                 NavigationLink {
                     view_cocktailsList(selectedCategory: nil) // Show all cocktails
-                        .environmentObject(loginViewModel)
+                        .environmentObject(userViewModel)
                         .environmentObject(myBarViewModel)
                 } label: {
                     CategoryCard(
@@ -44,7 +45,7 @@ struct view_cocktailsFrontPage: View {
                     ForEach(CocktailCategory.allCases, id: \.self) { category in
                         NavigationLink {
                             view_cocktailsList(selectedCategory: category)
-                                .environmentObject(loginViewModel)
+                                .environmentObject(userViewModel)
                                 .environmentObject(myBarViewModel)
                         } label: {
                             CategoryCard(
@@ -66,13 +67,13 @@ struct view_cocktailsFrontPage: View {
                     ForEach(IngredientTag.allCases, id: \.self) { tag in
                         NavigationLink {
                             view_cocktailsList(selectedCategory: nil, baseSpirit: tag)
-                                .environmentObject(loginViewModel)
+                                .environmentObject(userViewModel)
                                 .environmentObject(myBarViewModel)
                         } label: {
                             CategoryCard(
-                                title: tag.rawValue,
+                                title: tag.rawValue.capitalized,
                                 imageName: tag.imageName,
-                                uiHeight: 120,
+                                uiHeight: 90,
                                 iHeight: 90
                             )
                         }
@@ -91,7 +92,7 @@ struct view_cocktailsFrontPage: View {
             .navigationTitle("Cocktails")
             .background(Color.colorSet2)
             .toolbar {
-                if (loginViewModel.currentUser?.addPermission ?? false) == true {
+                if (userViewModel.currentUser?.addPermission ?? false) == true {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         NavigationLink(destination: view_newCocktail()) {
                             Label("Add Cocktail", systemImage: "plus")
@@ -151,9 +152,16 @@ extension IngredientTag {
 }
 
 #Preview {
+    // Create an in-memory model container for previews
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: MyBar.self, configurations: config)
+    let context = container.mainContext
+    
+    let myBarVM = MyBarViewModel(context: context)
+    
     view_cocktailsFrontPage()
         .environmentObject({
-            let vm = LoginViewModel()
+            let vm = UserViewModel()
             vm.currentUser = LoggedInUser(
                 id: UUID(),
                 username: "Daniel Vang Kleist",
@@ -163,4 +171,5 @@ extension IngredientTag {
             )
             return vm
         }())
+        .environmentObject(myBarVM)
 }

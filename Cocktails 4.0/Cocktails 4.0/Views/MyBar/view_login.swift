@@ -6,9 +6,10 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct view_login: View {
-    @EnvironmentObject var loginViewModel: LoginViewModel
+    @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var myBarViewModel: MyBarViewModel
     
     @State private var isPasswordVisible: Bool = false
@@ -22,7 +23,7 @@ struct view_login: View {
                     .fontWeight(.semibold)
             
             VStack(spacing: 20) {
-                TextField("Username", text: $loginViewModel.username)
+                TextField("Username", text: $userViewModel.username)
                     .textContentType(.username)
                     .autocapitalization(.none)
                     .disableAutocorrection(true)
@@ -33,9 +34,9 @@ struct view_login: View {
                 ZStack(alignment: .trailing) {
                     Group {
                         if isPasswordVisible {
-                            TextField("Password", text: $loginViewModel.password)
+                            TextField("Password", text: $userViewModel.password)
                         } else {
-                            SecureField("Password", text: $loginViewModel.password)
+                            SecureField("Password", text: $userViewModel.password)
                         }
                     }
                     .textContentType(.password)
@@ -53,7 +54,7 @@ struct view_login: View {
                     }
                     .padding(.trailing, 16)
                 }
-                if let error = loginViewModel.errorMessage, !error.isEmpty {
+                if let error = userViewModel.errorMessage, !error.isEmpty {
                     Text(error)
                         .foregroundColor(.red)
                         .font(.footnote)
@@ -64,14 +65,14 @@ struct view_login: View {
             VStack(spacing: 16) {
                 Button(action: {
                     Task {
-                        await loginViewModel.login(myBarViewModel: myBarViewModel)
+                        await userViewModel.login(myBarViewModel: myBarViewModel)
                     }
                 }) {
                     ZStack {
                         RoundedRectangle(cornerRadius: 10)
                             .fill(Color.colorSet4)
                             .frame(height: 48)
-                        if loginViewModel.isLoading {
+                        if userViewModel.isLoading {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle(tint: .white))
                         } else {
@@ -81,7 +82,7 @@ struct view_login: View {
                         }
                     }
                 }
-                .disabled(loginViewModel.isLoading)
+                .disabled(userViewModel.isLoading)
                 
                 NavigationLink {
                     view_registerUser()
@@ -98,6 +99,14 @@ struct view_login: View {
 }
 
 #Preview {
+    // Create an in-memory model container for previews
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: MyBar.self, configurations: config)
+    let context = container.mainContext
+    
+    let myBarVM = MyBarViewModel(context: context)
+    
     view_login()
-        .environmentObject(LoginViewModel())
+        .environmentObject(UserViewModel())
+        .environmentObject(myBarVM)
 }

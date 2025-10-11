@@ -12,5 +12,6 @@
   "coffee liqueur": ["kahlua", "tia maria", "patron XO cafe", "mr black"],
   "simple syrup": ["simple sirup", "sukkersirup", "demerara syrup", "demerara sirup"],
   "calvados": ["applejack"],
-  "sparkling water": ["seltzer", "danskvand", "soda water"]
+  "sparkling water": ["seltzer", "danskvand", "soda water"],
+  "vermouth" : ["sweet vermouth", "dry vermout", "lillet blanc", "lillet rouge"]
 }

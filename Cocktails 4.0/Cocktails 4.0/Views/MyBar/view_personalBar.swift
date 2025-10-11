@@ -16,6 +16,8 @@ struct view_personalBar: View {
     
     @Binding var path: [String]
     
+    @State private var presentSheet = false
+    
     @State private var newItemName: String = ""
     @State private var newItemCategory: BarItemCategory? = nil
     
@@ -67,12 +69,27 @@ struct view_personalBar: View {
                     // Center text
                     Spacer()
                     
+                    
                     HStack(){
                         Spacer()
                         
                         Text("Bar is Empty")
                             .foregroundStyle(.secondary)
+                        
+                        Spacer()
+                    }
+                    HStack(){
+                        Spacer()
+                        
                         // add a quick add with ingredients for my bar
+                        Button(action: { presentSheet.toggle() }) {
+                            Label("Quick add", systemImage: "arrow.up")
+                        }
+                        .sheet(isPresented: $presentSheet) {
+                            QuickAdd()
+                                .environmentObject(myBarViewModel)
+                        }
+                        
                         Spacer()
                     }
                     

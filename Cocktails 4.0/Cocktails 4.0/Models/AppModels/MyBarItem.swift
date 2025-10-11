@@ -9,7 +9,7 @@ import SwiftUI
 import Foundation
 import SwiftData
 
-class MyBarItem: Codable, Identifiable {
+class MyBarItem: Codable, Identifiable, Hashable {
     var name: String
     var category: BarItemCategory
     
@@ -18,6 +18,13 @@ class MyBarItem: Codable, Identifiable {
         self.category = category
     }
     
+    static func == (lhs: MyBarItem, rhs: MyBarItem) -> Bool {
+        ObjectIdentifier(lhs) == ObjectIdentifier(rhs)
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(ObjectIdentifier(self))
+    }
 }
 
 enum BarItemCategory: String, Codable, CaseIterable {

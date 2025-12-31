@@ -16,8 +16,10 @@ enum PendingActionType: String, Codable, CaseIterable {
     case addRemoved
     case deleteRemoved
     case addCocktail
-    case editCocktail
+    case updateCocktail
     case deleteCocktail
+    case deleteCocktailImage
+    case updateCocktailImage
 }
 
 extension PendingActionType {
@@ -30,11 +32,13 @@ final class PendingAction {
     @Attribute var type: PendingActionType
     var payload: Data
     var dateCreated: Date
+    var imageData: Data?
 
-    init<T: Encodable>(type: PendingActionType, payload: T) {
+    init<T: Encodable>(type: PendingActionType, payload: T, imageData: Data? = nil) {
         self.id = UUID()
         self.type = type
         self.dateCreated = Date()
+        self.imageData = imageData
         let encoder = JSONEncoder()
         do {
             self.payload = try encoder.encode(payload) // raw JSON bytes

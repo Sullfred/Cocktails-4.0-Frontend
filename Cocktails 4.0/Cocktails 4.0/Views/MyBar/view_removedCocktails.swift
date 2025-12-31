@@ -12,8 +12,6 @@ struct view_removedCocktails: View {
     @Environment(\.modelContext) private var context
     @EnvironmentObject var myBarViewModel: MyBarViewModel
     
-    @Query private var myBars: [MyBar]
-    
     @State var selectedCocktails = [RemovedCocktail?]()
     
     var body: some View {
@@ -44,7 +42,7 @@ struct view_removedCocktails: View {
                                     }
                                 }
                                 Spacer()
-                                Text("Deleted: \(item.date, format: .dateTime.day().month().year())")
+                                Text("Removed: \(item.date, format: .dateTime.day().month().year())")
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                                     .frame(width: 95)
@@ -57,10 +55,11 @@ struct view_removedCocktails: View {
                     Spacer()
                     Text("Selected: \(selectedCocktails.map { $0!.name.capitalized }.joined(separator: ", "))")
                     Button(action: undoDeletes) {
-                        Label("Undo Removes", systemImage: "arrow.uturn.backward")
+                        Label("Undo Remove", systemImage: "arrow.uturn.backward")
                     }
+                    .buttonStyle(.borderedProminent)
                     .disabled(selectedCocktails.isEmpty)
-                    .tint(Color.colorSet5)
+                    .tint(Color.colorSet4)
                 }
                 .padding()
                 .navigationTitle("Removed Cocktails")
@@ -69,24 +68,24 @@ struct view_removedCocktails: View {
         }
         .containerRelativeFrame([.horizontal, .vertical])
         .background(Color.colorSet2)
-        /*
-         .task {
-         context.insert(MyBar(deletedCocktails: [DeletedCocktail(id: "1id", name: "Negroni", creator: "anders erickson"), DeletedCocktail(id: "2id", name: "Whiskey sour", creator: ""), DeletedCocktail(id: "3id", name: "Pisco sour", creator: "anders erickson")]))
-         }
-         */
     }
 }
 
 private extension view_removedCocktails {
     func undoDeletes() {
-            selectedCocktails.forEach { item in
-                if let removed = item {
-                    Task {
-                        await myBarViewModel.deleteRemoved(removed)
-                    }
-                }
+        var deletedCocktails: [RemovedCocktail] = []
+        
+        selectedCocktails.forEach { item in
+            if let removed = item {
+                deletedCocktails.append(removed)
+            }
+        }
+        if !deletedCocktails.isEmpty {
+            Task {
+                await myBarViewModel.deleteRemoved(deletedCocktails)
             }
             selectedCocktails = []
+        }
     }
 }
 

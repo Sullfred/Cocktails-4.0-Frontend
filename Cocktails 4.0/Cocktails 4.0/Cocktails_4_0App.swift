@@ -11,7 +11,6 @@ import SwiftData
 @main
 struct Cocktails_4_0App: App {
     @StateObject private var sharedModelContainer = ModelContainerObservable()
-    @StateObject private var cocktailService = CocktailService.shared
     
     @StateObject private var toastManager = ToastManager.shared
 
@@ -28,12 +27,6 @@ struct Cocktails_4_0App: App {
                             let newBar = MyBar()
                             modelContext.insert(newBar)
                             try modelContext.save()
-                        }
-                        
-                        if await cocktailService.checkServerConnection() {
-                            await cocktailService.syncPendingUploads(context: modelContext)
-                            await cocktailService.syncPendingUpdates(context: modelContext)
-                            await cocktailService.fetchCocktails(context: modelContext)
                         }
                     } catch {
                         print("Error in startup tasks: \(error)")

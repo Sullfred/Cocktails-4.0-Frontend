@@ -14,10 +14,10 @@ struct view_userSettings: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var myBarViewModel: MyBarViewModel
     
-    @State private var isShowingChangeUsername = false
-    @State private var isShowingChangePassword = false
-    @State private var showLogoutAlert = false
-    @State private var showDeleteAlert = false
+    @State private var isShowingChangeUsername: Bool = false
+    @State private var isShowingChangePassword: Bool = false
+    @State private var showLogoutAlert: Bool = false
+    @State private var showDeleteAlert: Bool = false
     
     var body: some View {
         ScrollView {
@@ -28,25 +28,28 @@ struct view_userSettings: View {
                 GroupBox(label: Label("\(userViewModel.currentUser?.username ?? "Account")", systemImage: "person.crop.circle")) {
                     HStack() {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("User Permissions")
+                            Text("Role: \(userViewModel.currentUser?.role.rawValue.capitalized ?? "Guest")")
+                                .font(.headline)
+                                .padding(.bottom, 5)
+                            
+                            Text("Role Permissions")
                                 .font(.title3)
                             if let user = userViewModel.currentUser {
-                                if user.addPermission {
-                                    Text("Adding cocktails")
-                                        .font(.body)
-                                        .foregroundColor(.secondary)
-                                }
-                                if user.editPermissions {
-                                    Text("Edit cocktails")
-                                        .font(.body)
-                                        .foregroundColor(.secondary)
-                                }
-                                if user.adminRights {
+                                if user.role == .admin {
                                     Text("Administrator rights")
                                         .font(.body)
                                         .foregroundColor(.secondary)
                                 }
-                                if !user.addPermission && !user.editPermissions && !user.adminRights {
+                                if user.role == .creator || user.role == .admin {
+                                    Text("Adding cocktails")
+                                        .font(.body)
+                                        .foregroundColor(.secondary)
+                                    
+                                    Text("Edit cocktails")
+                                        .font(.body)
+                                        .foregroundColor(.secondary)
+                                }
+                                if user.role == .guest {
                                     Text("None")
                                         .font(.body)
                                         .foregroundColor(.secondary)
@@ -64,12 +67,37 @@ struct view_userSettings: View {
                     .padding(.vertical, 4)
                 }
                 
+                // Admin section
+                if let user = userViewModel.currentUser, user.role == .admin {
+                    GroupBox(label: Label("Administration", systemImage: "gearshape.2")) {
+                        
+                        if (user.authState == .authenticated) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Manage users and permissions.")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                
+                                NavigationLink {
+                                    view_adminDashboard()
+                                        .environmentObject(myBarViewModel)
+                                } label: {
+                                    Label("Open Admin Dashboard", systemImage: "person.3.sequence.fill")
+                                        .font(.headline)
+                                        .padding(.vertical, 8)
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, 4)
+                        } else {
+                            Text("Admin access requires an active session.")
+                        }
+                    }
+                }
+                
                 // User actions
                 VStack(spacing: 6) {
                     Button {
-                        withAnimation {
-                            isShowingChangeUsername.toggle()
-                        }
+                        toggleShowingUserSetting(toggleVar: &isShowingChangeUsername)
                     } label: {
                         Text("Change Username")
                             .frame(maxWidth: .infinity)
@@ -89,9 +117,7 @@ struct view_userSettings: View {
                     .animation(.easeInOut, value: isShowingChangeUsername)
                     
                     Button {
-                        withAnimation {
-                            isShowingChangePassword.toggle()
-                        }
+                        toggleShowingUserSetting(toggleVar: &isShowingChangePassword)
                     } label: {
                         Text("Change Password")
                             .frame(maxWidth: .infinity)
@@ -114,7 +140,7 @@ struct view_userSettings: View {
                 // Destructive & Logout actions
                 VStack(spacing: 12) {
                     Button(role: .destructive) {
-                        showDeleteAlert = true
+                        checkBeforeDelete()
                     } label: {
                         Text("Delete Account")
                             .frame(maxWidth: .infinity)
@@ -164,14 +190,18 @@ struct view_userSettings: View {
 }
 
 private extension view_userSettings {
-    func permissionsText() -> String {
-        guard let user = userViewModel.currentUser else { return "Unknown" }
-        var perms: [String] = []
-        if user.addPermission { perms.append("Add") }
-        if user.editPermissions { perms.append("Edit") }
-        if user.adminRights { perms.append("Admin") }
-        if perms.isEmpty { return "None" }
-        return perms.joined(separator: ", ")
+    func toggleShowingUserSetting(toggleVar: inout Bool) {
+        if let loggedInUser = userViewModel.currentUser {
+            toggleIfAuthenticated(loggedInUser: loggedInUser, toggleVar: &toggleVar)
+        }
+    }
+    
+    func checkBeforeDelete() {
+        if (userViewModel.currentUser?.authState == .authenticated) {
+            showDeleteAlert = true
+        } else {
+            ToastManager.shared.show(style: .warning, message: "Login required for this action")
+        }
     }
 }
 
@@ -189,9 +219,8 @@ private extension view_userSettings {
             vm.currentUser = LoggedInUser(
                 id: UUID(),
                 username: "Daniel Vang Kleist",
-                addPermission: true,
-                editPermissions: true,
-                adminRights: false
+                role: .admin,
+                authState: .authenticated
             )
             return vm
         }())

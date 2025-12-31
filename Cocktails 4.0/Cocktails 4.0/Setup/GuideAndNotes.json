@@ -53,34 +53,38 @@
       ]
     },
     {
-      "subtitle": "Cocktails",
-      "body": "This is the frontpage where you can choose which ",
+      "subtitle": "The Cocktail List",
+      "body": "This is the page where you can choose find and search for cocktails. You can choose between categories of cocktails, which spirit the cocktail must include, or just see all the cocktails.",
       "subsections": [
           {
             "headline": "The Cocktail List",
-            "description": ""
+            "description": "When you have choosen which cocktails you want to see, you will enter the cocktail list page. Here you can see the different cocktails, search for cocktails by name or ingredient(s), or sort between cocktails. To sort - press the 'up and down' arrow in the top left. You will then see different sorting options such as: by name or creator, favorites only, or only the cocktails you can craft with the ingredients in your personal bar."
+          },
+          {
+            "headline": "Searching",
+            "description": "When using the search function, you can search for cocktails by their name, an ingredient or multiple ingredients. When you search for cocktails with multiple ingredients make sure to seperate each ingredient using the comma ','."
           },
           {
             "headline": "Favorite Cocktails",
-            "description": ""
+            "description": "If you have some cocktails you really like, you can favorite the cocktail. To do this enter the information page for cocktail you want to favorite and press the heart in the top right corner. Now the cocktail will show when sorting by favorites only."
           },
           {
-            "headline": "Deleted Cocktails",
-            "description": ""
+            "headline": "Removed Cocktails",
+            "description": "If there is some cocktails you really do not like you can remove them, such that you cannot see them. Swipe left on the cocktail from the cocktail list to remove them. If you regret, you can find all of your removed cocktails in the 'removed cocktails' page - located at the bottom of the cocktail frontpage. Here you can select between the removed cocktails and undo your action."
           },
           {
             "headline": "Creating a New Cocktail",
-            "description": ""
+            "description": "If you have permission you can also create new cocktails. On the frontpage and the cocktails list you will see a plus on the top right corner. Press this and you will be directed to a screen where you can create a new cocktail. Fill out some information and press 'save'. If you change your mind, you can just press cancel."
           },
           {
             "headline": "Editing a Cocktail",
-            "description": ""
+            "description": "If you have permission you can also edit cocktails. Go to the cocktail information screen and you will see an edit button in the top right corner. Press it and you will see an edit screen. Make our changes, press save, or cancel you want."
           },
       ]
     },
     {
-      "subtitle": "My Bar",
-      "body": "My Bar is used to keep track of which cocktail ingredients you own. "
+      "subtitle": "Personal Bar",
+      "body": "Your personal bar is used to keep track of which cocktail ingredients you own. If you have yet to fill in your bar, you can use the quick add button to quickly choose bar items you have at home."
     }
   ]
 }

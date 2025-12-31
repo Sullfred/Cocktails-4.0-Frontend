@@ -16,3 +16,16 @@ struct UpdatePasswordDTO: Codable {
     let newPassword: String
     let confirmNewPassword: String
 }
+
+struct fetchPublicUserDTO: Codable, Identifiable {
+    let id: UUID
+    let username: String
+    var role: UserRole
+}
+
+struct UpdateUserRoleDTO: Codable {
+    let id: UUID
+    let role: UserRole
+}
+
+

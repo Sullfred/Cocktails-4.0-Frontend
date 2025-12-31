@@ -12,7 +12,6 @@ struct ChangeUsername: View {
     
     @Binding var isShowingChangeUsername: Bool
     @State private var newUsername: String = ""
-    @State private var isLoading: Bool = false
     @State private var isSuccess: Bool = false
     
     var body: some View {
@@ -51,9 +50,7 @@ struct ChangeUsername: View {
                 
                 Button {
                     Task {
-                        isLoading = true
                         let success = await userViewModel.updateUsername(newUsername: newUsername)
-                        isLoading = false
                         if success {
                             isSuccess = true
                             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -70,7 +67,7 @@ struct ChangeUsername: View {
                         }
                     }
                 } label: {
-                    if isLoading {
+                    if userViewModel.isLoading {
                         ProgressView()
                             .frame(maxWidth: .infinity)
                     } else if isSuccess {
@@ -84,7 +81,7 @@ struct ChangeUsername: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(Color.colorSet4)
-                .disabled(newUsername.isEmpty || isLoading)
+                .disabled(newUsername.isEmpty || userViewModel.isLoading)
             }
             .padding()
         }

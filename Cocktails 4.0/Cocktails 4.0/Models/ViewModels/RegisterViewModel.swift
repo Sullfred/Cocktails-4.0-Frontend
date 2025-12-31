@@ -18,6 +18,12 @@ class RegisterViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var didRegister: Bool = false
     
+    private let service: UserService
+    
+    init() {
+        self.service = UserService()
+    }
+    
     var formIsValid: Bool {
         !username.isEmpty &&
         password.count >= 8 &&
@@ -31,7 +37,7 @@ class RegisterViewModel: ObservableObject {
             isLoading = false
         }
         do {
-            try await UserService.shared.createUser(username: username, password: password, confirmPassword: confirmPassword)
+            try await service.createUser(username: username, password: password, confirmPassword: confirmPassword)
             didRegister = true
         } catch {
             let message = ErrorHandler.normalize(error)
@@ -39,6 +45,3 @@ class RegisterViewModel: ObservableObject {
         }
     }
 }
-
-// username: admin
-// password: theS3cretAdminPassw0rd

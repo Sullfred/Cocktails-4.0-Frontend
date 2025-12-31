@@ -20,56 +20,36 @@ final class PendingActionService {
     // Add a action to pendingAction
     // PendingActionType is the type of the action and payload is the object
     // Example: Creating a cocktail will create an pending action of type `addCocktail` with the created cocktail being the payload
-    func addAction<T: Encodable>(_ type: PendingActionType, payload: T) {
-        do {
-            let action = PendingAction(type: type, payload: payload)
-            context.insert(action)
-            try context.save()
-        } catch {
-            print("Failed to add action: \(error)")
-        }
+    func addAction(_ type: PendingActionType, payload: some Encodable, imageData: Data? = nil) throws {
+        let action = PendingAction(type: type, payload: payload, imageData: imageData)
+        context.insert(action)
+        try context.save()
     }
 
     // Fetch all actions of a certain type
-    func fetchActions(ofType type: PendingActionType) -> [PendingAction] {
-        do {
-            let allActions = try context.fetch(FetchDescriptor<PendingAction>())
-            return allActions.filter { $0.type.rawValue == type.rawValue }
-        } catch {
-            print("Failed to fetch pending actions of type \(type): \(error)")
-            return []
-        }
+    func fetchActions(ofType type: PendingActionType) throws -> [PendingAction] {
+        let allActions = try context.fetch(FetchDescriptor<PendingAction>())
+        let filteredActions = allActions.filter { $0.type.rawValue == type.rawValue }
+
+        return filteredActions
     }
 
-    func remove(_ action: PendingAction) {
+    func remove(_ action: PendingAction) throws {
         context.delete(action)
-        do {
-            try context.save()
-        } catch {
-            print("Failed to remove pending action: \(error)")
-        }
+        try context.save()
     }
 
     // ONLY FOR TESTING PURPOSE DURING DEVELOPMENT - REMOVE LATER
-    func fetchAll() -> [PendingAction] {
+    func fetchAll() throws -> [PendingAction] {
         let descriptor = FetchDescriptor<PendingAction>()
-        do {
-            return try context.fetch(descriptor)
-        } catch {
-            print("Failed to fetch pending actions: \(error)")
-            return []
-        }
+        return try context.fetch(descriptor)
     }
     
-    func clearAll() {
-        let all = fetchAll()
+    func clearAll() throws {
+        let all = try fetchAll()
         for action in all {
             context.delete(action)
         }
-        do {
-            try context.save()
-        } catch {
-            print("Failed to clear all pending actions: \(error)")
-        }
+        try context.save()
     }
 }

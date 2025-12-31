@@ -21,10 +21,9 @@ class MyBarService: ObservableObject {
     // Get the users personal bar
     func fetchMyBar(context: ModelContext, userToken: String) async throws -> MyBar {
         let url = serviceURL
-        var request = URLRequest(url: url)
-
-        request.httpMethod = "GET"
-        request.setValue("Bearer \(userToken)", forHTTPHeaderField: "Authorization")
+        
+        // Request info
+        var request = createRequestHeader(url: url, method: "GET", token: userToken)
         
         // Await and handle response from server
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -48,9 +47,9 @@ class MyBarService: ObservableObject {
         return personalBar
     }
     
-    func syncAddBarItem(userToken: String) async throws {
+    func addBarItem(userToken: String) async throws {
         let url = serviceURL.appending(path: "items")
-        let actions = pendingActionService.fetchActions(ofType: .addBarItem)
+        let actions = try pendingActionService.fetchActions(ofType: .addBarItem)
         
         for action in actions {
             guard let dto = action.decodePayload(as: MyBarItemDTO.self)
@@ -59,11 +58,8 @@ class MyBarService: ObservableObject {
                 continue
             }
             
-            var request = URLRequest(url: url)
-            
-            request.httpMethod = "POST"
-            request.setValue("Bearer \(userToken)", forHTTPHeaderField: "Authorization")
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            // Request info
+            var request = createRequestHeader(url: url, method: "POST", token: userToken, setApplicationField: true)
             
             let body = try JSONEncoder().encode(dto)
             request.httpBody = body
@@ -74,13 +70,13 @@ class MyBarService: ObservableObject {
                 throw error
             }
             
-            pendingActionService.remove(action)
+            try pendingActionService.remove(action)
             
         }
     }
     
-    func syncDeleteBarItem(userToken: String) async throws {
-        let actions = pendingActionService.fetchActions(ofType: .deleteBarItem)
+    func deleteBarItem(userToken: String) async throws {
+        let actions = try pendingActionService.fetchActions(ofType: .deleteBarItem)
         
         for action in actions {
             guard let dto = action.decodePayload(as: MyBarItemDTO.self)
@@ -89,10 +85,9 @@ class MyBarService: ObservableObject {
             }
             
             let url = serviceURL.appending(path: "items").appending(path: dto.name)
-            var request = URLRequest(url: url)
             
-            request.httpMethod = "DELETE"
-            request.setValue("Bearer \(userToken)", forHTTPHeaderField: "Authorization")
+            // Request info
+            var request = createRequestHeader(url: url, method: "DELETE", token: userToken)
             
             // Await and handle response from server
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -100,12 +95,12 @@ class MyBarService: ObservableObject {
                 throw error
             }
             
-            pendingActionService.remove(action)
+            try pendingActionService.remove(action)
         }
     }
     
-    func syncAddFavorites(userToken: String) async throws {
-        let actions = pendingActionService.fetchActions(ofType: .addFavorite)
+    func addToFavorites(userToken: String) async throws {
+        let actions = try pendingActionService.fetchActions(ofType: .addFavorite)
         
         for action in actions {
             guard let cocktailID = action.decodePayload(as: String.self)
@@ -114,10 +109,9 @@ class MyBarService: ObservableObject {
             }
             
             let url = serviceURL.appending(path: "favorites").appending(path: cocktailID)
-            var request = URLRequest(url: url)
             
-            request.httpMethod = "POST"
-            request.setValue("Bearer \(userToken)", forHTTPHeaderField: "Authorization")
+            // Request info
+            var request = createRequestHeader(url: url, method: "POST", token: userToken)
             
             // Await and handle response from server
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -125,12 +119,12 @@ class MyBarService: ObservableObject {
                 throw error
             }
             
-            pendingActionService.remove(action)
+            try pendingActionService.remove(action)
         }
     }
     
-    func syncDeleteFavorites(userToken: String) async throws {
-        let actions = pendingActionService.fetchActions(ofType: .deleteFavorite)
+    func deleteFromFavorites(userToken: String) async throws {
+        let actions = try pendingActionService.fetchActions(ofType: .deleteFavorite)
         
         for action in actions {
             guard let cocktailID = action.decodePayload(as: String.self)
@@ -139,10 +133,9 @@ class MyBarService: ObservableObject {
             }
             
             let url = serviceURL.appending(path: "favorites").appending(path: cocktailID)
-            var request = URLRequest(url: url)
-            
-            request.httpMethod = "DELETE"
-            request.setValue("Bearer \(userToken)", forHTTPHeaderField: "Authorization")
+
+            // Request info
+            var request = createRequestHeader(url: url, method: "DELETE", token: userToken)
             
             // Await and handle response from server
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -150,27 +143,26 @@ class MyBarService: ObservableObject {
                 throw error
             }
             
-            pendingActionService.remove(action)
+            try pendingActionService.remove(action)
         }
     }
     
-    func syncAddRemoves(userToken: String) async throws {
+    func addRemovedCocktail(userToken: String) async throws {
         let url = serviceURL.appending(path: "removed")
-        let actions = pendingActionService.fetchActions(ofType: .addRemoved)
+        let actions = try pendingActionService.fetchActions(ofType: .addRemoved)
         
         // JSON encoder with ISO8601 date format - Vapor expect date as string, swift uses number by default
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         
         for action in actions {
-            guard let dto = action.decodePayload(as: RemovedCocktailDTO.self) else {
+            guard let dto = action.decodePayload(as: RemovedCocktailDTO.self)
+            else {
                 continue
             }
             
-            var request = URLRequest(url: url)
-            request.httpMethod = "POST"
-            request.setValue("Bearer \(userToken)", forHTTPHeaderField: "Authorization")
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            // Request info
+            var request = createRequestHeader(url: url, method: "POST", token: userToken, setApplicationField: true)
             
             // Encode body
             let body = try encoder.encode(dto)
@@ -181,12 +173,12 @@ class MyBarService: ObservableObject {
                 throw error
             }
             
-            pendingActionService.remove(action)
+            try pendingActionService.remove(action)
         }
     }
     
-    func syncDeleteRemoves(userToken: String) async throws {
-        let actions = pendingActionService.fetchActions(ofType: .deleteRemoved)
+    func deleteRemovedCocktail(userToken: String) async throws {
+        let actions = try pendingActionService.fetchActions(ofType: .deleteRemoved)
         
         for action in actions {
             guard let dto = action.decodePayload(as: RemovedCocktailDTO.self)
@@ -195,10 +187,9 @@ class MyBarService: ObservableObject {
             }
             
             let url = serviceURL.appending(path: "removed").appending(path: dto.id)
-            var request = URLRequest(url: url)
             
-            request.httpMethod = "DELETE"
-            request.setValue("Bearer \(userToken)", forHTTPHeaderField: "Authorization")
+            // Request info
+            var request = createRequestHeader(url: url, method: "DELETE", token: userToken)
             
             // Await and handle response from server
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -206,8 +197,7 @@ class MyBarService: ObservableObject {
                 throw error
             }
             
-            pendingActionService.remove(action)
+            try pendingActionService.remove(action)
         }
     }
-    
 }

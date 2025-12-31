@@ -10,7 +10,17 @@ import Foundation
 struct LoggedInUser: Codable {
     let id: UUID
     var username: String
-    let addPermission: Bool
-    let editPermissions: Bool
-    let adminRights: Bool
+    var role: UserRole
+    var authState: AuthState
+}
+
+
+enum UserRole: String, Codable {
+    case guest
+    case creator
+    case admin
+}
+
+enum AuthState: Codable {
+    case authenticated, expired
 }

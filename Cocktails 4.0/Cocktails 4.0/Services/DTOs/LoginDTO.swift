@@ -20,8 +20,6 @@ struct LoginResponse: Codable {
 struct UserDTO: Codable {
     let id: UUID
     let username: String
-    let addPermission: Bool
-    let editPermissions: Bool
-    let adminRights: Bool
+    let role: UserRole
 }
 

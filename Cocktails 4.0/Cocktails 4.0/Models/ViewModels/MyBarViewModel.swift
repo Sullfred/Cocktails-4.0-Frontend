@@ -11,14 +11,14 @@ import SwiftData
 import KeychainSwift
 
 @MainActor
-final class MyBarViewModel: ObservableObject {
+class MyBarViewModel: ObservableObject {
     @Published var personalBar = MyBar()
     @Published var errorMessage: String?
-
-    private let service: MyBarService
+    
     private let context: ModelContext
+    private let service: MyBarService
     private let pendingActionService: PendingActionService
-
+    
     init(context: ModelContext) {
         self.context = context
         self.service = MyBarService(context: context)
@@ -67,7 +67,7 @@ final class MyBarViewModel: ObservableObject {
             ErrorHandler.handle(ErrorOutput.customError(message: "No Bar found"))
         }
     }
-
+    
     func getPersonalBar() async {
         do {
             // get userToken
@@ -83,7 +83,7 @@ final class MyBarViewModel: ObservableObject {
             errorMessage = ErrorHandler.normalize(error).localizedDescription
         }
     }
-
+    
     func addBarItem(_ barItem: MyBarItem) async {
         // update local state
         do {
@@ -93,24 +93,65 @@ final class MyBarViewModel: ObservableObject {
             errorMessage = ErrorHandler.normalize(error).localizedDescription
         }
         
+        // Add item to pending queue
         do {
-            // Add item to pending queue
             let dto = MyBarItemDTO(from: barItem)
-            pendingActionService.addAction(.addBarItem, payload: dto)
-            
-            // get userToken
-            let keychain = KeychainSwift()
-            guard let token = keychain.get("userToken")
-            else {
-                return
-            }
-            // Attempt to sync with database
-            try await service.syncAddBarItem(userToken: token)
+            try pendingActionService.addAction(.addBarItem, payload: dto)
         } catch {
             errorMessage = ErrorHandler.normalize(error).localizedDescription
         }
+        
+        if (checkUserAuth()) {
+            do {
+                // get userToken
+                let keychain = KeychainSwift()
+                guard let token = keychain.get("userToken")
+                else {
+                    return
+                }
+                // Attempt to sync with database
+                try await service.addBarItem(userToken: token)
+            } catch {
+                errorMessage = ErrorHandler.normalize(error).localizedDescription
+            }
+        }
     }
-
+    
+    func addMultipleBarItems(_ barItems: [MyBarItem]) async {
+        // update local state
+        barItems.forEach { item in
+            do {
+                personalBar.myBarItems.append(item)
+                try context.save()
+            } catch {
+                errorMessage = ErrorHandler.normalize(error).localizedDescription
+            }
+            
+            // Add item to pending queue
+            do {
+                let dto = MyBarItemDTO(from: item)
+                try pendingActionService.addAction(.addBarItem, payload: dto)
+            } catch {
+                errorMessage = ErrorHandler.normalize(error).localizedDescription
+            }
+        }
+        
+        if (checkUserAuth()) {
+            do {
+                // get userToken
+                let keychain = KeychainSwift()
+                guard let token = keychain.get("userToken")
+                else {
+                    return
+                }
+                // Attempt to sync with database
+                try await service.addBarItem(userToken: token)
+            } catch {
+                errorMessage = ErrorHandler.normalize(error).localizedDescription
+            }
+        }
+    }
+    
     func deleteBarItem(_ barItem: MyBarItem) async {
         // update local state
         do {
@@ -120,25 +161,32 @@ final class MyBarViewModel: ObservableObject {
             errorMessage = ErrorHandler.normalize(error).localizedDescription
         }
         
+        // Add item to pending queue
         do {
-            // Add item to pending queue
             let dto = MyBarItemDTO(from: barItem)
-            pendingActionService.addAction(.deleteBarItem, payload: dto)
-            
-            // get userToken
-            let keychain = KeychainSwift()
-            guard let token = keychain.get("userToken")
-            else {
-                return
-            }
-            
-            // Attempt to sync with database
-            try await service.syncDeleteBarItem(userToken: token)
+            try pendingActionService.addAction(.deleteBarItem, payload: dto)
         } catch {
             errorMessage = ErrorHandler.normalize(error).localizedDescription
         }
+        
+        // Attempt to sync with database
+        
+        if (checkUserAuth()) {
+            do {
+                // get userToken
+                let keychain = KeychainSwift()
+                guard let token = keychain.get("userToken")
+                else {
+                    return
+                }
+                
+                try await service.deleteBarItem(userToken: token)
+            } catch {
+                errorMessage = ErrorHandler.normalize(error).localizedDescription
+            }
+        }
     }
-
+    
     func addFavorite(cocktailID: String) async {
         // update local state
         if !personalBar.favoriteCocktails.contains(cocktailID) {
@@ -150,24 +198,31 @@ final class MyBarViewModel: ObservableObject {
             }
         }
         
+        // Add item to pending queue
         do {
-            // Add item to pending queue
-            pendingActionService.addAction(.addFavorite, payload: cocktailID)
-            
-            // get userToken
-            let keychain = KeychainSwift()
-            guard let token = keychain.get("userToken")
-            else {
-                return
-            }
-            
-            // Attempt to sync with database
-            try await service.syncAddFavorites(userToken: token)
+            try pendingActionService.addAction(.addFavorite, payload: cocktailID)
         } catch {
             errorMessage = ErrorHandler.normalize(error).localizedDescription
         }
+        
+        
+        // Attempt to sync with database
+        if (checkUserAuth()) {
+            do {
+                // get userToken
+                let keychain = KeychainSwift()
+                guard let token = keychain.get("userToken")
+                else {
+                    return
+                }
+                
+                try await service.addToFavorites(userToken: token)
+            } catch {
+                errorMessage = ErrorHandler.normalize(error).localizedDescription
+            }
+        }
     }
-
+    
     func deleteFavorite(cocktailID: String) async {
         // update local state
         do {
@@ -177,24 +232,30 @@ final class MyBarViewModel: ObservableObject {
             errorMessage = ErrorHandler.normalize(error).localizedDescription
         }
         
+        // Add item to pending queue
         do {
-            // Add item to pending queue
-            pendingActionService.addAction(.deleteFavorite, payload: cocktailID)
-            
-            // get userToken
-            let keychain = KeychainSwift()
-            guard let token = keychain.get("userToken")
-            else {
-                return
-            }
-            
-            // Attempt to sync with database
-            try await service.syncDeleteFavorites(userToken: token)
+            try pendingActionService.addAction(.deleteFavorite, payload: cocktailID)
         } catch {
             errorMessage = ErrorHandler.normalize(error).localizedDescription
         }
+        
+        // Attempt to sync with database
+        if (checkUserAuth()) {
+            do {
+                // get userToken
+                let keychain = KeychainSwift()
+                guard let token = keychain.get("userToken")
+                else {
+                    return
+                }
+                
+                try await service.deleteFromFavorites(userToken: token)
+            } catch {
+                errorMessage = ErrorHandler.normalize(error).localizedDescription
+            }
+        }
     }
-
+    
     func addRemoved(_ removed: RemovedCocktail) async {
         // update local state
         do {
@@ -204,50 +265,108 @@ final class MyBarViewModel: ObservableObject {
             errorMessage = ErrorHandler.normalize(error).localizedDescription
         }
         
+        // Add item to pending queue
         do {
-            // Add item to pending queue
             let dto = RemovedCocktailDTO(from: removed)
-            pendingActionService.addAction(.addRemoved, payload: dto)
-            
-            // get userToken
-            let keychain = KeychainSwift()
-            guard let token = keychain.get("userToken")
-            else {
-                return
-            }
-            
-            // Attempt to sync with database
-            try await service.syncAddRemoves(userToken: token)
-        } catch {
-            errorMessage = ErrorHandler.normalize(error).localizedDescription
-        }
-    }
-
-    func deleteRemoved(_ removed: RemovedCocktail) async {
-        // update local state
-        do {
-            personalBar.removedCocktails.removeAll{ $0.id == removed.id }
-            try context.save()
+            try pendingActionService.addAction(.addRemoved, payload: dto)
         } catch {
             errorMessage = ErrorHandler.normalize(error).localizedDescription
         }
         
-        do {
-            // Add item to pending queue
-            let dto = RemovedCocktailDTO(from: removed)
-            pendingActionService.addAction(.deleteRemoved, payload: dto)
-            
-            // get userToken
-            let keychain = KeychainSwift()
-            guard let token = keychain.get("userToken")
-            else {
-                return
+        // Attempt to sync with database
+        if (checkUserAuth()) {
+            do {
+                // get userToken
+                let keychain = KeychainSwift()
+                guard let token = keychain.get("userToken")
+                else {
+                    return
+                }
+                
+                try await service.addRemovedCocktail(userToken: token)
+            } catch {
+                errorMessage = ErrorHandler.normalize(error).localizedDescription
+            }
+        }
+    }
+    
+    func deleteRemoved(_ removed: [RemovedCocktail]) async {
+        
+        removed.forEach {item in
+            // update local state
+            do {
+                personalBar.removedCocktails.removeAll{ $0.id == item.id }
+                try context.save()
+            } catch {
+                errorMessage = ErrorHandler.normalize(error).localizedDescription
             }
             
-            // Attempt to sync with database
-            try await service.syncDeleteRemoves(userToken: token)
-        } catch {
-            errorMessage = ErrorHandler.normalize(error).localizedDescription
+            do {
+                // Add item to pending queue
+                let dto = RemovedCocktailDTO(from: item)
+                try pendingActionService.addAction(.deleteRemoved, payload: dto)
+            } catch {
+                errorMessage = ErrorHandler.normalize(error).localizedDescription
+            }
         }
+        
+        // Attempt to sync with database
+        if (checkUserAuth()) {
+            do {
+                // get userToken
+                let keychain = KeychainSwift()
+                guard let token = keychain.get("userToken")
+                else {
+                    return
+                }
+                
+                try await service.deleteRemovedCocktail(userToken: token)
+            } catch {
+                errorMessage = ErrorHandler.normalize(error).localizedDescription
+            }
+        }
+    }
+    
+    func syncAll() async {
+        
+        // Only sync if user is authenticated
+        if (checkUserAuth()) {
+            
+            do {
+                // get userToken
+                let keychain = KeychainSwift()
+                guard let token = keychain.get("userToken")
+                else {
+                    return
+                }
+                // Attempt to sync with database
+                try await service.addBarItem(userToken: token)
+                try await service.deleteBarItem(userToken: token)
+                try await service.addToFavorites(userToken: token)
+                try await service.deleteFromFavorites(userToken: token)
+                try await service.addRemovedCocktail(userToken: token)
+                try await service.deleteRemovedCocktail(userToken: token)
+            } catch {
+                errorMessage = ErrorHandler.normalize(error).localizedDescription
+            }
+        }
+    }
+    
+    private func checkUserAuth() -> Bool {
+        if let data = UserDefaults.standard.data(forKey: "loggedInUser"),
+           let loggedInUser = try? JSONDecoder().decode(LoggedInUser.self, from: data) {
+            
+            if loggedInUser.authState == .authenticated {
+                return true
+            }
+        } else {
+            ErrorHandler.handle(
+                ErrorOutput.customError(
+                    message: "Login required to sync this change."
+                )
+            )
+        }
+        
+        return false
     }
 }

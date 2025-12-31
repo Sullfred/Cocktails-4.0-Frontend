@@ -119,10 +119,8 @@ private func categoryHeader(_ category: BarItemCategory) -> some View {
 
 private extension QuickAdd {
     func addItems(barItems: [MyBarItem]) {
-        barItems.forEach { item in
-            Task {
-                await myBarViewModel.addBarItem(item)
-            }
+        Task {
+            await myBarViewModel.addMultipleBarItems(barItems)
         }
     }
 }

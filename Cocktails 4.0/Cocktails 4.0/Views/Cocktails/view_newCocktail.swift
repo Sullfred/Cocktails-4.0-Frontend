@@ -13,7 +13,7 @@ import PhotosUI
 struct view_newCocktail: View {
     @Environment(\.modelContext) var modelContext
     @Environment(\.dismiss) var dismiss
-    @StateObject private var service = CocktailService.shared
+    @EnvironmentObject var cocktailViewModel: CocktailViewModel
     
     @State var selectedPhoto : PhotosPickerItem?
     
@@ -239,19 +239,13 @@ private extension view_newCocktail {
             
             let newCocktail = Cocktail(name: newCocktailName.lowercased(), creator: newCocktailCreator.lowercased(), style: newCocktailStyle, ingredients: newCocktailIngredients, comment: newCocktailComment, image: newCocktailImage ?? nil, cocktailCategory: newCocktailCategory)
             
-            modelContext.insert(newCocktail)
-            try modelContext.save()
             
             Task {
-                await service.createCocktail(newCocktail)
-                await service.syncPendingUploads(context: modelContext)
+                await cocktailViewModel.addNewCocktail(newCocktail)
             }
             
             dismiss()
-        } catch {
-            errorMessage = "Failed to save cocktail: \(error.localizedDescription)"
-            showError = true
-        }
+        } 
     }
     
     func cancel() {

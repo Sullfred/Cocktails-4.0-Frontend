@@ -28,8 +28,10 @@ struct view_personalBar: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 NavigationLink(destination: view_notes()) {
-                    Label("Guide", systemImage: "note.text")
+                    Label("Guide", systemImage: "book.pages")
                         .font(.headline)
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(Color.colorSet4, Color.black.opacity(0.5))
                 }
                 Spacer()
             }
@@ -82,8 +84,8 @@ struct view_personalBar: View {
                         Spacer()
                         
                         // add a quick add with ingredients for my bar
-                        Button(action: { presentSheet.toggle() }) {
-                            Label("Quick add", systemImage: "arrow.up")
+                        Button(action: openQuickAddView) {
+                            Label("Quick add", systemImage: "note.text.badge.plus")
                         }
                         .sheet(isPresented: $presentSheet) {
                             QuickAdd()
@@ -156,23 +158,35 @@ struct view_personalBar: View {
 
 private extension view_personalBar {
     func add_item() {
-        let trimmedName = newItemName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedName.isEmpty else { return }
-        let newItem = MyBarItem(name: trimmedName.lowercased())
-        if let selectedCategory = newItemCategory {
-            newItem.category = selectedCategory
-        } else {
-            newItem.assignCategoryBasedOnName()
-        }
-        
-       
+        if (userViewModel.currentUser?.authState == .authenticated) {
+            let trimmedName = newItemName.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedName.isEmpty else { return }
+            let newItem = MyBarItem(name: trimmedName.lowercased())
+            if let selectedCategory = newItemCategory {
+                newItem.category = selectedCategory
+            } else {
+                newItem.assignCategoryBasedOnName()
+            }
+            
             Task {
                 await myBarViewModel.addBarItem(newItem)
             }
-
-        newItemName = ""
-        newItemCategory = nil
+            
+            newItemName = ""
+            newItemCategory = nil
+            
+        } else {
+            ToastManager.shared.show(style: .warning, message: "Login required")
+        }
         
+    }
+    
+    func openQuickAddView() {
+        if (userViewModel.currentUser?.authState == .authenticated) {
+            presentSheet.toggle()
+        } else {
+            ToastManager.shared.show(style: .warning, message: "Login required")
+        }
     }
 }
 
@@ -190,9 +204,8 @@ private extension view_personalBar {
             vm.currentUser = LoggedInUser(
                 id: UUID(),
                 username: "PreviewUser",
-                addPermission: false,
-                editPermissions: false,
-                adminRights: false
+                role: .admin,
+                authState: .authenticated
             )
             return vm
         }())

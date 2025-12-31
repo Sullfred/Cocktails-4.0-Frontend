@@ -57,9 +57,8 @@ struct view_myBarFrontPage: View {
             vm.currentUser = LoggedInUser(
                 id: UUID(),
                 username: "Daniel Vang Kleist",
-                addPermission: true,
-                editPermissions: true,
-                adminRights: false
+                role: .admin,
+                authState: .authenticated
             )
             return vm
         }())

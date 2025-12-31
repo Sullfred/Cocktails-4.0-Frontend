@@ -18,6 +18,9 @@ class UserViewModel: ObservableObject {
     @Published var errorMessage: String? = nil
     @Published var isLoggedIn: Bool = false
     @Published var currentUser: LoggedInUser? = nil
+    @Published var showLogin = false
+    
+    private let service: UserService
     
     var formIsValid: Bool {
         !username.isEmpty && !password.isEmpty && password.count >= 6
@@ -26,6 +29,8 @@ class UserViewModel: ObservableObject {
     private let userDefaultsKey = "loggedInUser"
     
     init() {
+        self.service = UserService()
+        
         if let data = UserDefaults.standard.data(forKey: userDefaultsKey) {
             if let savedUser = try? JSONDecoder().decode(LoggedInUser.self, from: data) {
                 currentUser = savedUser
@@ -38,11 +43,14 @@ class UserViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
         defer {
+            password = ""
             isLoading = false
         }
         
         do {
-            let response = try await UserService.shared.login(username: username, password: password)
+            let response = try await service.login(username: username, password: password)
+            
+            password = ""
             
             // save data from response
             let keychain = KeychainSwift()
@@ -53,15 +61,17 @@ class UserViewModel: ObservableObject {
             let loggedInUser = LoggedInUser(
                 id: response.user.id,
                 username: response.user.username,
-                addPermission: response.user.addPermission,
-                editPermissions: response.user.editPermissions,
-                adminRights: response.user.adminRights
+                role: response.user.role,
+                authState: .authenticated
             )
+            
             if let encoded = try? JSONEncoder().encode(loggedInUser) {
                 UserDefaults.standard.set(encoded, forKey: userDefaultsKey)
             }
+            
             currentUser = loggedInUser
             isLoggedIn = true
+            showLogin = false
             
             // Get users personal bar after login
             await myBarViewModel.getPersonalBar()
@@ -70,24 +80,27 @@ class UserViewModel: ObservableObject {
             let message = ErrorHandler.normalize(error)
             errorMessage = message.localizedDescription
         }
+        
+        isLoading = false
     }
     
     func logout(myBarViewModel: MyBarViewModel) async {
         let keychain = KeychainSwift()
-        guard let token = keychain.get("userToken")
-        else {
-            return
+        let token = keychain.get("userToken")
+
+        // Attempt server-side logout only if a token exists
+        if let token {
+            do {
+                try await service.logout(userToken: token)
+            } catch {
+                // Logout should still succeed client-side even if server rejects the token
+                ToastManager.shared.show(style: .error, message: error.localizedDescription)
+            }
         }
-        
-        do {
-            try await UserService.shared.logout(userToken: token)
-        } catch {
-            ToastManager.shared.show(style: .error, message: error.localizedDescription)
-        }
-        
-        // Delete personal bar from context
+
+        // Always clean up client-side state
         myBarViewModel.changeToGuestBar()
-        
+
         keychain.delete("userToken")
         isLoggedIn = false
         currentUser = nil
@@ -102,7 +115,7 @@ class UserViewModel: ObservableObject {
         }
         
         do {
-            try await UserService.shared.deleteUser(userToken: token)
+            try await service.deleteUser(userToken: token)
         } catch {
             ErrorHandler.handle(error)
         }
@@ -121,6 +134,7 @@ class UserViewModel: ObservableObject {
     }
     
     func updateUsername(newUsername: String) async -> Bool {
+        isLoading = true
         errorMessage = nil
         
         let keychain = KeychainSwift()
@@ -130,22 +144,28 @@ class UserViewModel: ObservableObject {
         }
         
         do {
-            try await UserService.shared.updateUsername(userToken: token, newUsername: newUsername)
+            try await service.updateUsername(userToken: token, newUsername: newUsername)
             
             // update user info in the userdefaults
             currentUser?.username = newUsername
             if let currentUser = currentUser, let encoded = try? JSONEncoder().encode(currentUser) {
                 UserDefaults.standard.set(encoded, forKey: userDefaultsKey)
             }
+            isLoading = false
+            
             return true
         } catch {
+            isLoading = false
+            
             let message = ErrorHandler.normalize(error)
             errorMessage = message.localizedDescription
+            
             return false
         }
     }
     
     func updatePassword(currentPassword: String, newPassword: String, confirmNewPassword: String) async -> Bool {
+        isLoading = false
         errorMessage = nil
         
         let keychain = KeychainSwift()
@@ -153,13 +173,47 @@ class UserViewModel: ObservableObject {
         else {
             return false
         }
+        
         do {
-            try await UserService.shared.updatePassword(userToken: token, currentPassword: currentPassword, newPassword: newPassword, confirmNewPassword: confirmNewPassword)
+            try await service.updatePassword(userToken: token, currentPassword: currentPassword, newPassword: newPassword, confirmNewPassword: confirmNewPassword)
+            
+            isLoading = false
+            
             return true
         } catch {
+            isLoading = false
             let message = ErrorHandler.normalize(error)
             errorMessage = message.localizedDescription
+            
             return false
         }
+    }
+    
+    func checkTokenValidity() async {
+        
+        let userToken = KeychainSwift().get("userToken")
+        
+        if (userToken != nil) {
+            do {
+                try await service.verifyUser(userToken: userToken ?? "")
+            } catch {
+                handleExpiredToken()
+            }
+        }
+    }
+    
+    func handleExpiredToken() {
+        let keychain = KeychainSwift()
+        keychain.delete("userToken")
+        
+        // update user info in the userdefaults
+        currentUser?.authState = .expired
+        if let currentUser = currentUser, let encoded = try? JSONEncoder().encode(currentUser) {
+            UserDefaults.standard.set(encoded, forKey: userDefaultsKey)
+        }
+    }
+    
+    func presentLogin() {
+        showLogin = true
     }
 }

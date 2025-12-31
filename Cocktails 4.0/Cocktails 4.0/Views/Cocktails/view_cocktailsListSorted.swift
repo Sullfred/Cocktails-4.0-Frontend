@@ -11,6 +11,7 @@ import SwiftData
 struct view_cocktailsListSorted: View {
     @Environment(\.modelContext) private var context
     
+    @EnvironmentObject var cocktailViewModel: CocktailViewModel
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var myBarViewModel: MyBarViewModel
     
@@ -68,6 +69,7 @@ struct view_cocktailsListSorted: View {
                     Section(header: selectedCategory == nil ? categoryHeader(category) : nil) {
                         ForEach(cocktailsInCategory) { cocktail in
                             NavigationLink(destination: view_cocktailDetails(cocktail: cocktail)
+                                .environmentObject(cocktailViewModel)
                                 .environmentObject(userViewModel)
                                 .environmentObject(myBarViewModel)) {
                                     VStack(alignment: .leading) {
@@ -91,8 +93,8 @@ struct view_cocktailsListSorted: View {
         }
         .listStyle(.plain)
         .refreshable {
-            if await CocktailService.shared.checkServerConnection() {
-                await CocktailService.shared.fetchCocktails(context: context)
+            Task{
+                await cocktailViewModel.refresh()
             }
         }
     }
@@ -202,9 +204,8 @@ private extension view_cocktailsListSorted {
         vm.currentUser = LoggedInUser(
             id: UUID(),
             username: "Daniel Vang Kleist",
-            addPermission: false,
-            editPermissions: false,
-            adminRights: false
+            role: .admin,
+            authState: .authenticated
         )
         return vm
     }())

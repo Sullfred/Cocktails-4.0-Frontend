@@ -10,6 +10,7 @@ import SwiftUI
 import SwiftData
 
 struct view_cocktailDetails: View {
+    @EnvironmentObject var cocktailViewModel: CocktailViewModel
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var myBarViewModel: MyBarViewModel
     
@@ -21,10 +22,10 @@ struct view_cocktailDetails: View {
         view_cocktailDetailsInfo(cocktail: cocktail)
             .environmentObject(myBarViewModel)
             .toolbar {
-                if (userViewModel.currentUser?.editPermissions ?? false) == true {
+                if (userViewModel.currentUser?.role == .creator || userViewModel.currentUser?.role == .admin) {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button(action: {
-                            isEditing = true
+                            editCocktail()
                         }) {
                             Text("Edit")
                         }
@@ -33,10 +34,19 @@ struct view_cocktailDetails: View {
             }
             .fullScreenCover(isPresented: $isEditing) {
                 view_cocktailDetailsEdit(cocktail: cocktail)
+                    .environmentObject(cocktailViewModel)
             }
     }
-        
 }
+
+private extension view_cocktailDetails {
+    func editCocktail() {
+        if let loggedInUser = userViewModel.currentUser {
+            toggleIfAuthenticated(loggedInUser: loggedInUser, toggleVar: &isEditing)
+        }
+    }
+}
+
 
 #Preview {
     let imageData = UIImage(resource: .cocktailPreview).pngData()
@@ -70,9 +80,8 @@ struct view_cocktailDetails: View {
             vm.currentUser = LoggedInUser(
                 id: UUID(),
                 username: "Daniel Vang Kleist",
-                addPermission: false,
-                editPermissions: false,
-                adminRights: false
+                role: .admin,
+                authState: .authenticated
             )
             return vm
         }())

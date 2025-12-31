@@ -4,10 +4,13 @@ import SwiftData
 struct view_cocktailsList: View {
     @Environment(\.modelContext) private var modelContext
     
+    @EnvironmentObject var cocktailViewModel: CocktailViewModel
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var myBarViewModel: MyBarViewModel
 
     @State private var path: [Cocktail] = []
+    @State private var showCreateNewCocktail: Bool = false
+    
     @State private var sortOrder = [
         SortDescriptor(\Cocktail.name),
         SortDescriptor(\Cocktail.creator)
@@ -22,14 +25,17 @@ struct view_cocktailsList: View {
         view_cocktailsListSorted(sortOrder: sortOrder, searchText: searchText, showFavoritesOnly: showFavoritesOnly, showCraftableOnly: showCraftableOnly, selectedCategory: selectedCategory, baseSpirit: baseSpirit)
             .environmentObject(userViewModel)
             .environmentObject(myBarViewModel)
+            .environmentObject(cocktailViewModel)
             .navigationTitle(selectedCategory != nil ? selectedCategory?.rawValue ?? "error" : "All Cocktails")
             .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always)) //Will fix flicker when navigating
             .background(Color.colorSet2)
             .scrollContentBackground(.hidden)
             .toolbar {
-                if (userViewModel.currentUser?.addPermission ?? false) == true {
+                if (userViewModel.currentUser?.role == .creator || userViewModel.currentUser?.role == .admin){
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        NavigationLink(destination: view_newCocktail()) {
+                        Button(action: {
+                            checkBeforeGoToNewCocktailView()
+                        }) {
                             Label("Add Cocktail", systemImage: "plus")
                         }
                     }
@@ -78,7 +84,18 @@ struct view_cocktailsList: View {
                     .menuActionDismissBehavior(.disabled)
                 }
             }
+            .navigationDestination(isPresented: $showCreateNewCocktail){
+                view_newCocktail().environmentObject(cocktailViewModel)
+            }
             .tint(.colorSet4)
+    }
+}
+
+private extension view_cocktailsList {
+    func checkBeforeGoToNewCocktailView() {
+        if let loggedInUser = userViewModel.currentUser {
+            toggleIfAuthenticated(loggedInUser: loggedInUser, toggleVar: &showCreateNewCocktail)
+        }
     }
 }
 
@@ -89,18 +106,20 @@ struct view_cocktailsList: View {
     let context = container.mainContext
     
     let myBarVM = MyBarViewModel(context: context)
+    let cocktailVM = CocktailViewModel(context: context)
     
-    return view_cocktailsList(selectedCategory: nil, baseSpirit: nil)
+    view_cocktailsList(selectedCategory: nil, baseSpirit: nil)
         .environmentObject({
             let vm = UserViewModel()
             vm.currentUser = LoggedInUser(
                 id: UUID(),
                 username: "Daniel Vang Kleist",
-                addPermission: false,
-                editPermissions: false,
-                adminRights: false
+                role: .admin,
+                authState: .authenticated
             )
             return vm
         }())
         .environmentObject(myBarVM)
+        .environmentObject(cocktailVM)
+
 }

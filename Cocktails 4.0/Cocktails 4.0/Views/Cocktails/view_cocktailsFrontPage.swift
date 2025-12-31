@@ -11,6 +11,9 @@ import SwiftData
 struct view_cocktailsFrontPage: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var myBarViewModel: MyBarViewModel
+    @EnvironmentObject var cocktailViewModel: CocktailViewModel
+    
+    @State private var showCreateNewCocktail: Bool = false
     
     private let columns = [
         GridItem(.flexible()),
@@ -29,6 +32,7 @@ struct view_cocktailsFrontPage: View {
                     view_cocktailsList(selectedCategory: nil) // Show all cocktails
                         .environmentObject(userViewModel)
                         .environmentObject(myBarViewModel)
+                        .environmentObject(cocktailViewModel)
                 } label: {
                     CategoryCard(
                         title: "All Cocktails",
@@ -47,6 +51,7 @@ struct view_cocktailsFrontPage: View {
                             view_cocktailsList(selectedCategory: category)
                                 .environmentObject(userViewModel)
                                 .environmentObject(myBarViewModel)
+                                .environmentObject(cocktailViewModel)
                         } label: {
                             CategoryCard(
                                 title: category.rawValue,
@@ -69,6 +74,7 @@ struct view_cocktailsFrontPage: View {
                             view_cocktailsList(selectedCategory: nil, baseSpirit: tag)
                                 .environmentObject(userViewModel)
                                 .environmentObject(myBarViewModel)
+                                .environmentObject(cocktailViewModel)
                         } label: {
                             CategoryCard(
                                 title: tag.rawValue.capitalized,
@@ -92,13 +98,18 @@ struct view_cocktailsFrontPage: View {
             .navigationTitle("Cocktails")
             .background(Color.colorSet2)
             .toolbar {
-                if (userViewModel.currentUser?.addPermission ?? false) == true {
+                if (userViewModel.currentUser?.role == .creator || userViewModel.currentUser?.role == .admin) {
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        NavigationLink(destination: view_newCocktail()) {
+                        Button(action: {
+                            checkBeforeGoToNewCocktailView()
+                        }) {
                             Label("Add Cocktail", systemImage: "plus")
                         }
                     }
                 }
+            }
+            .navigationDestination(isPresented: $showCreateNewCocktail){
+                view_newCocktail().environmentObject(cocktailViewModel)
             }
         }
         .tint(.colorSet4)
@@ -151,6 +162,14 @@ extension IngredientTag {
     }
 }
 
+private extension view_cocktailsFrontPage {
+    func checkBeforeGoToNewCocktailView() {
+        if let loggedInUser = userViewModel.currentUser {
+            toggleIfAuthenticated(loggedInUser: loggedInUser, toggleVar: &showCreateNewCocktail)
+        }
+    }
+}
+
 #Preview {
     // Create an in-memory model container for previews
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
@@ -158,6 +177,7 @@ extension IngredientTag {
     let context = container.mainContext
     
     let myBarVM = MyBarViewModel(context: context)
+    let cocktailVM = CocktailViewModel(context: context)
     
     view_cocktailsFrontPage()
         .environmentObject({
@@ -165,11 +185,11 @@ extension IngredientTag {
             vm.currentUser = LoggedInUser(
                 id: UUID(),
                 username: "Daniel Vang Kleist",
-                addPermission: false,
-                editPermissions: false,
-                adminRights: false
+                role: .admin,
+                authState: .authenticated
             )
             return vm
         }())
         .environmentObject(myBarVM)
+        .environmentObject(cocktailVM)
 }

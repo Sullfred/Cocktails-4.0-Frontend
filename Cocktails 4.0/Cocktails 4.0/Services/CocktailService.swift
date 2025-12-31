@@ -47,375 +47,234 @@ func removeCachedImage(for id: UUID) {
 // MARK: - Server Communication
 @MainActor
 class CocktailService: ObservableObject {
-    static let shared = CocktailService()
     private let baseURL = ServiceConfig.baseURL // For handling imageURL
     private let serviceURL = ServiceConfig.baseURL.appending(path: Endpoints.cocktails)
+    private let pendingActionService: PendingActionService
     
-    @Published private var pendingUploads: [Cocktail] = []
-    @Published private var pendingDeletes: [Cocktail] = []
-    @Published private var pendingUpdates: [Cocktail] = []
-    
-    private init() {}
-    // Functions to add cocktails to pending list
-    func createCocktail(_ cocktail: Cocktail) async {
-        pendingUploads.append(cocktail)
+    init(context: ModelContext) {
+        self.pendingActionService = PendingActionService(context: context)
     }
     
-    func deleteCocktail(_ cocktail: Cocktail) async {
-        pendingDeletes.append(cocktail)
-    }
-    
-    func updateCocktail(_ cocktail: Cocktail) async {
-        pendingUpdates.append(cocktail)
-    }
-    
-    func fetchCocktails(context: ModelContext) async {
+    // Fetches cocktails from the server, prepares their images, and returns `[Cocktail]`.
+    func fetchCocktails() async throws -> [Cocktail] {
         let url = serviceURL
         
+        var cocktails: [Cocktail] = []
+        var cocktailDTOs: [CocktailDTO] = []
+        
+        // Request header
+        var request = createRequestHeader(url: url, method: "GET")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        if let error = ErrorHandler.mapHTTPResponse(response, data: data) {
+            throw error
+        }
+        
+        // Decode response
         do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            let cocktailDTOs = try JSONDecoder().decode([CocktailDTO].self, from: data)
+            cocktailDTOs = try JSONDecoder().decode([CocktailDTO].self, from: data)
+        } catch {
+            print("Failed to decode cocktails: \(error)")
+            throw error
+        }
+        
+        // Prepare cocktails and images
+        for dto in cocktailDTOs {
+            var cocktail = Cocktail(from: dto)
             
-            // Remove local cocktails not present on server
-            let descriptor = FetchDescriptor<Cocktail>()
-            let existingCocktails = try context.fetch(descriptor)
-            let dtoIDs = Set(cocktailDTOs.map { $0.id })
-            
-            let myBarDescriptor = FetchDescriptor<MyBar>()
-            let myBar = try? context.fetch(myBarDescriptor).first
-            
-            // Check for MyBar before clean up as deletedCocktailIDs is needed later
-            let deletedCocktailIDs = Set(myBar?.removedCocktails.map { $0.id } ?? [])
-            
-            // Clean up myBar: remove any with id not in dtoIDs
-            if let myBar = myBar {
-                let dtoIDs = Set(cocktailDTOs.map { $0.id })
-                let filteredDeleted = myBar.removedCocktails.filter { dtoIDs.contains(UUID(uuidString: $0.id) ?? UUID()) }
-                myBar.removedCocktails = filteredDeleted
-                let filteredFavorites = myBar.favoriteCocktails.filter { dtoIDs.contains(UUID(uuidString: $0) ?? UUID()) }
-                myBar.favoriteCocktails = filteredFavorites
-            }
-            
-            // Remove cocktails which do not exist in the remote database
-            var removedCocktails: [String] = []
-            for cocktail in existingCocktails {
-                if !dtoIDs.contains(cocktail.id) {
-                    removedCocktails.append(cocktail.name.capitalized)
-                    context.delete(cocktail)
-                }
-            }
-            
-            // Inform user about deleted cocktails
-            if !removedCocktails.isEmpty {
-                ToastManager.shared.show(style: .info, message: "Cocktails removed: \(removedCocktails.joined(separator: ", "))")
-            }
-            
-            var addedCocktails: [String] = []
-            for dto in cocktailDTOs {
-                // Check if the cocktail is deleted locally - if true just continue
-                if deletedCocktailIDs.contains(dto.id.uuidString) {
-                    continue
-                }
-                
-                if let existingCocktail = existingCocktails.first(where: { $0.id == dto.id }) {
-                    // Update existing cocktail
-                    existingCocktail.name = dto.name
-                    existingCocktail.creator = dto.creator
-                    existingCocktail.style = Style(rawValue: dto.style) ?? .shaken
-                    existingCocktail.comment = dto.comment
-                    existingCocktail.cocktailCategory = CocktailCategory(rawValue: dto.cocktailCategory) ?? .other
-                    
-                    existingCocktail.ingredients.removeAll()
-                    for ingredientDTO in dto.ingredients {
-                        let ingredient = Ingredient(from: ingredientDTO)
-                        existingCocktail.ingredients.append(ingredient)
-                        context.insert(ingredient)
-                    }
-                    
-                    // Handle image from DTO
-                    if let imageURLString = dto.imageURL {
-                        if existingCocktail.imageURL != imageURLString {
-                            // Determine if imageURLString is absolute or relative
-                            let url: URL?
-                            if imageURLString.hasPrefix("http://") || imageURLString.hasPrefix("https://") {
-                                url = URL(string: imageURLString)
-                            } else if imageURLString.hasPrefix("/Images/") {
-                                url = baseURL.appendingPathComponent(String(imageURLString.dropFirst()))
-                            } else {
-                                url = URL(string: imageURLString)
-                            }
-                            if let url = url {
-                                do {
-                                    let (imageData, _) = try await URLSession.shared.data(from: url)
-                                    existingCocktail.image = imageData
-                                    existingCocktail.imageURL = imageURLString
-                                    _ = cacheImage(imageData, for: dto.id)
-                                } catch {
-                                    print("Failed to download image for cocktail \(existingCocktail.name): \(error)")
-                                }
-                            }
-                        }
-                    } else {
-                        // No imageURL from server, try to load from cache if it exists
-                        if let cachedImage = loadCachedImage(for: dto.id) {
-                            existingCocktail.image = cachedImage
-                            existingCocktail.imageURL = nil
-                        } else {
-                            existingCocktail.image = nil
-                            existingCocktail.imageURL = nil
-                        }
-                    }
-                } else {
-                    // Insert new cocktail
-                    let cocktail = Cocktail(from: dto)
-                    addedCocktails.append(cocktail.name.capitalized)
-                    context.insert(cocktail)
-                    
-                    // Handle image from DTO
-                    if let imageURLString = dto.imageURL {
-                        // Determine if imageURLString is absolute or relative
-                        let url: URL?
-                        if imageURLString.hasPrefix("http://") || imageURLString.hasPrefix("https://") {
-                            url = URL(string: imageURLString)
-                        } else if imageURLString.hasPrefix("/Images/") {
-                            url = baseURL.appendingPathComponent(String(imageURLString.dropFirst()))
-                        } else {
-                            url = URL(string: imageURLString)
-                        }
-                        if let url = url {
-                            do {
-                                let (imageData, _) = try await URLSession.shared.data(from: url)
-                                cocktail.image = imageData
-                                cocktail.imageURL = imageURLString
-                                _ = cacheImage(imageData, for: dto.id)
-                            } catch {
-                                print("Failed to download image for cocktail \(cocktail.name): \(error)")
-                            }
-                        }
-                    } else {
-                        // No imageURL from server, try to load from cache
+            // If cocktail has an imageURL we get the image from the server
+            if dto.imageURL != nil {
+                let imageURL = serviceURL.appending(path: "\(dto.id)/image")
+                let imageRequest = createRequestHeader(url: url, method: "GET")
+                do {
+                    let (imageData, imageResponse) = try await URLSession.shared.data(for: imageRequest)
+                    if let error = ErrorHandler.mapHTTPResponse(imageResponse, data: imageData) {
+                        print("Image HTTP error for \(cocktail.name): \(error)")
                         if let cachedImage = loadCachedImage(for: dto.id) {
                             cocktail.image = cachedImage
                             cocktail.imageURL = nil
-                        } else {
-                            cocktail.image = nil
-                            cocktail.imageURL = nil
                         }
+                    } else {
+                        cocktail.image = imageData
+                        cocktail.imageURL = dto.imageURL
+                        _ = cacheImage(imageData, for: dto.id)
+                    }
+                } catch {
+                    ToastManager.shared.show(style: .warning, message: "Failed to get image for cocktail: \(cocktail.name)")
+                    
+                    print("Failed to download image for cocktail \(cocktail.name): \(error)")
+                    // Try loading cached image if available
+                    if let cachedImage = loadCachedImage(for: dto.id) {
+                        cocktail.image = cachedImage
+                        cocktail.imageURL = nil
                     }
                 }
-            }
-            try? context.save()
-            
-            if !addedCocktails.isEmpty {
-                ToastManager.shared.show(style: .info, message: "Cocktails added: \(addedCocktails.joined(separator: ", "))")
-            }
-        } catch {
-            print("Failed to fetch cocktails: \(error)")
-        }
-    }
-    
-    func syncPendingUploads(context: ModelContext) async {
-        // Go through all the pending uploads
-        for cocktail in pendingUploads {
-            do {
-                // Upload cocktail
-                let cocktailDTO = CocktailDTO(from: cocktail)
-                let url = serviceURL
-                var request = URLRequest(url: url)
-                
-                request.httpMethod = "POST"
-                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-                request.httpBody = try JSONEncoder().encode(cocktailDTO)
-                
-                let (_, response) = try await URLSession.shared.data(for: request)
-                guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-                    print("Failed to upload cocktail \(cocktail.name)")
-                    continue
-                }
-                
-                // Upload image if exists
-                if let imageData = cocktail.image {
-                    let imageURL = serviceURL.appending(path: "\(cocktail.id)/image")
-                    var imageRequest = URLRequest(url: imageURL)
-                    imageRequest.httpMethod = "POST"
-                    
-                    let boundary = UUID().uuidString
-                    imageRequest.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-                    
-                    var body = Data()
-                    body.append("--\(boundary)\r\n".data(using: .utf8)!)
-                    body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(cocktail.id).jpg\"\r\n".data(using: .utf8)!)
-                    body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
-                    body.append(imageData)
-                    body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
-                    
-                    imageRequest.httpBody = body
-                    
-                    let (_, imgResponse) = try await URLSession.shared.data(for: imageRequest)
-                    if let httpResponse = imgResponse as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
-                        print("Failed to upload image for cocktail \(cocktail.name)")
-                    }
-                }
-                
-                // Remove from pending if success
-                if let index = pendingUploads.firstIndex(where: { $0.id == cocktail.id }) {
-                    pendingUploads.remove(at: index)
-                }
-                
-            } catch {
-                print("Failed to upload cocktail \(cocktail.name): \(error)")
-            }
-        }
-    }
-    
-    func syncPendingDeletes() async {
-        for cocktail in pendingDeletes {
-            let id = cocktail.id
-            let url = serviceURL.appending(path: "\(id.uuidString)")
-            var request = URLRequest(url: url)
-            
-            request.httpMethod = "DELETE"
-            
-            do {
-                let (_, response) = try await URLSession.shared.data(for: request)
-                if let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) {
-                    print("Successfully deleted cocktail \(cocktail.name) on server.")
-                    
-                    if let index = pendingDeletes.firstIndex(where: { $0.id == cocktail.id }) {
-                        pendingDeletes.remove(at: index)
-                    }
+            } else {
+                // No imageURL from server, try to load from cache if it exists
+                if let cachedImage = loadCachedImage(for: dto.id) {
+                    cocktail.image = cachedImage
+                    cocktail.imageURL = nil
                 } else {
-                    print("Failed to delete cocktail \(cocktail.name) on server: Invalid response.")
+                    cocktail.image = nil
+                    cocktail.imageURL = nil
                 }
-            } catch {
-                print("Failed to delete cocktail \(cocktail.name) on server: \(error)")
             }
+            cocktails.append(cocktail)
+        }
+        
+        return cocktails
+    }
+    
+    func addNewCocktail(userToken: String) async throws {
+        let actions = try pendingActionService.fetchActions(ofType: .addCocktail)
+        
+        for action in actions {
+            guard let cocktailDTO = action.decodePayload(as: CocktailDTO.self) else {
+                print("Failed to decode payload for addCocktail action")
+                continue
+            }
+            let url = serviceURL
+            
+            // Request header
+            var request = createRequestHeader(url: url, method: "POST", token: userToken, setApplicationField: true)
+
+            // Request body
+            request.httpBody = try JSONEncoder().encode(cocktailDTO)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            if let error = ErrorHandler.mapHTTPResponse(response, data: data) {
+                throw error
+            }
+            
+            // Upload image if imageData is provided
+            if let imageData = action.imageData {
+                try await uploadImage(for: cocktailDTO.id, imageData: imageData, userToken: userToken)
+            }
+            
+            try pendingActionService.remove(action)
         }
     }
     
-    func syncPendingUpdates(context: ModelContext) async {
-        // Go through all the pending updates
-        for cocktail in pendingUpdates {
-            
-            do {
-                let id = cocktail.id
-                let cocktailDTO = CocktailDTO(from: cocktail)
-                let url = serviceURL.appending(path: "\(id.uuidString)")
-                
-                var request = URLRequest(url: url)
-                
-                request.httpMethod = "PUT"
-                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-                request.httpBody = try JSONEncoder().encode(cocktailDTO)
-                
-                let (_, response) = try await URLSession.shared.data(for: request)
-                if let httpResponse = response as? HTTPURLResponse {
-                    if (200...299).contains(httpResponse.statusCode) {
-                        
-                        // After successful PUT, handle image upload or deletion
-                        if let imageData = cocktail.image {
-                            // Upload image
-                            let imageURL = serviceURL.appending(path: "\(cocktail.id)/image")
-                            var imageRequest = URLRequest(url: imageURL)
-                            imageRequest.httpMethod = "POST"
-                            
-                            let boundary = UUID().uuidString
-                            imageRequest.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-                            
-                            var body = Data()
-                            body.append("--\(boundary)\r\n".data(using: .utf8)!)
-                            body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(cocktail.id).jpg\"\r\n".data(using: .utf8)!)
-                            body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
-                            body.append(imageData)
-                            body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
-                            
-                            imageRequest.httpBody = body
-                            
-                            do {
-                                let (_, imgResponse) = try await URLSession.shared.data(for: imageRequest)
-                                if let imgHttpResponse = imgResponse as? HTTPURLResponse, !(200...299).contains(imgHttpResponse.statusCode) {
-                                    print("Failed to upload image for cocktail \(cocktail.name)")
-                                }
-                                // Cache the image after upload
-                                _ = cacheImage(imageData, for: cocktail.id)
-                            } catch {
-                                print("Failed to upload image for cocktail \(cocktail.name): \(error)")
-                            }
-                        } else {
-                            // If image is nil but previously had an image, delete the image on the server and clear local image and imageURL
-                            if cocktail.imageURL != nil {
-                                let deleteImageURL = serviceURL.appending(path: "\(cocktail.id)/image")
-                                var deleteRequest = URLRequest(url: deleteImageURL)
-                                deleteRequest.httpMethod = "DELETE"
-                                
-                                do {
-                                    let (_, deleteResponse) = try await URLSession.shared.data(for: deleteRequest)
-                                    if let deleteHttpResponse = deleteResponse as? HTTPURLResponse, (200...299).contains(deleteHttpResponse.statusCode) {
-                                        cocktail.image = nil
-                                        cocktail.imageURL = nil
-                                        // Remove cached image from disk
-                                        removeCachedImage(for: cocktail.id)
-                                    } else {
-                                        print("Failed to delete image for cocktail \(cocktail.name) on server")
-                                    }
-                                } catch {
-                                    print("Failed to delete image for cocktail \(cocktail.name) on server: \(error)")
-                                }
-                            }
-                        }
-                        
-                        // Remove from pending if success
-                        if let index = pendingUpdates.firstIndex(where: { $0.id == cocktail.id }) {
-                            pendingUpdates.remove(at: index)
-                        }
-                    } else if httpResponse.statusCode == 404 {
-                        // Cocktail was deleted on server
-                        // Clean up myBar
-                        let myBarDescriptor = FetchDescriptor<MyBar>()
-                        if let myBar = try? context.fetch(myBarDescriptor).first {
-                            let deletedCocktailIDs = Set(myBar.removedCocktails.map { $0.id })
-                            let favoriteCocktailIDs = Set(myBar.favoriteCocktails)
-                            
-                            if favoriteCocktailIDs.contains(id.uuidString) {
-                                let filteredFavorites = myBar.favoriteCocktails.filter { $0 != id.uuidString }
-                                myBar.favoriteCocktails = filteredFavorites
-                            }
-                            
-                            // If cocktail already has been deleted locally we remove it from deletedCocktails
-                            // Else we remove it from the context
-                            if deletedCocktailIDs.contains(id.uuidString) {
-                                let filteredDeleted = myBar.removedCocktails.filter { $0.id != id.uuidString }
-                                myBar.removedCocktails = filteredDeleted
-                            } else {
-                                let cocktailDescriptor = FetchDescriptor<Cocktail>(predicate: #Predicate {$0.id == id} )
-                                if let localCocktail = try? context.fetch(cocktailDescriptor).first {
-                                    context.delete(localCocktail)
-                                }
-                                //let cocktailDescriptor = FetchDescriptor<Cocktail>
-                                // if let localCocktail = try? context.fetch(cocktailDescriptor).first(where: { $0.id == id }) {
-                                //    context.delete(localCocktail)
-                                //}
-                            }
-                            try? context.save()
-                        }
-
-                        // Remove from pending if success
-                        if let index = pendingUpdates.firstIndex(where: { $0.id == cocktail.id }) {
-                            pendingUpdates.remove(at: index)
-                        }
-                    }
-                }
-            } catch {
-                print("Failed to update cocktail \(cocktail.name): \(error)")
+    func updateCocktail(userToken: String) async throws {
+        let actions = try pendingActionService.fetchActions(ofType: .updateCocktail)
+        let deleteImageActions = try pendingActionService.fetchActions(ofType: .deleteCocktailImage)
+        
+        for action in actions {
+            guard let cocktailDTO = action.decodePayload(as: CocktailDTO.self) else {
+                print("Failed to decode payload for updateCocktail action")
+                continue
             }
+            let id = cocktailDTO.id
+            let url = serviceURL.appending(path: "\(id.uuidString)")
+            
+            // Request header
+            var request = createRequestHeader(url: url, method: "PUT", token: userToken, setApplicationField: true)
+            
+            // Request body
+            request.httpBody = try JSONEncoder().encode(cocktailDTO)
+            
+            let (data, response) = try await URLSession.shared.data(for: request)
+            if let error = ErrorHandler.mapHTTPResponse(response, data: data) {
+                // If 404, the cocktail was deleted on server
+                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 404 {
+                    // Optionally handle local cleanup here if context is available
+                    try pendingActionService.remove(action)
+                } else {
+                    throw error
+                }
+                continue
+            }
+            
+            // After successful PUT, handle image upload or deletion
+            if let imageData = action.imageData {
+                try await updateImage(for: cocktailDTO.id, imageData: imageData, userToken: userToken)
+            }
+            try pendingActionService.remove(action)
         }
+        
+        // Go through deleteImageActions to delete images on the server
+        for action in deleteImageActions {
+            guard let cocktailId = action.decodePayload(as: UUID.self) else {
+                print("Failed to decode payload for deleteCocktailImage action")
+                continue
+            }
+            try await deleteImage(for: cocktailId, userToken: userToken)
+            try pendingActionService.remove(action)
+        }
+    }
+    
+    // Function to delete image on the server and remove cached image
+    func deleteImage(for cocktailID: UUID, userToken: String) async throws {
+        let deleteImageURL = serviceURL.appending(path: "\(cocktailID)/image")
+        
+        // Request header
+        var request = createRequestHeader(url: deleteImageURL, method: "DELETE", token: userToken)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        if let error = ErrorHandler.mapHTTPResponse(response, data: data) {
+            print("Failed to delete image for cocktail \(cocktailID) on server: \(error)")
+            throw error
+        }
+        // Remove cached image from disk
+        removeCachedImage(for: cocktailID)
+    }
+
+    // Function for image Upload
+    func uploadImage(for cocktailID: UUID, imageData: Data, userToken: String) async throws {
+        let imageURL = serviceURL.appending(path: "\(cocktailID)/image")
+        
+        // Request header
+        var request = createRequestHeader(url: imageURL, method: "POST", token: userToken)
+        
+        let boundary = UUID().uuidString
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        var body = Data()
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(cocktailID).jpg\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+        body.append(imageData)
+        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+        request.httpBody = body
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        if let error = ErrorHandler.mapHTTPResponse(response, data: data) {
+            print("Failed to upload image for cocktail \(cocktailID): \(error)")
+        }
+    }
+    
+    func updateImage(for cocktailID: UUID, imageData: Data, userToken: String) async throws {
+        let imageURL = serviceURL.appending(path: "\(cocktailID)/image")
+        
+        // Request header
+        var request = createRequestHeader(url: imageURL, method: "PUT", token: userToken)
+        
+        let boundary = UUID().uuidString
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        
+        var body = Data()
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(cocktailID).jpg\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+        body.append(imageData)
+        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+        
+        request.httpBody = body
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        if let error = ErrorHandler.mapHTTPResponse(response, data: data) {
+            print("Failed to update image for cocktail \(cocktailID): \(error)")
+            throw error
+        }
+        
+        // Cache new image locally after successful upload
+        //_ = cacheImage(imageData, for: cocktailID)
     }
     
     // Check if the server is reachable by sending a HEAD request to the cocktails endpoint
     func checkServerConnection() async -> Bool {
         let url = serviceURL
-        var request = URLRequest(url: url)
-        request.httpMethod = "HEAD"
+        
+        var request = createRequestHeader(url: url, method: "HEAD")
         
         do {
             let (_, response) = try await URLSession.shared.data(for: request)
@@ -427,4 +286,5 @@ class CocktailService: ObservableObject {
         }
         return false
     }
+    
 }

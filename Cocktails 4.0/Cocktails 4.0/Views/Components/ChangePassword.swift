@@ -20,7 +20,6 @@ struct ChangePassword: View {
     @State private var showNewPassword: Bool = false
     @State private var showConfirmNewPassword: Bool = false
     
-    @State private var isLoading: Bool = false
     @State private var isSuccess: Bool = false
     
     private var valid: Bool {
@@ -134,10 +133,7 @@ struct ChangePassword: View {
                 
                 Button {
                     Task {
-                        isLoading = true
-                        userViewModel.errorMessage = nil
                         let success = await userViewModel.updatePassword(currentPassword: currentPassword, newPassword: newPassword, confirmNewPassword: ConfirmNewPassword)
-                        isLoading = false
                         if success {
                             isSuccess = true
                             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -156,7 +152,7 @@ struct ChangePassword: View {
                         }
                     }
                 } label: {
-                    if isLoading {
+                    if userViewModel.isLoading {
                         ProgressView()
                             .frame(maxWidth: .infinity)
                     } else if isSuccess {
@@ -170,7 +166,7 @@ struct ChangePassword: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(Color.colorSet4)
-                .disabled(!valid || isLoading)
+                .disabled(!valid || userViewModel.isLoading)
             }
             .padding()
         }

@@ -22,3 +22,5 @@ func convertUnit (ingredient: Ingredient, targetUnit: UnitVolume) -> Double? {
 func isFavorite(cocktail: Cocktail, myBar: MyBar) -> Bool {
     myBar.favoriteCocktails.contains(cocktail.id.uuidString)
 }
+
+

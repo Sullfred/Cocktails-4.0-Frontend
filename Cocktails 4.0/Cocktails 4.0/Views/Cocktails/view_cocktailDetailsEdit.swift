@@ -12,7 +12,7 @@ import PhotosUI
 struct view_cocktailDetailsEdit: View {
     @Environment(\.modelContext) var modelContext
     @Environment(\.dismiss) var dismiss
-    @StateObject private var api = CocktailService.shared
+    @EnvironmentObject var cocktailViewModel: CocktailViewModel
     
     var cocktail: Cocktail
     @State private var draft: CocktailDraft
@@ -198,20 +198,10 @@ struct view_cocktailDetailsEdit: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        do {
-                            try modelContext.save()
-                            draft.apply(to: cocktail)
-                            
-                            Task {
-                                await api.updateCocktail(cocktail)
-                                await api.syncPendingUpdates(context: modelContext)
-                            }
-                            
-                            dismiss()
-                        } catch {
-                            errorMessage = "Failed to save cocktail: \(error.localizedDescription)"
-                            showError = true
+                        Task {
+                            await cocktailViewModel.updateCocktail(draft, cocktail: cocktail)
                         }
+                        dismiss()
                     }
                     .disabled(draft.name.isEmpty)
                 }
@@ -222,49 +212,6 @@ struct view_cocktailDetailsEdit: View {
         } message: {
             Text(errorMessage)
         }
-    }
-}
-
-struct CocktailDraft {
-    var name: String
-    var creator: String
-    var style: Style
-    var ingredients: [Ingredient]
-    var comment: String
-    var cocktailCategory: CocktailCategory
-    var image: Data?
-    
-    init(from cocktail: Cocktail) {
-        self.name = cocktail.name.capitalized
-        self.creator = cocktail.creator.capitalized
-        self.style = cocktail.style
-        // Deep copy of ingredients as Ingredient is reference due to @Model
-        self.ingredients = cocktail.ingredients.map { ingredient in
-            Ingredient(
-                volume: ingredient.volume,
-                unit: ingredient.unit,
-                name: ingredient.name,
-                orderIndex: ingredient.orderIndex
-            )
-        }.sorted(by: {$0.orderIndex < $1.orderIndex})
-        
-        self.comment = cocktail.comment
-        self.cocktailCategory = cocktail.cocktailCategory
-        self.image = cocktail.image
-    }
-    
-    func apply(to cocktail: Cocktail) {
-        cocktail.name = name.lowercased()
-        cocktail.creator = creator.lowercased()
-        cocktail.style = style
-        cocktail.ingredients = ingredients.map { ingredient in
-            ingredient.name = ingredient.name.lowercased()
-            ingredient.assignTagBasedOnName()
-            return ingredient
-        }
-        cocktail.comment = comment
-        cocktail.cocktailCategory = cocktailCategory
-        cocktail.image = image
     }
 }
 

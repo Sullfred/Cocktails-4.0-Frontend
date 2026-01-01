@@ -13,5 +13,6 @@
   "simple syrup": ["simple sirup", "sukkersirup", "demerara syrup", "demerara sirup"],
   "calvados": ["applejack"],
   "sparkling water": ["seltzer", "danskvand", "soda water"],
-  "vermouth" : ["sweet vermouth", "dry vermout", "lillet blanc", "lillet rouge"]
+  "vermouth" : ["sweet vermouth", "dry vermout", "lillet blanc", "lillet rouge"],
+  "lime juice" : ["lemon juice"]
 }

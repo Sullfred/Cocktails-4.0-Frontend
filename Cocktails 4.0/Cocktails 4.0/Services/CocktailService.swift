@@ -26,7 +26,6 @@ func cacheImage(_ data: Data, for id: UUID) -> URL? {
         try data.write(to: url, options: .atomic)
         return url
     } catch {
-        print("Failed to cache image for cocktail \(id): \(error)")
         return nil
     }
 }
@@ -74,7 +73,6 @@ class CocktailService: ObservableObject {
         do {
             cocktailDTOs = try JSONDecoder().decode([CocktailDTO].self, from: data)
         } catch {
-            print("Failed to decode cocktails: \(error)")
             throw error
         }
         
@@ -85,11 +83,10 @@ class CocktailService: ObservableObject {
             // If cocktail has an imageURL we get the image from the server
             if dto.imageURL != nil {
                 let imageURL = serviceURL.appending(path: "\(dto.id)/image")
-                let imageRequest = createRequestHeader(url: url, method: "GET")
+                let imageRequest = createRequestHeader(url: imageURL, method: "GET")
                 do {
                     let (imageData, imageResponse) = try await URLSession.shared.data(for: imageRequest)
                     if let error = ErrorHandler.mapHTTPResponse(imageResponse, data: imageData) {
-                        print("Image HTTP error for \(cocktail.name): \(error)")
                         if let cachedImage = loadCachedImage(for: dto.id) {
                             cocktail.image = cachedImage
                             cocktail.imageURL = nil
@@ -102,7 +99,6 @@ class CocktailService: ObservableObject {
                 } catch {
                     ToastManager.shared.show(style: .warning, message: "Failed to get image for cocktail: \(cocktail.name)")
                     
-                    print("Failed to download image for cocktail \(cocktail.name): \(error)")
                     // Try loading cached image if available
                     if let cachedImage = loadCachedImage(for: dto.id) {
                         cocktail.image = cachedImage
@@ -130,7 +126,6 @@ class CocktailService: ObservableObject {
         
         for action in actions {
             guard let cocktailDTO = action.decodePayload(as: CocktailDTO.self) else {
-                print("Failed to decode payload for addCocktail action")
                 continue
             }
             let url = serviceURL
@@ -161,7 +156,7 @@ class CocktailService: ObservableObject {
         
         for action in actions {
             guard let cocktailDTO = action.decodePayload(as: CocktailDTO.self) else {
-                print("Failed to decode payload for updateCocktail action")
+                ErrorHandler.handle(ErrorOutput.customError(message: "Decoding error has happened"))
                 continue
             }
             let id = cocktailDTO.id
@@ -195,7 +190,6 @@ class CocktailService: ObservableObject {
         // Go through deleteImageActions to delete images on the server
         for action in deleteImageActions {
             guard let cocktailId = action.decodePayload(as: UUID.self) else {
-                print("Failed to decode payload for deleteCocktailImage action")
                 continue
             }
             try await deleteImage(for: cocktailId, userToken: userToken)
@@ -212,7 +206,7 @@ class CocktailService: ObservableObject {
         
         let (data, response) = try await URLSession.shared.data(for: request)
         if let error = ErrorHandler.mapHTTPResponse(response, data: data) {
-            print("Failed to delete image for cocktail \(cocktailID) on server: \(error)")
+            //print("Failed to delete image for cocktail \(cocktailID) on server: \(error)")
             throw error
         }
         // Remove cached image from disk
@@ -238,7 +232,7 @@ class CocktailService: ObservableObject {
         
         let (data, response) = try await URLSession.shared.data(for: request)
         if let error = ErrorHandler.mapHTTPResponse(response, data: data) {
-            print("Failed to upload image for cocktail \(cocktailID): \(error)")
+            //print("Failed to upload image for cocktail \(cocktailID): \(error)")
         }
     }
     
@@ -262,12 +256,12 @@ class CocktailService: ObservableObject {
         
         let (data, response) = try await URLSession.shared.data(for: request)
         if let error = ErrorHandler.mapHTTPResponse(response, data: data) {
-            print("Failed to update image for cocktail \(cocktailID): \(error)")
+            //print("Failed to update image for cocktail \(cocktailID): \(error)")
             throw error
         }
         
         // Cache new image locally after successful upload
-        //_ = cacheImage(imageData, for: cocktailID)
+        _ = cacheImage(imageData, for: cocktailID)
     }
     
     // Check if the server is reachable by sending a HEAD request to the cocktails endpoint

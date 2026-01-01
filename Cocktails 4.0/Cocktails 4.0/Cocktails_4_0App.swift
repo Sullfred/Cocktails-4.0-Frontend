@@ -29,7 +29,7 @@ struct Cocktails_4_0App: App {
                             try modelContext.save()
                         }
                     } catch {
-                        print("Error in startup tasks: \(error)")
+                        //print("Error in startup tasks: \(error)")
                     }
                 }
         }

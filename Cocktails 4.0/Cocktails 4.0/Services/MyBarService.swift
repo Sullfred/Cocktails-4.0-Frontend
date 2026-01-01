@@ -54,7 +54,7 @@ class MyBarService: ObservableObject {
         for action in actions {
             guard let dto = action.decodePayload(as: MyBarItemDTO.self)
             else {
-                print("could not decode")
+                //print("could not decode")
                 continue
             }
             

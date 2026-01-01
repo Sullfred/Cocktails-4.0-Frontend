@@ -75,7 +75,7 @@ struct view_notes: View {
                     let decodedGuide = try JSONDecoder().decode(GuideAndNotes.self, from: data)
                     guide = decodedGuide
                 } catch {
-                    print("Failed to load or decode GuideAndNotes.json: \(error)")
+                    //print("Failed to load or decode GuideAndNotes.json: \(error)")
                 }
             } else {
                 print("GuideAndNotes.json not found.")

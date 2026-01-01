@@ -62,9 +62,6 @@ struct ErrorHandler {
                 break
             }
         }
-        
-        // print errors for debugging during dev - remove later
-        print("Error: \(errorOutput.localizedDescription)")
     }
     
     // Handle errors from the server

@@ -6,214 +6,234 @@
 //
 
 import Foundation
-import Combine
-import KeychainSwift
 import SwiftData
+import SwiftUI
 
 @MainActor
 class UserViewModel: ObservableObject {
-    @Published var username: String = ""
-    @Published var password: String = ""
-    @Published var isLoading: Bool = false
-    @Published var errorMessage: String? = nil
-    @Published var isLoggedIn: Bool = false
-    @Published var currentUser: LoggedInUser? = nil
+    @Published var username = ""
+    @Published var password = ""
+    @Published var isLoading = false
+    @Published var errorMessage: String?
+    @Published var currentUser: LoggedInUser?
     @Published var showLogin = false
-    
-    private let service: UserService
-    
-    var formIsValid: Bool {
-        !username.isEmpty && !password.isEmpty && password.count >= 6
+    @Published var authState: AuthState = .unknown
+
+    private let dependencies: AppDependencies
+    private let userDefaultsKey = "loggedInUser"
+    var isLoggedIn: Bool {
+        authState == .authenticated
     }
     
-    private let userDefaultsKey = "loggedInUser"
+    var formIsValid: Bool {
+        !username.isEmpty && password.count >= 6
+    }
     
-    init() {
-        self.service = UserService()
+    var canCreateCocktails: Bool {
+        currentUser?.role == .creator ||
+        currentUser?.role == .admin
+    }
+    
+    var requireAuth: Bool {
+        currentUser?.authState == .authenticated
+    }
+    
+    
+    init(dependencies: AppDependencies) {
+        self.dependencies = dependencies
         
-        if let data = UserDefaults.standard.data(forKey: userDefaultsKey) {
-            if let savedUser = try? JSONDecoder().decode(LoggedInUser.self, from: data) {
-                currentUser = savedUser
-                isLoggedIn = true
+        loadPersistedSession()
+        if currentUser != nil {
+            Task {
+                await verifyTokenStatus()
             }
         }
     }
-    
-    func login(myBarViewModel: MyBarViewModel) async {
+
+    // MARK: - Auth Actions
+    func login() async {
         isLoading = true
         errorMessage = nil
+
         defer {
-            password = ""
             isLoading = false
-        }
-        
-        do {
-            let response = try await service.login(username: username, password: password)
-            
             password = ""
-            
-            // save data from response
-            let keychain = KeychainSwift()
-            let token = response.token
-            
-            keychain.set(token, forKey: "userToken")
-            
-            let loggedInUser = LoggedInUser(
+        }
+
+        do {
+            let response = try await dependencies.userService.login(
+                username: username,
+                password: password
+            )
+
+            try KeychainAuthStore.shared.saveToken(response.token)
+
+            let user = LoggedInUser(
                 id: response.user.id,
                 username: response.user.username,
                 role: response.user.role,
                 authState: .authenticated
             )
-            
-            if let encoded = try? JSONEncoder().encode(loggedInUser) {
-                UserDefaults.standard.set(encoded, forKey: userDefaultsKey)
-            }
-            
-            currentUser = loggedInUser
-            isLoggedIn = true
+
+            currentUser = user
+            authState = .authenticated
+
+            persistCurrentUser()
             showLogin = false
-            
-            // Get users personal bar after login
-            await myBarViewModel.getPersonalBar()
-            
+
         } catch {
-            let message = ErrorHandler.normalize(error)
-            errorMessage = message.localizedDescription
+            ErrorHandler.handle(error)
+            authState = .unknown
         }
-        
-        isLoading = false
     }
-    
-    func logout(myBarViewModel: MyBarViewModel) async {
-        let keychain = KeychainSwift()
-        let token = keychain.get("userToken")
 
-        // Attempt server-side logout only if a token exists
-        if let token {
-            do {
-                try await service.logout(userToken: token)
-            } catch {
-                // Logout should still succeed client-side even if server rejects the token
-                ToastManager.shared.show(style: .error, message: error.localizedDescription)
-            }
-        }
-
-        // Always clean up client-side state
-        myBarViewModel.changeToGuestBar()
-
-        keychain.delete("userToken")
-        isLoggedIn = false
-        currentUser = nil
-        UserDefaults.standard.removeObject(forKey: userDefaultsKey)
-    }
-    
-    func deleteUser(context: ModelContext) async {
-        let keychain = KeychainSwift()
-        guard let token = keychain.get("userToken")
-        else {
-            return
-        }
-        
+    func logout() async {
         do {
-            try await service.deleteUser(userToken: token)
+            try await dependencies.userService.logout()
+        } catch {
+            
+        }
+
+        clearSession()
+        cleanPersonalBar()
+    }
+
+    func deleteUser() async {
+        do {
+            try await dependencies.userService.deleteUser()
         } catch {
             ErrorHandler.handle(error)
         }
-        
-        // Delete personal bar from context
-        let cureentUserId = self.currentUser?.id
-        if let bar = try? context.fetch(FetchDescriptor<MyBar>(predicate: #Predicate { $0.userId == cureentUserId })).first {
-            context.delete(bar)
-            try? context.save()
-        }
-        
-        keychain.delete("userToken")
-        isLoggedIn = false
-        currentUser = nil
-        UserDefaults.standard.removeObject(forKey: userDefaultsKey)
+
+        clearSession()
+        cleanPersonalBar()
     }
-    
-    func updateUsername(newUsername: String) async -> Bool {
+
+    // MARK: - Profile Updates
+    func updateUsername(_ newUsername: String) async -> Bool {
         isLoading = true
         errorMessage = nil
-        
-        let keychain = KeychainSwift()
-        guard let token = keychain.get("userToken")
-        else {
-            return false
-        }
-        
+        defer { isLoading = false }
+
         do {
-            try await service.updateUsername(userToken: token, newUsername: newUsername)
-            
-            // update user info in the userdefaults
+            try await dependencies.userService.updateUsername(newUsername)
+
             currentUser?.username = newUsername
-            if let currentUser = currentUser, let encoded = try? JSONEncoder().encode(currentUser) {
-                UserDefaults.standard.set(encoded, forKey: userDefaultsKey)
-            }
-            isLoading = false
-            
+            persistCurrentUser()
+
             return true
         } catch {
-            isLoading = false
-            
-            let message = ErrorHandler.normalize(error)
-            errorMessage = message.localizedDescription
-            
+            ErrorHandler.handle(error)
             return false
         }
     }
-    
-    func updatePassword(currentPassword: String, newPassword: String, confirmNewPassword: String) async -> Bool {
-        isLoading = false
-        errorMessage = nil
-        
-        let keychain = KeychainSwift()
-        guard let token = keychain.get("userToken")
-        else {
+
+    func updatePassword(current: String, new: String, confirm: String) async -> Bool {
+        guard new == confirm else {
+            errorMessage = "Passwords do not match"
             return false
         }
+
+        isLoading = true
+        errorMessage = nil
+        defer {
+            isLoading = false
+        }
+
+        do {
+            try await dependencies.userService.updatePassword(current: current, new: new, confirm: confirm)
+            return true
+        } catch {
+            ErrorHandler.handle(error)
+            return false
+        }
+    }
+
+    // MARK: - Token Verification
+    func verifyTokenStatus() async {
+        do {
+            let token = try KeychainAuthStore.shared.getToken()
+            if token.isEmpty {
+                handleExpiredSession()
+                return
+            }
+            
+            try await dependencies.userService.verifyToken(token)
+            authState = .authenticated
+        } catch APIError.unauthorized {
+            handleExpiredSession()
+        } catch APIError.notFound {
+            handleExpiredSession()
+        } catch KeyChainError.getTokenError {
+            currentUser?.authState = .expired
+            authState = .expired
+            persistCurrentUser()
+        } catch {
+            ErrorHandler.handle(error)
+        }
+    }
+
+    // MARK: - Session Handling
+    private func persistCurrentUser() {
+        guard let currentUser else { return }
+
+        do {
+            try UserSessionStore.shared.saveUser(currentUser)
+        } catch {
+            print("Failed to persist user:", error)
+        }
+    }
+
+    private func loadPersistedSession() {
+        guard let user = try? UserSessionStore.shared.getUser()
+        else {
+            return
+        }
+
+        currentUser = user
+        authState = user.authState
+    }
+
+    private func clearSession() {
+        username = ""
+        password = ""
+        currentUser = nil
+        authState = .unknown
+        
+        UserSessionStore.shared.deleteUser()
         
         do {
-            try await service.updatePassword(userToken: token, currentPassword: currentPassword, newPassword: newPassword, confirmNewPassword: confirmNewPassword)
-            
-            isLoading = false
-            
-            return true
+            try KeychainAuthStore.shared.deleteToken()
         } catch {
-            isLoading = false
-            let message = ErrorHandler.normalize(error)
-            errorMessage = message.localizedDescription
-            
-            return false
+            ErrorHandler.handle(error)
         }
     }
-    
-    func checkTokenValidity() async {
-        
-        let userToken = KeychainSwift().get("userToken")
-        
-        if (userToken != nil) {
-            do {
-                try await service.verifyUser(userToken: userToken ?? "")
-            } catch {
-                handleExpiredToken()
-            }
-        }
-    }
-    
-    func handleExpiredToken() {
-        let keychain = KeychainSwift()
-        keychain.delete("userToken")
-        
-        // update user info in the userdefaults
+
+    private func handleExpiredSession() {
         currentUser?.authState = .expired
-        if let currentUser = currentUser, let encoded = try? JSONEncoder().encode(currentUser) {
-            UserDefaults.standard.set(encoded, forKey: userDefaultsKey)
+        authState = .expired
+        persistCurrentUser()
+
+        do {
+            try KeychainAuthStore.shared.deleteToken()
+        } catch {
+            ErrorHandler.handle(error)
         }
     }
-    
-    func presentLogin() {
-        showLogin = true
+
+    // MARK: - SwiftData Cleanup
+    private func cleanPersonalBar() {
+        do {
+            let descriptor = FetchDescriptor<MyBar>(
+                predicate: #Predicate { _ in true }
+            )
+            let bars = try dependencies.contexCoordinator.fetch(descriptor)
+
+            try bars.forEach{
+                try dependencies.contexCoordinator.delete($0)
+            }
+        } catch {
+            ErrorHandler.handle(error)
+        }
     }
 }

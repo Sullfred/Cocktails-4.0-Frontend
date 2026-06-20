@@ -10,7 +10,6 @@ import SwiftData
 import PhotosUI
 
 struct view_cocktailDetailsEdit: View {
-    @Environment(\.modelContext) var modelContext
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var cocktailViewModel: CocktailViewModel
     

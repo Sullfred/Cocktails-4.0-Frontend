@@ -8,7 +8,7 @@ import Foundation
 
 struct ServiceConfig {
     // Get from environment
-    static let baseURL: URL = {URL(string: ProcessInfo.processInfo.environment["SERVER_URL"] ?? "http://127.0.0.1:8080")!}()
+    static let baseURL: URL = {URL(string: ProcessInfo.processInfo.environment["SERVER_URL"] ?? "http://127.0.0.1:9080")!}()
 }
 
 struct Endpoints {

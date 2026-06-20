@@ -96,5 +96,4 @@ struct view_userRoles: View {
 
 #Preview {
     view_userRoles()
-        .environmentObject(AdminViewModel())
 }

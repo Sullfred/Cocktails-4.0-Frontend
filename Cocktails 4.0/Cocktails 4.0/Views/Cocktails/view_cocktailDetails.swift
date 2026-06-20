@@ -22,7 +22,7 @@ struct view_cocktailDetails: View {
         view_cocktailDetailsInfo(cocktail: cocktail)
             .environmentObject(myBarViewModel)
             .toolbar {
-                if (userViewModel.currentUser?.role == .creator || userViewModel.currentUser?.role == .admin) {
+                if (userViewModel.canCreateCocktails) {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button(action: {
                             editCocktail()
@@ -34,15 +34,12 @@ struct view_cocktailDetails: View {
             }
             .fullScreenCover(isPresented: $isEditing) {
                 view_cocktailDetailsEdit(cocktail: cocktail)
-                    .environmentObject(cocktailViewModel)
             }
     }
-}
-
-private extension view_cocktailDetails {
+    
     func editCocktail() {
         if let loggedInUser = userViewModel.currentUser {
-            toggleIfAuthenticated(loggedInUser: loggedInUser, toggleVar: &isEditing)
+            toggleIfAuthenticated(isAuthenticated: userViewModel.requireAuth, toggleVar: &isEditing)
         }
     }
 }
@@ -72,11 +69,12 @@ private extension view_cocktailDetails {
     let container = try! ModelContainer(for: MyBar.self, configurations: config)
     let context = container.mainContext
     
-    let myBarVM = MyBarViewModel(context: context)
+    let dependencies = AppDependencies(context: context)
+    let myBarVM = MyBarViewModel(dependencies: dependencies)
     
     view_cocktailDetails(cocktail: testCocktail)
         .environmentObject({
-            let vm = UserViewModel()
+            let vm = UserViewModel(dependencies: dependencies)
             vm.currentUser = LoggedInUser(
                 id: UUID(),
                 username: "Daniel Vang Kleist",

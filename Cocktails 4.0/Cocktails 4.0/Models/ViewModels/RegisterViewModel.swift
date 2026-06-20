@@ -18,10 +18,10 @@ class RegisterViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var didRegister: Bool = false
     
-    private let service: UserService
+    private let dependencies: AppDependencies
     
-    init() {
-        self.service = UserService()
+    init(dependencies: AppDependencies) {
+        self.dependencies = dependencies
     }
     
     var formIsValid: Bool {
@@ -37,11 +37,10 @@ class RegisterViewModel: ObservableObject {
             isLoading = false
         }
         do {
-            try await service.createUser(username: username, password: password, confirmPassword: confirmPassword)
+            try await dependencies.userService.register(username: username, password: password, confirmPassword: confirmPassword)
             didRegister = true
         } catch {
-            let message = ErrorHandler.normalize(error)
-            errorMessage = message.localizedDescription
+            ErrorHandler.handle(error)
         }
     }
 }

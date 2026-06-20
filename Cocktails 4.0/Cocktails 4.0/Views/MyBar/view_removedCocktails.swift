@@ -9,9 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct view_removedCocktails: View {
-    @Environment(\.modelContext) private var context
     @EnvironmentObject var myBarViewModel: MyBarViewModel
-    
     @State var selectedCocktails = [RemovedCocktail?]()
     
     var body: some View {
@@ -95,7 +93,8 @@ private extension view_removedCocktails {
     let container = try! ModelContainer(for: MyBar.self, configurations: config)
     let context = container.mainContext
     
-    let myBarVM = MyBarViewModel(context: context)
+    let dependencies = AppDependencies(context: context)
+    let myBarVM = MyBarViewModel(dependencies: dependencies)
     
     view_removedCocktails()
         .modelContainer(for: MyBar.self, inMemory: true)

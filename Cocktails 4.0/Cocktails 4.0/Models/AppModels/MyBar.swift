@@ -38,3 +38,14 @@ struct RemovedCocktail: Codable, Hashable, Identifiable {
         self.date = date
     }
 }
+
+//Default state
+extension MyBar {
+    static var empty: MyBar {
+        MyBar(
+            myBarItems: [],
+            favoriteCocktails: [],
+            deletedCocktails: []
+        )
+    }
+}

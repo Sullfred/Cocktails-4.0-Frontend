@@ -9,78 +9,84 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    @Environment(\.modelContext) var context
-    @StateObject private var userViewModel = UserViewModel()
+    @StateObject private var userViewModel: UserViewModel
     @StateObject private var myBarViewModel: MyBarViewModel
     @StateObject private var cocktailViewModel: CocktailViewModel
+    @StateObject private var adminViewModel: AdminViewModel
+    @StateObject private var registerViewModel: RegisterViewModel
     
-    @State private var minimizeBanner: Bool = false
-    
-    private func toggleBannerSize() {
-        minimizeBanner.toggle()
+    @State private var isBannerMinimized: Bool = false
+
+    init(dependencies: AppDependencies) {
+        _myBarViewModel = StateObject(wrappedValue: MyBarViewModel(dependencies: dependencies))
+        _cocktailViewModel = StateObject(wrappedValue: CocktailViewModel(dependencies: dependencies))
+        _userViewModel = StateObject(wrappedValue: UserViewModel(dependencies: dependencies))
+        _adminViewModel = StateObject(wrappedValue: AdminViewModel(dependencies: dependencies))
+        _registerViewModel = StateObject(wrappedValue: RegisterViewModel(dependencies: dependencies))
     }
-    
-    init(context: ModelContext) {
-        UITabBar.appearance().backgroundColor = UIColor.white
-        _myBarViewModel = StateObject(wrappedValue: MyBarViewModel(context: context))
-        _cocktailViewModel = StateObject(wrappedValue: CocktailViewModel(context: context))
-    }
-    
+
     var body: some View {
         ZStack(alignment: .top) {
-            TabView {
-                view_cocktailsFrontPage()
-                    .tabItem {
-                        Label("Cocktails", systemImage: "list.bullet")
-                    }
-                    .environmentObject(userViewModel)
-                    .environmentObject(myBarViewModel)
-                    .environmentObject(cocktailViewModel)
-                view_myBarFrontPage()
-                    .tabItem {
-                        Label("My Bar", systemImage: "wineglass")
-                    }
-                    .environmentObject(userViewModel)
-                    .environmentObject(myBarViewModel)
-            }
-            .background(Color.colorSet2)
-            .tint(Color.colorSet5)
-            .onAppear(perform: {
-                Task {
-                    await userViewModel.checkTokenValidity()
-                    await myBarViewModel.syncAll()
-                    await cocktailViewModel.syncAll()
-                    await cocktailViewModel.refresh()
-                    
+
+            VStack(spacing: 0) {
+                TabView {
+                    CocktailsFrontPage()
+                        .tabItem {
+                            Label("Cocktails", systemImage: "list.bullet")
+                        }
+
+                    MyBarFrontPage()
+                        .tabItem {
+                            Label("My Bar", systemImage: "wineglass")
+                        }
                 }
-            })
-            .sheet(isPresented: $userViewModel.showLogin) {
-                view_login()
-                    .environmentObject(userViewModel)
-                    .environmentObject(myBarViewModel)
+                .background(Color.colorSet2)
+                .tint(.colorSet5)
             }
-            
-            if (userViewModel.currentUser?.authState == .expired) {
-                if (minimizeBanner == false) {
-                    SessionExpiredBanner(onLogin: userViewModel.presentLogin, minimize: toggleBannerSize)
-                        .transition(.scale.animation(.easeInOut(duration: 0.3)))
-                        .zIndex(1)
-                } else {
-                    SessionExpiredMiniBanner(minimize: toggleBannerSize)
-                        .transition(.scale.animation(.easeInOut(duration: 0.6)))
-                        .zIndex(1)
+
+            // MARK: - Session Expiry Banner
+            if userViewModel.authState == .expired {
+                Group {
+                    if isBannerMinimized {
+                        SessionExpiredMiniBanner(minimize: toggleBannerSize)
+                    } else {
+                        SessionExpiredBanner(
+                            onLogin: {
+                                userViewModel.showLogin = true
+                            },
+                            minimize: toggleBannerSize
+                        )
+                    }
                 }
+                .transition(.scale.animation(.easeInOut(duration: 0.3)))
+                .zIndex(1)
+                .padding(.top, 24)
             }
         }
+        .environmentObject(userViewModel)
+        .environmentObject(myBarViewModel)
+        .environmentObject(cocktailViewModel)
+        .environmentObject(adminViewModel)
+        .environmentObject(registerViewModel)
+        
+        .task {
+            await loadInitialData()
+        }
+        .sheet(isPresented: $userViewModel.showLogin) {
+            LoginView()
+                .environmentObject(userViewModel)
+        }
+    }
+
+    private func loadInitialData() async {
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask { await userViewModel.verifyTokenStatus() }
+            group.addTask { await myBarViewModel.loadLocalBar() }
+            group.addTask { await cocktailViewModel.refresh() }
+        }
+    }
+    
+    private func toggleBannerSize() {
+        isBannerMinimized.toggle()
     }
 }
-
-/*
- #Preview {
- let config = ModelConfiguration(isStoredInMemoryOnly: true)
- let container = try! ModelContainer(for: MyBar.self, configurations: config)
- let context = container.mainContext
- 
- ContentView(context: context)
- }
- */

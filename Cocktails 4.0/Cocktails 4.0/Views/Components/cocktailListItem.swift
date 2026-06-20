@@ -76,7 +76,8 @@ struct cocktailListItem: View {
     let container = try! ModelContainer(for: MyBar.self, configurations: config)
     let context = container.mainContext
     
-    let myBarVM = MyBarViewModel(context: context)
+    let dependencies = AppDependencies(context: context)
+    let myBarVM = MyBarViewModel(dependencies: dependencies)
     
     cocktailListItem(cocktail: testCocktail)
         .environmentObject(myBarVM)

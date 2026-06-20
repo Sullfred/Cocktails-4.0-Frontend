@@ -22,5 +22,5 @@ enum UserRole: String, Codable {
 }
 
 enum AuthState: Codable {
-    case authenticated, expired
+    case authenticated, expired, unknown
 }

@@ -8,7 +8,7 @@
 import SwiftUI
 import SwiftData
 
-struct view_login: View {
+struct LoginView: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var myBarViewModel: MyBarViewModel
     
@@ -65,7 +65,7 @@ struct view_login: View {
             VStack(spacing: 16) {
                 Button(action: {
                     Task {
-                        await userViewModel.login(myBarViewModel: myBarViewModel)
+                        await userViewModel.login()
                     }
                 }) {
                     ZStack {
@@ -99,14 +99,5 @@ struct view_login: View {
 }
 
 #Preview {
-    // Create an in-memory model container for previews
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: MyBar.self, configurations: config)
-    let context = container.mainContext
-    
-    let myBarVM = MyBarViewModel(context: context)
-    
-    view_login()
-        .environmentObject(UserViewModel())
-        .environmentObject(myBarVM)
+    LoginView()
 }

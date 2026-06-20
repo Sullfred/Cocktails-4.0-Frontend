@@ -8,7 +8,7 @@
 import SwiftUI
 import SwiftData
 
-struct view_cocktailsFrontPage: View {
+struct CocktailsFrontPage: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var myBarViewModel: MyBarViewModel
     @EnvironmentObject var cocktailViewModel: CocktailViewModel
@@ -30,9 +30,6 @@ struct view_cocktailsFrontPage: View {
             ScrollView {
                 NavigationLink {
                     view_cocktailsList(selectedCategory: nil) // Show all cocktails
-                        .environmentObject(userViewModel)
-                        .environmentObject(myBarViewModel)
-                        .environmentObject(cocktailViewModel)
                 } label: {
                     CategoryCard(
                         title: "All Cocktails",
@@ -49,9 +46,6 @@ struct view_cocktailsFrontPage: View {
                     ForEach(CocktailCategory.allCases, id: \.self) { category in
                         NavigationLink {
                             view_cocktailsList(selectedCategory: category)
-                                .environmentObject(userViewModel)
-                                .environmentObject(myBarViewModel)
-                                .environmentObject(cocktailViewModel)
                         } label: {
                             CategoryCard(
                                 title: category.rawValue,
@@ -72,9 +66,6 @@ struct view_cocktailsFrontPage: View {
                     ForEach(IngredientTag.allCases, id: \.self) { tag in
                         NavigationLink {
                             view_cocktailsList(selectedCategory: nil, baseSpirit: tag)
-                                .environmentObject(userViewModel)
-                                .environmentObject(myBarViewModel)
-                                .environmentObject(cocktailViewModel)
                         } label: {
                             CategoryCard(
                                 title: tag.rawValue.capitalized,
@@ -98,7 +89,7 @@ struct view_cocktailsFrontPage: View {
             .navigationTitle("Cocktails")
             .background(Color.colorSet2)
             .toolbar {
-                if (userViewModel.currentUser?.role == .creator || userViewModel.currentUser?.role == .admin) {
+                if (userViewModel.canCreateCocktails) {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button(action: {
                             checkBeforeGoToNewCocktailView()
@@ -109,10 +100,16 @@ struct view_cocktailsFrontPage: View {
                 }
             }
             .navigationDestination(isPresented: $showCreateNewCocktail){
-                view_newCocktail().environmentObject(cocktailViewModel)
+                view_newCocktail()
             }
         }
         .tint(.colorSet4)
+    }
+    
+    private func checkBeforeGoToNewCocktailView() {
+        if userViewModel.currentUser != nil {
+            toggleIfAuthenticated(isAuthenticated: userViewModel.requireAuth, toggleVar: &showCreateNewCocktail)
+        }
     }
 }
 
@@ -162,26 +159,19 @@ extension IngredientTag {
     }
 }
 
-private extension view_cocktailsFrontPage {
-    func checkBeforeGoToNewCocktailView() {
-        if let loggedInUser = userViewModel.currentUser {
-            toggleIfAuthenticated(loggedInUser: loggedInUser, toggleVar: &showCreateNewCocktail)
-        }
-    }
-}
-
 #Preview {
     // Create an in-memory model container for previews
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(for: MyBar.self, configurations: config)
     let context = container.mainContext
     
-    let myBarVM = MyBarViewModel(context: context)
-    let cocktailVM = CocktailViewModel(context: context)
+    let dependencies = AppDependencies(context: context)
+    let myBarVM = MyBarViewModel(dependencies: dependencies)
+    let cocktailVM = CocktailViewModel(dependencies: dependencies)
     
-    view_cocktailsFrontPage()
+    CocktailsFrontPage()
         .environmentObject({
-            let vm = UserViewModel()
+            let vm = UserViewModel(dependencies: dependencies)
             vm.currentUser = LoggedInUser(
                 id: UUID(),
                 username: "Daniel Vang Kleist",

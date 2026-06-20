@@ -100,6 +100,10 @@ struct QuickAdd: View {
             quickAddBarItems = items.sorted { $0.name < $1.name }
         }
     }
+    
+    func addItems(barItems: [MyBarItem]) {
+        myBarViewModel.addMultipleBarItems(barItems)
+    }
 }
 
 @ViewBuilder
@@ -117,13 +121,6 @@ private func categoryHeader(_ category: BarItemCategory) -> some View {
     .background(Color.colorSet2)
 }
 
-private extension QuickAdd {
-    func addItems(barItems: [MyBarItem]) {
-        Task {
-            await myBarViewModel.addMultipleBarItems(barItems)
-        }
-    }
-}
 
 #Preview {
     // Create an in-memory model container for previews
@@ -131,7 +128,8 @@ private extension QuickAdd {
     let container = try! ModelContainer(for: MyBar.self, configurations: config)
     let context = container.mainContext
     
-    let myBarVM = MyBarViewModel(context: context)
+    let dependencies = AppDependencies(context: context)
+    let myBarVM = MyBarViewModel(dependencies: dependencies)
     
     QuickAdd()
         .environmentObject(myBarVM)

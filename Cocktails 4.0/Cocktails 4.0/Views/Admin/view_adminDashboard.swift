@@ -10,10 +10,8 @@ import SwiftUI
 import SwiftUI
 
 struct view_adminDashboard: View {
-    @StateObject private var adminViewModel = AdminViewModel()
+    @EnvironmentObject var adminViewModel: AdminViewModel
     @Environment(\.dismiss) private var dismiss
-    
-    @EnvironmentObject var myBarViewModel: MyBarViewModel
     
     var body: some View {
         ScrollView {
@@ -25,8 +23,6 @@ struct view_adminDashboard: View {
                     .padding()
             } else if adminViewModel.isConnected {
                 view_dashboardContent()
-                    .environmentObject(adminViewModel)
-                    .environmentObject(myBarViewModel)
             } else {
                 VStack(spacing: 12) {
                     

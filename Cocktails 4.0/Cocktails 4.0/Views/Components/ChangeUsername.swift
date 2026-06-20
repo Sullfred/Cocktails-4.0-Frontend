@@ -50,7 +50,7 @@ struct ChangeUsername: View {
                 
                 Button {
                     Task {
-                        let success = await userViewModel.updateUsername(newUsername: newUsername)
+                        let success = await userViewModel.updateUsername(newUsername)
                         if success {
                             isSuccess = true
                             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -92,5 +92,4 @@ struct ChangeUsername: View {
 #Preview {
     @Previewable @State var value: Bool = true
     ChangeUsername(isShowingChangeUsername: $value)
-        .environmentObject(UserViewModel())
 }

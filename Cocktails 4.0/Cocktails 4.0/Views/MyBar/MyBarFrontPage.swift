@@ -8,7 +8,7 @@
 import SwiftUI
 import SwiftData
 
-struct view_myBarFrontPage: View {
+struct MyBarFrontPage: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var myBarViewModel: MyBarViewModel
     @State private var path: [String] = []
@@ -18,19 +18,13 @@ struct view_myBarFrontPage: View {
             Group {
                 if userViewModel.isLoggedIn {
                     view_personalBar(path: $path)
-                        .environmentObject(userViewModel)
-                        .environmentObject(myBarViewModel)
                 } else {
-                    view_login()
-                        .environmentObject(userViewModel)
-                        .environmentObject(myBarViewModel)
+                    LoginView()
                 }
             }
             .navigationDestination(for: String.self) { value in
                 if value == "settings" {
                     view_userSettings()
-                        .environmentObject(userViewModel)
-                        .environmentObject(myBarViewModel)
                 }
             }
         }
@@ -49,11 +43,12 @@ struct view_myBarFrontPage: View {
     let container = try! ModelContainer(for: MyBar.self, configurations: config)
     let context = container.mainContext
     
-    let myBarVM = MyBarViewModel(context: context)
+    let dependencies = AppDependencies(context: context)
+    let myBarVM = MyBarViewModel(dependencies: dependencies)
     
-    view_myBarFrontPage()
+    MyBarFrontPage()
         .environmentObject({
-            let vm = UserViewModel()
+            let vm = UserViewModel(dependencies: dependencies)
             vm.currentUser = LoggedInUser(
                 id: UUID(),
                 username: "Daniel Vang Kleist",

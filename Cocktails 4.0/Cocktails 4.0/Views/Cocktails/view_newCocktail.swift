@@ -226,9 +226,7 @@ struct view_newCocktail: View {
             Text(errorMessage)
         }
     }
-}
-
-private extension view_newCocktail {
+    
     func save() {
         do {
             newCocktailIngredients = newCocktailIngredients.map { ingredient in
@@ -245,7 +243,7 @@ private extension view_newCocktail {
             }
             
             dismiss()
-        } 
+        }
     }
     
     func cancel() {

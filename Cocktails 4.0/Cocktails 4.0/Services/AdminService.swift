@@ -16,65 +16,45 @@ class AdminService: ObservableObject {
     
     init() {}
     
-    // Check if the server is reachable
-    func checkServerConnection() async throws -> Bool {
-        let url = ServiceConfig.baseURL.appending(path: "ping")
-        
-        // Request info
-        var request = createRequestHeader(url: url, method: "GET")
-        
-        let (_, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            return false
-        }
-        return true
-    }
-    
     // fetch users
-    func fetchUsers(userToken: String) async throws -> [fetchPublicUserDTO] {
+    func fetchUsers() async throws -> [fetchPublicUserDTO] {
         let url = userServiceURL.appending(path: "fetchUsers")
         
-        // Request info
-        var request = createRequestHeader(url: url, method: "GET", token: userToken)
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
-        if let error = ErrorHandler.mapHTTPResponse(response, data: data) {
-            throw error
-        }
-        
-        let users = try JSONDecoder().decode([fetchPublicUserDTO].self, from: data)
+        var users: [fetchPublicUserDTO] = try await APIClient.request(url: url)
         return users
     }
     
-    func updateUserRole(userId: UUID, newRole: UserRole, userToken: String) async throws {
+    func updateUserRole(userId: UUID, newRole: UserRole) async throws {
         let url = userServiceURL.appending(path: "updateUserRole")
         let dto = UpdateUserRoleDTO(id: userId, role: newRole)
-        
-        // Request info
-        var request = createRequestHeader(url: url, method: "PATCH", token: userToken, setApplicationField: true)
-        
         let body = try JSONEncoder().encode(dto)
-        request.httpBody = body
         
-        // Await and handle response from server
-        let (data, response) = try await URLSession.shared.data(for: request)
-        if let error = ErrorHandler.mapHTTPResponse(response, data: data) {
-            throw error
-        }
+        try await APIClient.mutate(
+            url: url,
+            method: "PUT",
+            body: body
+        )
     }
     
-    func deleteCocktail(userToken: String, cocktailIds: [String]) async throws {
-        
+    func deleteCocktail(cocktailIds: [String]) async throws {
         for cocktailId in cocktailIds {
             let url = cocktailServiceURL.appending(path: cocktailId)
             
-            var request = createRequestHeader(url: url, method: "DELETE", token: userToken)
-            
-            // Await and handle response from server
-            let (data, response) = try await URLSession.shared.data(for: request)
-            if let error = ErrorHandler.mapHTTPResponse(response, data: data) {
-                throw error
-            }
+            try await APIClient.mutate(
+                url: url,
+                method: "DELETE"
+            )
+        }
+    }
+    
+    func checkServerConnection() async throws -> Bool {
+        let url = ServiceConfig.baseURL.appending(path: "ping")
+        
+        do {
+            try await APIClient.ping(url: url)
+            return true
+        } catch {
+            return false
         }
     }
 }

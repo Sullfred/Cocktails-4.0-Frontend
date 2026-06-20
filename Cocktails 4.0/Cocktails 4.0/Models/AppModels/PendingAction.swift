@@ -18,8 +18,19 @@ enum PendingActionType: String, Codable, CaseIterable {
     case addCocktail
     case updateCocktail
     case deleteCocktail
-    case deleteCocktailImage
-    case updateCocktailImage
+}
+
+struct CocktailPayload: Codable {
+    let cocktail: CocktailDTO
+    let imageAction: ImageAction
+    let imageData: Data?
+}
+
+enum ImageAction: Codable {
+    case unchanged
+    case upload
+    case update
+    case delete
 }
 
 extension PendingActionType {
@@ -30,20 +41,21 @@ extension PendingActionType {
 final class PendingAction {
     @Attribute(.unique) var id: UUID
     @Attribute var type: PendingActionType
+    var userId: UUID
     var payload: Data
     var dateCreated: Date
     var imageData: Data?
 
-    init<T: Encodable>(type: PendingActionType, payload: T, imageData: Data? = nil) {
+    init<T: Encodable>(type: PendingActionType, userId: UUID, payload: T) {
         self.id = UUID()
         self.type = type
+        self.userId = userId
         self.dateCreated = Date()
-        self.imageData = imageData
         let encoder = JSONEncoder()
         do {
             self.payload = try encoder.encode(payload) // raw JSON bytes
         } catch {
-            ErrorHandler.handle(ErrorOutput.customError(message: "Failed to encode payload"))
+            ErrorHandler.handle(PendingActionError.encodingError)
             self.payload = Data()
         }
     }
@@ -53,7 +65,7 @@ final class PendingAction {
         do {
             return try decoder.decode(T.self, from: payload)
         } catch {
-            ErrorHandler.handle(ErrorOutput.customError(message: "Failed to decode payload"))
+            ErrorHandler.handle(PendingActionError.decodingError)
             return nil
         }
     }

@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-func toggleIfAuthenticated(loggedInUser: LoggedInUser, toggleVar: inout Bool) {
-    if (loggedInUser.authState == .authenticated) {
+func toggleIfAuthenticated(isAuthenticated: Bool, toggleVar: inout Bool) {
+    if (isAuthenticated) {
         withAnimation {
             toggleVar.toggle()
         }

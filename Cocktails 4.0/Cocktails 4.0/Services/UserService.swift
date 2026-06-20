@@ -6,168 +6,77 @@
 //
 
 import Foundation
-import SwiftData
-import SwiftUI
 
 @MainActor
-class UserService: ObservableObject {
-    private let serviceURL = ServiceConfig.baseURL.appending(path: Endpoints.user)
-    
-    init() {}
-    
-    func createUser(username: String, password: String, confirmPassword: String) async throws {
-        let dto = CreateUserDTO(username: username, password: password, confirmPassword: confirmPassword)
-        let url = serviceURL.appending(path: "register")
-        
-        // Request info
-        var request = createRequestHeader(url: url, method: "POST", setApplicationField: true)
-        
-        // Request body
-        let body = try JSONEncoder().encode(dto)
-        request.httpBody = body
-        
-        // Await and handle response from server
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw ErrorOutput.serverError(statusCode: 500, message: "No response from server")
-        }
-        if httpResponse.statusCode == 409 {
-            var errorMessage: String = "Failed to register user"
-            if let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-               let reason = json["reason"] as? String {
-                errorMessage = reason
-            } else if let string = String(data: data, encoding: .utf8), !string.isEmpty {
-                errorMessage = string
-            }
-            throw ErrorOutput.customError(message: errorMessage)
-        }
-        if !(200...299).contains(httpResponse.statusCode) {
-            // Decode error message from server
-            var errorMessage: String = "Failed to register user"
-            if let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-               let reason = json["reason"] as? String {
-                errorMessage = reason
-            } else if let string = String(data: data, encoding: .utf8), !string.isEmpty {
-                errorMessage = string
-            }
-            throw ErrorOutput.serverError(statusCode: httpResponse.statusCode, message: errorMessage)
-        }
-    }
-    
+final class UserService {
+    private let base = ServiceConfig.baseURL
+
+    // MARK: - Auth
     func login(username: String, password: String) async throws -> LoginResponse {
-        let url = serviceURL.appending(path: "login")
-        
-        // Request info
-        var request = createRequestHeader(url: url, method: "POST")
-        
-        // Encode username and password in Basic Auth header
-        let loginString = "\(username):\(password)"
-        guard let loginData = loginString.data(using: .utf8) else {
-            throw ErrorOutput.encodingError(message: "Failed to encode credentials")
+        let url = base.appending(path: Endpoints.user + "/login")
+        let creds = "\(username):\(password)"
+        guard let loginData = creds.data(using: .utf8) else {
+            throw APIError.networkFailure(NSError(domain: "Auth", code: -1))
         }
-        let base64Login = loginData.base64EncodedString()
-        request.setValue("Basic \(base64Login)", forHTTPHeaderField: "Authorization")
-        
-        // Await and handle response from server
-        let (data, response) = try await URLSession.shared.data(for: request)
-        if let error = ErrorHandler.mapHTTPResponse(response, data: data) {
-            throw error
-        }
-        
-        let loginResponse = try JSONDecoder().decode(LoginResponse.self, from: data)
-        return loginResponse
-    }
-    
-    func logout(userToken: String) async throws {
-        let url = serviceURL.appending(path: "logout")
-        
-        // Request info
-        var request = createRequestHeader(url: url, method: "POST", token: userToken)
+        let base64Creds = loginData.base64EncodedString()
 
-        // Await and handle response from server
-        let (data, response) = try await URLSession.shared.data(for: request)
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        let apiKey = ProcessInfo.processInfo.environment["COCKTAILS_API_KEY"]
+        request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+        request.setValue("Basic \(base64Creds)", forHTTPHeaderField: "Authorization")
+        request.setValue("json", forHTTPHeaderField: "Accept")
 
-        // If the token is already invalid/expired, logout should still be considered successful
-        if let httpResponse = response as? HTTPURLResponse {
-            switch httpResponse.statusCode {
-            case 200...299:
-                return
-            case 401, 403, 404:
-                // Token missing, expired, or already deleted on server
-                // Treat as successful logout to allow client cleanup
-                return
-            default:
-                // Handle unexpected errors
-                if let error = ErrorHandler.mapHTTPResponse(response, data: data) {
-                    throw error
-                }
-            }
-        }
-    }
-    
-    func deleteUser(userToken: String) async throws {
-        let url = serviceURL.appending(path: "me")
-        
-        // Request info
-        var request = createRequestHeader(url: url, method: "DELETE", token: userToken)
-        
-        // Await and handle response from server
         let (data, response) = try await URLSession.shared.data(for: request)
-        if let error = ErrorHandler.mapHTTPResponse(response, data: data) {
+        try APIError.map(data, response, url: request.url?.absoluteString ?? "")
+
+        return try JSONDecoder().decode(LoginResponse.self, from: data)
+    }
+
+    func verifyToken(_ token: String) async throws {
+        let url = base.appending(path: Endpoints.user + "/verifyToken")
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        let apiKey = ProcessInfo.processInfo.environment["COCKTAILS_API_KEY"]
+        request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        let (_, response) = try await URLSession.shared.data(for: request)
+        try APIError.map(nil, response, url: "verifyToken")
+    }
+
+    // MARK: - User Management
+    func register(username: String, password: String, confirmPassword: String) async throws {
+        let url = base.appending(path: Endpoints.user + "/register")
+        let body = try JSONEncoder().encode(CreateUserDTO(username: username, password: password, confirmPassword: confirmPassword))
+        try await APIClient.mutate(url: url, method: "POST", body: body)
+    }
+
+    func updateUsername(_ newUsername: String) async throws {
+        let url = base.appending(path: Endpoints.user + "/updateUsername")
+        let body = try JSONEncoder().encode(UpdateUsernameDTO(newUsername: newUsername))
+        try await APIClient.mutate(url: url, method: "PATCH", body: body)
+    }
+
+    func updatePassword(current: String, new: String, confirm: String) async throws {
+        let url = base.appending(path: Endpoints.user + "/updatePassword")
+        let body = try JSONEncoder().encode(UpdatePasswordDTO(currentPassword: current, newPassword: new, confirmNewPassword: confirm))
+        try await APIClient.mutate(url: url, method: "PATCH", body: body)
+    }
+
+    func deleteUser() async throws {
+        let url = base.appending(path: Endpoints.user + "/me")
+        try await APIClient.mutate(url: url, method: "DELETE")
+    }
+
+    func logout() async throws {
+        let url = base.appending(path: Endpoints.user + "/logout")
+        do {
+            try await APIClient.mutate(url: url, method: "POST")
+        } catch APIError.httpError(let code, _) where [401, 403, 404].contains(code) {
+            return // Already expired/invalid, treat as success
+        } catch {
             throw error
-        }
-    }
-    
-    func updateUsername(userToken: String, newUsername: String) async throws {
-        let url = serviceURL.appending(path: "updateUsername")
-        let dto = UpdateUsernameDTO(newUsername: newUsername)
-        
-        // Request info
-        var request = createRequestHeader(url: url, method: "PATCH", token: userToken, setApplicationField: true)
-        
-        let body = try JSONEncoder().encode(dto)
-        request.httpBody = body
-        
-        // Await and handle response from server
-        let (data, response) = try await URLSession.shared.data(for: request)
-        if let error = ErrorHandler.mapHTTPResponse(response, data: data) {
-            throw error
-        }
-    }
-    
-    // Update password function
-    func updatePassword(userToken: String, currentPassword: String, newPassword: String, confirmNewPassword: String) async throws {
-        let url = serviceURL.appending(path: "updatePassword")
-        let dto = UpdatePasswordDTO(currentPassword: currentPassword, newPassword: newPassword, confirmNewPassword: confirmNewPassword)
-        
-        // Request info
-        var request = createRequestHeader(url: url, method: "PATCH", token: userToken, setApplicationField: true)
-        
-        let body = try JSONEncoder().encode(dto)
-        request.httpBody = body
-        
-        // Await and handle response from server
-        let (data, response) = try await URLSession.shared.data(for: request)
-        if let error = ErrorHandler.mapHTTPResponse(response, data: data) {
-            throw error
-        }
-    }
-    
-    func verifyUser(userToken: String) async throws {
-        let url = serviceURL.appending(path: "verifyToken")
-        
-        // Request info
-        var request = createRequestHeader(url: url, method: "GET", token: userToken)
-        
-        // Await and handle response from server
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        if let HTTPURLResponse = response as? HTTPURLResponse {
-            let httpCode = HTTPURLResponse.statusCode
-            
-            if httpCode != 200 {
-                throw ErrorHandler.mapHTTPResponse(response, data: data)!
-            }
         }
     }
 }

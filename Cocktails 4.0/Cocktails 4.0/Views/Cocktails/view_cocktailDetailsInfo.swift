@@ -108,15 +108,13 @@ struct view_cocktailDetailsInfo: View {
             }
         }
     }
-}
-
-private extension view_cocktailDetailsInfo {
+    
     func toggleFavorite(cocktailId: String) {
         Task {
             if myBarViewModel.personalBar.favoriteCocktails.contains(cocktailId) {
-                await myBarViewModel.deleteFavorite(cocktailID: cocktailId)
+                await myBarViewModel.deleteFavorite(cocktailId)
             } else {
-                await myBarViewModel.addFavorite(cocktailID: cocktailId)
+                await myBarViewModel.addFavorite(cocktailId)
             }
         }
     }

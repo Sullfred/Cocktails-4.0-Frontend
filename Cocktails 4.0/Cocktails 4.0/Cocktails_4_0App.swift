@@ -7,50 +7,50 @@
 
 import SwiftUI
 import SwiftData
+import os
 
 @main
 struct Cocktails_4_0App: App {
-    @StateObject private var sharedModelContainer = ModelContainerObservable()
-    
+    private let modelContainer: ModelContainer
+    private let dependencies: AppDependencies
     @StateObject private var toastManager = ToastManager.shared
+
+    init() {
+        let schema = Schema([Cocktail.self, MyBar.self, PendingAction.self])
+        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+
+        do {
+            self.modelContainer = try ModelContainer(for: schema, configurations: [configuration])
+            self.dependencies = AppDependencies(context: modelContainer.mainContext)
+            // 3. Bootstrap immediately after container creation
+            bootstrapData()
+        } catch {
+            fatalError("Failed to create ModelContainer: \(error)")
+        }
+    }
 
     var body: some Scene {
         WindowGroup {
-            ContentView(context: sharedModelContainer.container.mainContext)
+            ContentView(dependencies: dependencies)
+                .environmentObject(dependencies)
                 .environmentObject(toastManager)
                 .toastView(toast: $toastManager.toast)
-                .task {
-                    let modelContext = sharedModelContainer.container.mainContext
-                    do {
-                        let existingBars = try modelContext.fetch(FetchDescriptor<MyBar>())
-                        if existingBars.isEmpty {
-                            let newBar = MyBar()
-                            modelContext.insert(newBar)
-                            try modelContext.save()
-                        }
-                    } catch {
-                        //print("Error in startup tasks: \(error)")
-                    }
-                }
         }
-        .modelContainer(sharedModelContainer.container)
+        .modelContainer(modelContainer)
     }
-}
 
-// Observable wrapper for ModelContainer
-class ModelContainerObservable: ObservableObject {
-    let container: ModelContainer
-    init() {
-        let schema = Schema([
-            Cocktail.self,
-            MyBar.self,
-            PendingAction.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+    private func bootstrapData() {
+        let context = modelContainer.mainContext
         do {
-            container = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let existingBars = try context.fetch(FetchDescriptor<MyBar>())
+            guard existingBars.isEmpty else { return }
+
+            let newBar = MyBar()
+            context.insert(newBar)
+            try context.save()
+            Logger().info("Initial MyBar record created.")
         } catch {
-            fatalError("Could not create ModelContainer: \(error)")
+            Logger().error("Bootstrap failed: \(error)")
         }
     }
 }

@@ -56,7 +56,8 @@ private func categoryHeader(_ category: BarItemCategory) -> some View {
     let container = try! ModelContainer(for: MyBar.self, configurations: config)
     let context = container.mainContext
     
-    let myBarVM = MyBarViewModel(context: context)
+    let dependencies = AppDependencies(context: context)
+    let myBarVM = MyBarViewModel(dependencies: dependencies)
     
     barItemList()
         .environmentObject(myBarVM)

@@ -9,18 +9,14 @@ import SwiftUI
 import SwiftData
 
 struct view_personalBar: View {
-    @Environment(\.modelContext) private var context
-    
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var myBarViewModel: MyBarViewModel
     
     @Binding var path: [String]
     
     @State private var presentSheet = false
-    
     @State private var newItemName: String = ""
     @State private var newItemCategory: BarItemCategory? = nil
-    
     @State private var showError = false
     @State private var errorMessage = ""
     
@@ -49,7 +45,7 @@ struct view_personalBar: View {
                             .foregroundStyle(.secondary)
                         Button(action: {
                             Task {
-                                await myBarViewModel.getPersonalBar()
+                                await myBarViewModel.GetPersonalBar()
                             }
                         }) {
                             Text("Retry")
@@ -67,10 +63,8 @@ struct view_personalBar: View {
                     .padding(.horizontal, 15)
                 
                 if myBarViewModel.personalBar.myBarItems.isEmpty {
-                    
                     // Center text
                     Spacer()
-                    
                     
                     HStack(){
                         Spacer()
@@ -153,10 +147,7 @@ struct view_personalBar: View {
             Text(errorMessage)
         }
     }
-}
-
-
-private extension view_personalBar {
+    
     func add_item() {
         if (userViewModel.currentUser?.authState == .authenticated) {
             let trimmedName = newItemName.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -182,7 +173,7 @@ private extension view_personalBar {
     }
     
     func openQuickAddView() {
-        if (userViewModel.currentUser?.authState == .authenticated) {
+        if (userViewModel.requireAuth) {
             presentSheet.toggle()
         } else {
             ToastManager.shared.show(style: .warning, message: "Login required")
@@ -196,11 +187,12 @@ private extension view_personalBar {
     let container = try! ModelContainer(for: MyBar.self, configurations: config)
     let context = container.mainContext
     
-    let myBarVM = MyBarViewModel(context: context)
+    let dependencies = AppDependencies(context: context)
+    let myBarVM = MyBarViewModel(dependencies: dependencies)
     
     view_personalBar(path: .constant([]))
         .environmentObject({
-            let vm = UserViewModel()
+            let vm = UserViewModel(dependencies: dependencies)
             vm.currentUser = LoggedInUser(
                 id: UUID(),
                 username: "PreviewUser",

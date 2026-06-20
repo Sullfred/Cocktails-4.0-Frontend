@@ -133,7 +133,7 @@ struct ChangePassword: View {
                 
                 Button {
                     Task {
-                        let success = await userViewModel.updatePassword(currentPassword: currentPassword, newPassword: newPassword, confirmNewPassword: ConfirmNewPassword)
+                        let success = await userViewModel.updatePassword(current: currentPassword, new: newPassword, confirm: ConfirmNewPassword)
                         if success {
                             isSuccess = true
                             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -178,5 +178,4 @@ struct ChangePassword: View {
     @Previewable @State var value: Bool = true
     
     ChangePassword(isShowingChangePassword: $value)
-        .environmentObject(UserViewModel())
 }

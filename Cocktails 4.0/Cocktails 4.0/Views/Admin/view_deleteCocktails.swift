@@ -21,7 +21,6 @@ struct view_deleteCocktails: View {
         } else {
             ScrollView {
                 MultiSelectButtonView(myBarViewModel.personalBar.removedCocktails, $selectedCocktails) { item in
-                    
                     HStack(alignment: .center) {
                         Image(systemName: selectedCocktails.contains(item) ? "checkmark.square.fill" : "square")
                             .foregroundStyle(selectedCocktails.contains(item) ? .blue : .primary)
@@ -77,9 +76,7 @@ struct view_deleteCocktails: View {
             .padding()
         }
     }
-}
-
-private extension view_deleteCocktails {
+    
     func deleteCocktails() {
         var deletedCocktails: [RemovedCocktail] = []
         var cocktailIds: [String] = []
@@ -115,9 +112,10 @@ private extension view_deleteCocktails {
     let container = try! ModelContainer(for: MyBar.self, configurations: config)
     let context = container.mainContext
     
-    let myBarVM = MyBarViewModel(context: context)
+    let dependencies = AppDependencies(context: context)
+    let myBarVM = MyBarViewModel(dependencies: dependencies)
     
     view_deleteCocktails()
-        .environmentObject(AdminViewModel())
+        .environmentObject(AdminViewModel(dependencies: dependencies))
         .environmentObject(myBarVM)
 }

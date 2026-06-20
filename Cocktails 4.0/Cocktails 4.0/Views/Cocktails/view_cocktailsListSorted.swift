@@ -9,8 +9,6 @@ import SwiftUI
 import SwiftData
 
 struct view_cocktailsListSorted: View {
-    @Environment(\.modelContext) private var context
-    
     @EnvironmentObject var cocktailViewModel: CocktailViewModel
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var myBarViewModel: MyBarViewModel
@@ -29,6 +27,7 @@ struct view_cocktailsListSorted: View {
         }
     }
     
+    // TODO: Move to CocktailRepository
     @Query(sort: [
         SortDescriptor(\Cocktail.name),
         SortDescriptor(\Cocktail.creator)
@@ -68,13 +67,9 @@ struct view_cocktailsListSorted: View {
                 if !cocktailsInCategory.isEmpty {
                     Section(header: selectedCategory == nil ? categoryHeader(category) : nil) {
                         ForEach(cocktailsInCategory) { cocktail in
-                            NavigationLink(destination: view_cocktailDetails(cocktail: cocktail)
-                                .environmentObject(cocktailViewModel)
-                                .environmentObject(userViewModel)
-                                .environmentObject(myBarViewModel)) {
+                            NavigationLink(destination: view_cocktailDetails(cocktail: cocktail)) {
                                     VStack(alignment: .leading) {
                                         cocktailListItem(cocktail: cocktail)
-                                            .environmentObject(myBarViewModel)
                                     }
                                 }
                                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
@@ -93,9 +88,7 @@ struct view_cocktailsListSorted: View {
         }
         .listStyle(.plain)
         .refreshable {
-            Task{
-                await cocktailViewModel.refresh()
-            }
+            await cocktailViewModel.refresh()
         }
     }
     
@@ -159,7 +152,7 @@ private extension view_cocktailsListSorted {
         return false
     }
     
-    func deleteCocktail(_ indexSet: IndexSet) {
+    func hideCocktail(_ indexSet: IndexSet) {
         for index in indexSet {
             let cocktail = allCocktails[index]
             removeFromList(cocktail)
@@ -173,6 +166,7 @@ private extension view_cocktailsListSorted {
         }
     }
     
+    // TODO: Move to IngredientGroupService
     func loadIngredientGroups() -> [String: [String]] {
         guard let url = Bundle.main.url(forResource: "IngredientGroups", withExtension: "json") else {
             return [:]
@@ -193,14 +187,15 @@ private extension view_cocktailsListSorted {
     let container = try! ModelContainer(for: MyBar.self, configurations: config)
     let context = container.mainContext
     
-    let myBarVM = MyBarViewModel(context: context)
+    let dependencies = AppDependencies(context: context)
+    let myBarVM = MyBarViewModel(dependencies: dependencies)
     
     view_cocktailsListSorted(sortOrder: [
         SortDescriptor(\Cocktail.name),
         SortDescriptor(\Cocktail.creator)
     ], searchText: "", showFavoritesOnly: false, showCraftableOnly: false, selectedCategory: nil, baseSpirit: nil)
     .environmentObject({
-        let vm = UserViewModel()
+        let vm = UserViewModel(dependencies: dependencies)
         vm.currentUser = LoggedInUser(
             id: UUID(),
             username: "Daniel Vang Kleist",

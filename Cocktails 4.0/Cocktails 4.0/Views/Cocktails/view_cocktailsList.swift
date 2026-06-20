@@ -2,8 +2,6 @@ import SwiftUI
 import SwiftData
 
 struct view_cocktailsList: View {
-    @Environment(\.modelContext) private var modelContext
-    
     @EnvironmentObject var cocktailViewModel: CocktailViewModel
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var myBarViewModel: MyBarViewModel
@@ -23,15 +21,12 @@ struct view_cocktailsList: View {
 
     var body: some View {
         view_cocktailsListSorted(sortOrder: sortOrder, searchText: searchText, showFavoritesOnly: showFavoritesOnly, showCraftableOnly: showCraftableOnly, selectedCategory: selectedCategory, baseSpirit: baseSpirit)
-            .environmentObject(userViewModel)
-            .environmentObject(myBarViewModel)
-            .environmentObject(cocktailViewModel)
             .navigationTitle(selectedCategory != nil ? selectedCategory?.rawValue ?? "error" : "All Cocktails")
             .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always)) //Will fix flicker when navigating
             .background(Color.colorSet2)
             .scrollContentBackground(.hidden)
             .toolbar {
-                if (userViewModel.currentUser?.role == .creator || userViewModel.currentUser?.role == .admin){
+                if (userViewModel.canCreateCocktails){
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button(action: {
                             checkBeforeGoToNewCocktailView()
@@ -85,16 +80,14 @@ struct view_cocktailsList: View {
                 }
             }
             .navigationDestination(isPresented: $showCreateNewCocktail){
-                view_newCocktail().environmentObject(cocktailViewModel)
+                view_newCocktail()
             }
             .tint(.colorSet4)
     }
-}
-
-private extension view_cocktailsList {
-    func checkBeforeGoToNewCocktailView() {
-        if let loggedInUser = userViewModel.currentUser {
-            toggleIfAuthenticated(loggedInUser: loggedInUser, toggleVar: &showCreateNewCocktail)
+    
+    private func checkBeforeGoToNewCocktailView() {
+        if userViewModel.currentUser != nil {
+            toggleIfAuthenticated(isAuthenticated: userViewModel.requireAuth, toggleVar: &showCreateNewCocktail)
         }
     }
 }
@@ -105,12 +98,13 @@ private extension view_cocktailsList {
     let container = try! ModelContainer(for: MyBar.self, configurations: config)
     let context = container.mainContext
     
-    let myBarVM = MyBarViewModel(context: context)
-    let cocktailVM = CocktailViewModel(context: context)
+    let dependencies = AppDependencies(context: context)
+    let myBarVM = MyBarViewModel(dependencies: dependencies)
+    let cocktailVM = CocktailViewModel(dependencies: dependencies)
     
     view_cocktailsList(selectedCategory: nil, baseSpirit: nil)
         .environmentObject({
-            let vm = UserViewModel()
+            let vm = UserViewModel(dependencies: dependencies)
             vm.currentUser = LoggedInUser(
                 id: UUID(),
                 username: "Daniel Vang Kleist",

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct view_registerUser: View {
-    @StateObject private var viewModel = RegisterViewModel()
+    @EnvironmentObject var registerViewModel: RegisterViewModel
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
@@ -27,7 +27,7 @@ struct view_registerUser: View {
             
             VStack(spacing: 20) {
                 // Username
-                TextField("Username", text: $viewModel.username)
+                TextField("Username", text: $registerViewModel.username)
                     .textContentType(.username)
                     .autocapitalization(.none)
                     .disableAutocorrection(true)
@@ -38,10 +38,10 @@ struct view_registerUser: View {
                 // Password
                 ZStack(alignment: .trailing) {
                     Group {
-                        if viewModel.showPassword {
-                            TextField("Password (min. 8 chars)", text: $viewModel.password)
+                        if registerViewModel.showPassword {
+                            TextField("Password (min. 8 chars)", text: $registerViewModel.password)
                         } else {
-                            SecureField("Password (min. 8 chars)", text: $viewModel.password)
+                            SecureField("Password (min. 8 chars)", text: $registerViewModel.password)
                         }
                     }
                     .textContentType(.password)
@@ -52,9 +52,9 @@ struct view_registerUser: View {
                     .cornerRadius(10)
                     
                     Button(action: {
-                        viewModel.showPassword.toggle()
+                        registerViewModel.showPassword.toggle()
                     }) {
-                        Image(systemName: viewModel.showPassword ? "eye.slash" : "eye")
+                        Image(systemName: registerViewModel.showPassword ? "eye.slash" : "eye")
                             .foregroundColor(.gray)
                     }
                     .padding(.trailing, 16)
@@ -63,10 +63,10 @@ struct view_registerUser: View {
                 // Confirm Password
                 ZStack(alignment: .trailing) {
                     Group {
-                        if viewModel.showConfirmPassword {
-                            TextField("Confirm Password", text: $viewModel.confirmPassword)
+                        if registerViewModel.showConfirmPassword {
+                            TextField("Confirm Password", text: $registerViewModel.confirmPassword)
                         } else {
-                            SecureField("Confirm Password", text: $viewModel.confirmPassword)
+                            SecureField("Confirm Password", text: $registerViewModel.confirmPassword)
                         }
                     }
                     .textContentType(.password)
@@ -77,17 +77,17 @@ struct view_registerUser: View {
                     .cornerRadius(10)
                     
                     Button(action: {
-                        viewModel.showConfirmPassword.toggle()
+                        registerViewModel.showConfirmPassword.toggle()
                     }) {
-                        Image(systemName: viewModel.showConfirmPassword ? "eye.slash" : "eye")
+                        Image(systemName: registerViewModel.showConfirmPassword ? "eye.slash" : "eye")
                             .foregroundColor(.gray)
                     }
                     .padding(.trailing, 16)
                 }
                 
                 // Error
-                if !viewModel.errorMessage.isEmpty {
-                    Text(viewModel.errorMessage)
+                if !registerViewModel.errorMessage.isEmpty {
+                    Text(registerViewModel.errorMessage)
                         .foregroundColor(.red)
                         .font(.caption)
                         .padding(.bottom, 5)
@@ -97,35 +97,35 @@ struct view_registerUser: View {
             // Register button
             Button(action: {
                 Task {
-                    await viewModel.register()
+                    await registerViewModel.register()
                     
                     // Reset username, password and confirmPassword
-                    viewModel.username = ""
-                    viewModel.password = ""
-                    viewModel.confirmPassword = ""
+                    registerViewModel.username = ""
+                    registerViewModel.password = ""
+                    registerViewModel.confirmPassword = ""
                 }
             }) {
-                if viewModel.isLoading {
+                if registerViewModel.isLoading {
                     ProgressView()
                 } else {
                     Text("Create Account")
                         .fontWeight(.semibold)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(viewModel.formIsValid ? Color.colorSet4 : Color.gray.opacity(0.4))
-                        .foregroundColor(viewModel.formIsValid ? Color.white : Color.gray)
+                        .background(registerViewModel.formIsValid ? Color.colorSet4 : Color.gray.opacity(0.4))
+                        .foregroundColor(registerViewModel.formIsValid ? Color.white : Color.gray)
                         .cornerRadius(8)
                         .padding(.horizontal)
                 }
             }
-            .disabled(!viewModel.formIsValid || viewModel.isLoading)
+            .disabled(!registerViewModel.formIsValid || registerViewModel.isLoading)
             
             Spacer()
         }
         .padding(20)
         .background(Color.colorSet2.ignoresSafeArea())
         // Watch for success and dismiss
-        .onChange(of: viewModel.didRegister) { dismiss() }
+        .onChange(of: registerViewModel.didRegister) { dismiss() }
     }
 }
 

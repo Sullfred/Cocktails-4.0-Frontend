@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct barItemRow: View {
-    @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var myBarViewModel: MyBarViewModel
     
     var barItem: MyBarItem
@@ -51,14 +50,13 @@ struct barItemRow: View {
             Text("Are you sure you want to delete \"\(deleteConfirmationItem?.name.capitalized ?? "")\"?")
         }
     }
-}
-
-private extension barItemRow {
+    
     func deleteItem(_ item: MyBarItem) {
-                Task {
-                    await myBarViewModel.deleteBarItem(barItem)
-                }
+        Task {
+            await myBarViewModel.deleteBarItem(barItem)
+        }
     }
 }
+
 
 

@@ -48,7 +48,6 @@ struct Cocktails_4_0App: App {
             let newBar = MyBar()
             context.insert(newBar)
             try context.save()
-            Logger().info("Initial MyBar record created.")
         } catch {
             Logger().error("Bootstrap failed: \(error)")
         }

@@ -82,7 +82,7 @@ final class MyBarPendingActionProcessor: PendingActionProcessor {
     }
     
     private func handleAddRemovedCocktail(_ action: PendingAction) async throws {
-        guard let payload = action.decodePayload(as: RemovedCocktailDTO.self) else {
+        guard let payload = action.decodePayload(as: HiddenCocktailDTO.self) else {
             throw PendingActionError.invalidPayload
         }
         
@@ -90,7 +90,7 @@ final class MyBarPendingActionProcessor: PendingActionProcessor {
     }
     
     private func handleDeleteRemovedCocktail(_ action: PendingAction) async throws {
-        guard let payload = action.decodePayload(as: RemovedCocktailDTO.self) else {
+        guard let payload = action.decodePayload(as: HiddenCocktailDTO.self) else {
             throw PendingActionError.invalidPayload
         }
         

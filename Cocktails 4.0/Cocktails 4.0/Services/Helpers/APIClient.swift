@@ -21,18 +21,28 @@ struct APIClient {
     static func request<T: Decodable>(url: URL, method: String = "GET", body: Data? = nil) async throws -> T {
         let request = try buildRequest(url: url, method: method, body: body)
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await perform(request)
 
         try APIError.map(data,response, url: request.url?.absoluteString ?? "")
 
         return try decoder.decode(T.self, from: data)
     }
+    
+    static func requestData(url: URL, method: String = "GET", body: Data? = nil) async throws -> Data {
+        let request = try buildRequest(url: url, method: method, body: body)
+
+        let (data, response) = try await perform(request)
+
+        try APIError.map(data, response, url: request.url?.absoluteString ?? "")
+
+        return data
+    }
 
     @discardableResult
     static func mutate<T: Decodable>(url: URL, method: String, body: Data? = nil, responseType: T.Type = EmptyResponse.self) async throws -> T {
-        let request = try buildRequest(url: url, method: method, body: body)
+        let request = try buildRequest(url: url, method: method, body: body, contentType: "application/json")
         
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await perform(request)
 
         try APIError.map(data, response, url: request.url?.absoluteString ?? "")
 
@@ -46,9 +56,8 @@ struct APIClient {
     @discardableResult
     static func upload(url: URL,method: String, imageData: Data, fileName: String, mimeType: String = "image/jpeg") async throws -> EmptyResponse {
         let boundary = UUID().uuidString
-        var request = try buildRequest(url: url, method: method, body: nil)
-
-        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        let contentType = "multipart/form-data; boundary=\(boundary)"
+        var request = try buildRequest(url: url, method: method, body: nil, contentType: contentType)
 
         var body = Data()
 
@@ -60,7 +69,7 @@ struct APIClient {
 
         request.httpBody = body
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await perform(request)
 
         try APIError.map(data,response,url: request.url?.absoluteString ?? "")
 
@@ -70,7 +79,7 @@ struct APIClient {
     static func delete(url: URL) async throws {
         let request = try buildRequest(url: url, method: "DELETE", body: nil)
 
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await perform(request)
 
         try APIError.map(data, response, url: request.url?.absoluteString ?? "")
     }
@@ -82,27 +91,31 @@ struct APIClient {
         let apiKey = ProcessInfo.processInfo.environment["COCKTAILS_API_KEY"]
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await perform(request)
 
         try APIError.map(data,response,url: request.url?.absoluteString ?? "")
     }
 
-    private static func buildRequest(url: URL, method: String, body: Data?) throws -> URLRequest {
+    private static func buildRequest(url: URL, method: String, body: Data?, contentType: String? = nil) throws -> URLRequest {
         var request = URLRequest(url: url)
         request.httpMethod = method
 
         let apiKey = ProcessInfo.processInfo.environment["COCKTAILS_API_KEY"]
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
-
+        
         if let token = try? KeychainAuthStore.shared.getToken() {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
 
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue(contentType, forHTTPHeaderField: "Content-Type")
+        request.setValue("*/*", forHTTPHeaderField: "Accept")
         request.httpBody = body
 
         return request
+    }
+
+    private static func perform(_ request: URLRequest) async throws -> (Data, URLResponse) {
+        try await session.data(for: request)
     }
 }
 

@@ -15,16 +15,18 @@ struct MyBarDTO: Codable, Identifiable {
     var userId: UUID
     var barItems: [MyBarItemDTO]
     var favoriteCocktails: [String]
-    var deletedCocktails: [RemovedCocktailDTO]
+    var hiddenCocktails: [HiddenCocktailDTO]
 }
 
 struct MyBarItemDTO: Codable {
+    var id: UUID
     var name: String
-    var category: String // String representation of BarItemCategory
+    var category: BarItemCategory
 }
 
-struct RemovedCocktailDTO: Codable, Identifiable {
-    var id: String
+struct HiddenCocktailDTO: Codable, Identifiable {
+    var id: UUID
+    var cocktailId: String
     var name: String
     var creator: String
     var date: Date
@@ -38,7 +40,7 @@ extension MyBarDTO {
         self.userId = model.userId ?? UUID()
         self.barItems = model.myBarItems.map { MyBarItemDTO(from: $0) }
         self.favoriteCocktails = model.favoriteCocktails
-        self.deletedCocktails = model.removedCocktails.map { RemovedCocktailDTO(from: $0) }
+        self.hiddenCocktails = model.removedCocktails.map { HiddenCocktailDTO(from: $0) }
     }
 }
 
@@ -48,7 +50,7 @@ extension MyBar {
             userId: dto.userId,
             myBarItems: dto.barItems.map { MyBarItem(from: $0) },
             favoriteCocktails: dto.favoriteCocktails,
-            deletedCocktails: dto.deletedCocktails.map {RemovedCocktail(from: $0)}
+            deletedCocktails: dto.hiddenCocktails.map {HiddenCocktail(from: $0)}
         )
     }
 }
@@ -56,34 +58,37 @@ extension MyBar {
 // Bar item
 extension MyBarItemDTO {
     init(from model: MyBarItem) {
+        self.id = model.id
         self.name = model.name
-        self.category = model.category.rawValue
+        self.category = model.category
     }
 }
 
 extension MyBarItem {
     convenience init(from dto: MyBarItemDTO) {
         self.init(
+            id: dto.id,
             name: dto.name,
-            category: BarItemCategory(rawValue: dto.category) ?? .other
+            category: dto.category
         )
     }
 }
 
 // Deleted cocktail
-extension RemovedCocktailDTO {
-    init(from model: RemovedCocktail) {
+extension HiddenCocktailDTO {
+    init(from model: HiddenCocktail) {
         self.id = model.id
+        self.cocktailId = model.cocktailId
         self.name = model.name
         self.creator = model.creator
         self.date = model.date
     }
 }
 
-extension RemovedCocktail {
-    init(from dto: RemovedCocktailDTO) {
+extension HiddenCocktail {
+    init(from dto: HiddenCocktailDTO) {
         self.init(
-            id: dto.id,
+            cocktailId: dto.cocktailId,
             name: dto.name,
             creator: dto.creator,
             date: dto.date

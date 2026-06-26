@@ -12,7 +12,7 @@ struct view_deleteCocktails: View {
     @EnvironmentObject var adminViewModel: AdminViewModel
     @EnvironmentObject var myBarViewModel: MyBarViewModel
     
-    @State var selectedCocktails = [RemovedCocktail?]()
+    @State var selectedCocktails = [HiddenCocktail?]()
     
     var body: some View {
         if myBarViewModel.personalBar.removedCocktails.isEmpty {
@@ -54,7 +54,7 @@ struct view_deleteCocktails: View {
                 Text("Selected: \(selectedCocktails.map { $0!.name.capitalized }.joined(separator: ", "))")
                 
                 Button {
-                    deleteCocktails()
+                    hideCocktails()
                 } label: {
                     if adminViewModel.isLoading {
                         ProgressView()
@@ -77,14 +77,14 @@ struct view_deleteCocktails: View {
         }
     }
     
-    func deleteCocktails() {
-        var deletedCocktails: [RemovedCocktail] = []
+    func hideCocktails() {
+        var deletedCocktails: [HiddenCocktail] = []
         var cocktailIds: [String] = []
         
         selectedCocktails.forEach { item in
             if let removed = item {
                 deletedCocktails.append(removed)
-                cocktailIds.append(removed.id)
+                cocktailIds.append(removed.cocktailId)
             }
         }
 

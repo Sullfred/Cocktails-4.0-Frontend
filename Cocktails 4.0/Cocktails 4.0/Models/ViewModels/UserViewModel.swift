@@ -21,8 +21,9 @@ class UserViewModel: ObservableObject {
 
     private let dependencies: AppDependencies
     private let userDefaultsKey = "loggedInUser"
+    
     var isLoggedIn: Bool {
-        authState == .authenticated
+        currentUser?.authState == .authenticated
     }
     
     var formIsValid: Bool {
@@ -30,14 +31,8 @@ class UserViewModel: ObservableObject {
     }
     
     var canCreateCocktails: Bool {
-        currentUser?.role == .creator ||
-        currentUser?.role == .admin
+        currentUser?.role == .creator || currentUser?.role == .admin
     }
-    
-    var requireAuth: Bool {
-        currentUser?.authState == .authenticated
-    }
-    
     
     init(dependencies: AppDependencies) {
         self.dependencies = dependencies
@@ -50,8 +45,8 @@ class UserViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Auth Actions
-    func login() async {
+    // Auth Actions
+    func login() async -> Bool {
         isLoading = true
         errorMessage = nil
 
@@ -84,32 +79,37 @@ class UserViewModel: ObservableObject {
         } catch {
             ErrorHandler.handle(error)
             authState = .unknown
+            return false
         }
+        
+        return true
     }
 
-    func logout() async {
+    func logout() async -> Bool {
         do {
             try await dependencies.userService.logout()
         } catch {
-            
+            return false
         }
 
         clearSession()
-        cleanPersonalBar()
+        
+        return true
     }
 
-    func deleteUser() async {
+    func deleteUser() async -> Bool {
         do {
             try await dependencies.userService.deleteUser()
         } catch {
             ErrorHandler.handle(error)
+            return false
         }
 
         clearSession()
-        cleanPersonalBar()
+        return true
     }
 
-    // MARK: - Profile Updates
+    // Profile Updates
     func updateUsername(_ newUsername: String) async -> Bool {
         isLoading = true
         errorMessage = nil
@@ -149,8 +149,11 @@ class UserViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Token Verification
     func verifyTokenStatus() async {
+        if authState == .unknown {
+            return
+        }
+        
         do {
             let token = try KeychainAuthStore.shared.getToken()
             if token.isEmpty {
@@ -172,15 +175,23 @@ class UserViewModel: ObservableObject {
             ErrorHandler.handle(error)
         }
     }
+    
+    func syncPendingActions() async {
+        do {
+            try await dependencies.pendingActionCoordinator.processAllPendingActions()
+        } catch {
+            ErrorHandler.handle(error)
+        }
+    }
 
-    // MARK: - Session Handling
+    // Helpers
     private func persistCurrentUser() {
         guard let currentUser else { return }
 
         do {
             try UserSessionStore.shared.saveUser(currentUser)
         } catch {
-            print("Failed to persist user:", error)
+            ErrorHandler.handle(error)
         }
     }
 
@@ -216,22 +227,6 @@ class UserViewModel: ObservableObject {
 
         do {
             try KeychainAuthStore.shared.deleteToken()
-        } catch {
-            ErrorHandler.handle(error)
-        }
-    }
-
-    // MARK: - SwiftData Cleanup
-    private func cleanPersonalBar() {
-        do {
-            let descriptor = FetchDescriptor<MyBar>(
-                predicate: #Predicate { _ in true }
-            )
-            let bars = try dependencies.contexCoordinator.fetch(descriptor)
-
-            try bars.forEach{
-                try dependencies.contexCoordinator.delete($0)
-            }
         } catch {
             ErrorHandler.handle(error)
         }

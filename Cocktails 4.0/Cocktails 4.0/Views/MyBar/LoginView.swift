@@ -65,7 +65,9 @@ struct LoginView: View {
             VStack(spacing: 16) {
                 Button(action: {
                     Task {
-                        await userViewModel.login()
+                        if (await userViewModel.login()) {
+                            await myBarViewModel.GetPersonalBar()
+                        }
                     }
                 }) {
                     ZStack {

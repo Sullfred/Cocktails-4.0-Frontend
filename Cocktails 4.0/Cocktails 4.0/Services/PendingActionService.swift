@@ -36,11 +36,12 @@ final class PendingActionService {
     // Fetch actions of specified type for the user
     func fetchActions(ofType type: PendingActionType) throws -> [PendingAction] {
         let userId = try currentUserId()
-        
+        let rawType = type.rawValue
+
         let descriptor = FetchDescriptor<PendingAction>(
             predicate: #Predicate<PendingAction> { action in
                 action.userId == userId &&
-                action.type == type
+                action.typeRaw == rawType
             },
             sortBy: [SortDescriptor(\.dateCreated)]
         )
@@ -75,7 +76,6 @@ final class PendingActionService {
     }
     
     func clearAll() throws {
-        let actions = try fetchAll()
         let userId = try currentUserId()
         
         try context.delete(model: PendingAction.self, where: #Predicate {

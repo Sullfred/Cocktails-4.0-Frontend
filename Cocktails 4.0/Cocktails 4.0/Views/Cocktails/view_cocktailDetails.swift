@@ -20,7 +20,6 @@ struct view_cocktailDetails: View {
     
     var body: some View {
         view_cocktailDetailsInfo(cocktail: cocktail)
-            .environmentObject(myBarViewModel)
             .toolbar {
                 if (userViewModel.canCreateCocktails) {
                     ToolbarItem(placement: .navigationBarTrailing) {
@@ -38,8 +37,8 @@ struct view_cocktailDetails: View {
     }
     
     func editCocktail() {
-        if let loggedInUser = userViewModel.currentUser {
-            toggleIfAuthenticated(isAuthenticated: userViewModel.requireAuth, toggleVar: &isEditing)
+        if userViewModel.currentUser != nil {
+            toggleIfAuthenticated(isAuthenticated: userViewModel.isLoggedIn, toggleVar: &isEditing)
         }
     }
 }

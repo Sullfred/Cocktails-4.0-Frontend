@@ -40,15 +40,20 @@ extension PendingActionType {
 @Model
 final class PendingAction {
     @Attribute(.unique) var id: UUID
-    @Attribute var type: PendingActionType
+    var typeRaw: String
+    var type: PendingActionType {
+        get { PendingActionType(rawValue: typeRaw)! }
+        set { typeRaw = newValue.rawValue }
+    }
     var userId: UUID
     var payload: Data
     var dateCreated: Date
     var imageData: Data?
+    var retryCount: Int = 0
 
     init<T: Encodable>(type: PendingActionType, userId: UUID, payload: T) {
         self.id = UUID()
-        self.type = type
+        self.typeRaw = type.rawValue
         self.userId = userId
         self.dateCreated = Date()
         let encoder = JSONEncoder()

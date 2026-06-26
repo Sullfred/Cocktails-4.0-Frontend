@@ -39,7 +39,7 @@ final class MyBarService {
     func deleteBarItem(_ payload: MyBarItemDTO) async throws {
         let url = serviceURL
             .appending(path: "items")
-            .appending(path: payload.name)
+            .appending(path: payload.id.uuidString)
 
         try await APIClient.mutate(
             url: url,
@@ -69,7 +69,7 @@ final class MyBarService {
         )
     }
 
-    func addRemoved(_ payload: RemovedCocktailDTO) async throws {
+    func addRemoved(_ payload: HiddenCocktailDTO) async throws {
         let url = serviceURL.appending(path: "removed")
 
         let encoder = JSONEncoder()
@@ -84,10 +84,10 @@ final class MyBarService {
         )
     }
 
-    func deleteRemoved(_ payload: RemovedCocktailDTO) async throws {
+    func deleteRemoved(_ payload: HiddenCocktailDTO) async throws {
         let url = serviceURL
             .appending(path: "removed")
-            .appending(path: payload.id)
+            .appending(path: payload.id.uuidString)
 
         try await APIClient.mutate(
             url: url,

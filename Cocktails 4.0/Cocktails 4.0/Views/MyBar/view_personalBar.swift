@@ -83,7 +83,6 @@ struct view_personalBar: View {
                         }
                         .sheet(isPresented: $presentSheet) {
                             QuickAdd()
-                                .environmentObject(myBarViewModel)
                         }
                         
                         Spacer()
@@ -93,7 +92,6 @@ struct view_personalBar: View {
                     
                 } else {
                     barItemList()
-                        .environmentObject(myBarViewModel)
                 }
             }
             
@@ -173,7 +171,7 @@ struct view_personalBar: View {
     }
     
     func openQuickAddView() {
-        if (userViewModel.requireAuth) {
+        if (userViewModel.isLoggedIn) {
             presentSheet.toggle()
         } else {
             ToastManager.shared.show(style: .warning, message: "Login required")

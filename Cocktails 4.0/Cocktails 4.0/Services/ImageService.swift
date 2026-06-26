@@ -9,7 +9,7 @@ import Foundation
 
 @MainActor
 final class ImageService {
-    private let serviceURL = ServiceConfig.baseURL
+    private let serviceURL = ServiceConfig.baseURL.appending(path: Endpoints.image)
     
     init() {}
     
@@ -48,7 +48,7 @@ final class ImageService {
     func fetchImage(for cocktailID: UUID) async throws -> Data {
         let imageURL = serviceURL.appending(path: "\(cocktailID)/image")
 
-        let data: Data = try await APIClient.request(url: imageURL)
+        let data: Data = try await APIClient.requestData(url: imageURL)
 
         ImageCacheHelper.cacheImage(data, for: cocktailID)
 

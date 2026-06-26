@@ -9,7 +9,6 @@ import SwiftUI
 import SwiftData
 
 struct QuickAdd: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var myBarViewModel: MyBarViewModel
     

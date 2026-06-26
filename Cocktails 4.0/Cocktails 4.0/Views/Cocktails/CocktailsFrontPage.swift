@@ -108,7 +108,7 @@ struct CocktailsFrontPage: View {
     
     private func checkBeforeGoToNewCocktailView() {
         if userViewModel.currentUser != nil {
-            toggleIfAuthenticated(isAuthenticated: userViewModel.requireAuth, toggleVar: &showCreateNewCocktail)
+            toggleIfAuthenticated(isAuthenticated: userViewModel.isLoggedIn, toggleVar: &showCreateNewCocktail)
         }
     }
 }

@@ -9,9 +9,8 @@ import SwiftUI
 import SwiftData
 
 struct view_cocktailDetailsInfo: View {
-    @Environment(\.modelContext) var modelContext
     @EnvironmentObject var myBarViewModel: MyBarViewModel
-    
+    @EnvironmentObject var userViewModel: UserViewModel
     var cocktail : Cocktail
     
     @State private var selectedMeasurement: UnitVolume = .milliliters
@@ -95,16 +94,18 @@ struct view_cocktailDetailsInfo: View {
         .containerRelativeFrame([.horizontal, .vertical])
         .background(.colorSet2)
         .toolbar{
-            ToolbarItem {
-                Button(action: {
-                    toggleFavorite(cocktailId: cocktail.id.uuidString)
-                }) {
-                    Label(
-                        "Toggle favorite",
-                        systemImage: isFavorite(cocktail: cocktail, myBar: myBarViewModel.personalBar) ? "heart.fill" : "heart"
-                    )
+            if (userViewModel.isLoggedIn) {
+                ToolbarItem {
+                    Button(action: {
+                        toggleFavorite(cocktailId: cocktail.id.uuidString)
+                    }) {
+                        Label(
+                            "Toggle favorite",
+                            systemImage: isFavorite(cocktail: cocktail, myBar: myBarViewModel.personalBar) ? "heart.fill" : "heart"
+                        )
+                    }
+                    .contentTransition(.symbolEffect(.replace))
                 }
-                .contentTransition(.symbolEffect(.replace))
             }
         }
     }
@@ -121,6 +122,14 @@ struct view_cocktailDetailsInfo: View {
 }
 
 #Preview {
+    // Create an in-memory model container for previews
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: MyBar.self, configurations: config)
+    let context = container.mainContext
+    
+    let dependencies = AppDependencies(context: context)
+    let myBarVM = MyBarViewModel(dependencies: dependencies)
+    
     let imageData = UIImage(resource: .cocktailPreview).pngData()
     
     let testCocktail = Cocktail(
@@ -140,4 +149,15 @@ struct view_cocktailDetailsInfo: View {
     )
     
     view_cocktailDetailsInfo(cocktail: testCocktail)
+        .environmentObject(myBarVM)
+        .environmentObject({
+            let vm = UserViewModel(dependencies: dependencies)
+            vm.currentUser = LoggedInUser(
+                id: UUID(),
+                username: "Daniel Vang Kleist",
+                role: .admin,
+                authState: .authenticated
+            )
+            return vm
+        }())
 }

@@ -75,6 +75,7 @@ struct ContentView: View {
         .sheet(isPresented: $userViewModel.showLogin) {
             LoginView()
                 .environmentObject(userViewModel)
+                .environmentObject(myBarViewModel)
         }
     }
 
@@ -83,6 +84,11 @@ struct ContentView: View {
             group.addTask { await userViewModel.verifyTokenStatus() }
             group.addTask { await myBarViewModel.loadLocalBar() }
             group.addTask { await cocktailViewModel.refresh() }
+            group.addTask {
+                if (await userViewModel.isLoggedIn) {
+                    await userViewModel.syncPendingActions()
+                }
+            }
         }
     }
     

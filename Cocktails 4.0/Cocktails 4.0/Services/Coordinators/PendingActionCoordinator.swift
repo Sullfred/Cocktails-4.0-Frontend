@@ -19,6 +19,8 @@ final class PendingActionCoordinator {
     private let pendingActionService: PendingActionService
     private let processors: [any PendingActionProcessor]
 
+    private var isProcessing = false
+    
     init(
         pendingActionService: PendingActionService,
         processors: [any PendingActionProcessor]
@@ -28,6 +30,15 @@ final class PendingActionCoordinator {
     }
 
     func processAllPendingActions() async throws {
+        guard !isProcessing  else {
+            return
+        }
+        isProcessing = true
+        
+        defer {
+            isProcessing = false
+        }
+        
         let actions = try pendingActionService.fetchAll()
             .sorted { $0.dateCreated < $1.dateCreated }
 
@@ -36,6 +47,7 @@ final class PendingActionCoordinator {
                 try await process(action)
                 try pendingActionService.remove(action)
             } catch {
+                action.retryCount += 1
                 ErrorHandler.handle(error)
                 continue
             }
@@ -43,6 +55,15 @@ final class PendingActionCoordinator {
     }
     
     func processPendingActionsOfType(type: PendingActionType) async throws {
+        guard !isProcessing else {
+            return
+        }
+        isProcessing = true
+        
+        defer {
+            isProcessing = false
+        }
+        
         let actions = try pendingActionService.fetchActions(ofType: type)
             .sorted { $0.dateCreated < $1.dateCreated }
         
@@ -51,6 +72,7 @@ final class PendingActionCoordinator {
                 try await process(action)
                 try pendingActionService.remove(action)
             } catch {
+                action.retryCount += 1
                 ErrorHandler.handle(error)
                 continue
             }

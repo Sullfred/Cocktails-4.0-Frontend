@@ -15,9 +15,9 @@ class MyBar {
     var userId: UUID?
     var myBarItems: [MyBarItem]
     var favoriteCocktails: [String]
-    var removedCocktails: [RemovedCocktail]
+    var removedCocktails: [HiddenCocktail]
     
-    init(userId: UUID? = nil, myBarItems: [MyBarItem] = [], favoriteCocktails: [String] = [], deletedCocktails: [RemovedCocktail] = []) {
+    init(userId: UUID? = nil, myBarItems: [MyBarItem] = [], favoriteCocktails: [String] = [], deletedCocktails: [HiddenCocktail] = []) {
         self.userId = userId
         self.myBarItems = myBarItems
         self.favoriteCocktails = favoriteCocktails
@@ -25,19 +25,7 @@ class MyBar {
     }
 }
 
-struct RemovedCocktail: Codable, Hashable, Identifiable {
-    var id: String
-    var name: String
-    var creator: String
-    var date: Date
-    
-    init(id: String, name: String, creator: String, date: Date = Date.now) {
-        self.id = id
-        self.name = name
-        self.creator = creator
-        self.date = date
-    }
-}
+
 
 //Default state
 extension MyBar {

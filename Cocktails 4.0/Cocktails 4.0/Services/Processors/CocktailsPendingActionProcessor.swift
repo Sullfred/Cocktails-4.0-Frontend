@@ -53,5 +53,4 @@ final class CocktailsPendingActionProcessor: PendingActionProcessor {
         }
         try await cocktailService.updateCocktail(payload)
     }
-    
 }

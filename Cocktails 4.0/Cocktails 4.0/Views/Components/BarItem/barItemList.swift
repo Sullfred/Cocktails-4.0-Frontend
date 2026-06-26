@@ -24,7 +24,6 @@ struct barItemList: View {
                         } else {
                             ForEach(itemsInCategory) { item in
                                 barItemRow(barItem: item)
-                                    .environmentObject(myBarViewModel)
                             }
                         }
                     }

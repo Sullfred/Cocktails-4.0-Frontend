@@ -48,7 +48,7 @@ class AdminService: ObservableObject {
     }
     
     func checkServerConnection() async throws -> Bool {
-        let url = ServiceConfig.baseURL.appending(path: "ping")
+        let url = ServiceConfig.baseURL.appending(path: Endpoints.cocktails)
         
         do {
             try await APIClient.ping(url: url)

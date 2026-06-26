@@ -38,10 +38,9 @@ struct view_cocktailsList: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Menu {
                         Section("Display"){
-                            
-                            Toggle("Show Favorites only", systemImage: showFavoritesOnly ? "heart.fill" : "heart", isOn: $showFavoritesOnly)
-                            
                             if userViewModel.currentUser != nil {
+                                Toggle("Show Favorites only", systemImage: showFavoritesOnly ? "heart.fill" : "heart", isOn: $showFavoritesOnly)
+                            
                                 Toggle("Show Craftables only", systemImage: showCraftableOnly ? "wineglass.fill" : "wineglass", isOn: $showCraftableOnly)
                             }
                         }
@@ -87,7 +86,7 @@ struct view_cocktailsList: View {
     
     private func checkBeforeGoToNewCocktailView() {
         if userViewModel.currentUser != nil {
-            toggleIfAuthenticated(isAuthenticated: userViewModel.requireAuth, toggleVar: &showCreateNewCocktail)
+            toggleIfAuthenticated(isAuthenticated: userViewModel.isLoggedIn, toggleVar: &showCreateNewCocktail)
         }
     }
 }

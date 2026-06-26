@@ -56,7 +56,7 @@ struct view_cocktailsListSorted: View {
                     ingredient.name.localizedStandardContains(term)
                 }
             })
-            && !myBarViewModel.personalBar.removedCocktails.contains(where: {$0.id == cocktail.id.uuidString})
+            && !myBarViewModel.personalBar.removedCocktails.contains(where: {$0.cocktailId == cocktail.id.uuidString})
         }
     }
     
@@ -161,7 +161,7 @@ private extension view_cocktailsListSorted {
     
     func removeFromList(_ cocktail: Cocktail) {
         Task {
-            let removed = RemovedCocktail(id: cocktail.id.uuidString, name: cocktail.name, creator: cocktail.creator)
+            let removed = HiddenCocktail(cocktailId: cocktail.id.uuidString, name: cocktail.name, creator: cocktail.creator)
             await myBarViewModel.addRemoved(removed)
         }
     }

@@ -54,6 +54,21 @@ final class MyBarViewModel: ObservableObject {
         }
     }
     
+    func cleanLocalBar() async {
+        do {
+            let descriptor = FetchDescriptor<MyBar>()
+            let bars = try dependencies.contexCoordinator.fetch(descriptor)
+            for bar in bars {
+                try dependencies.contexCoordinator.delete(bar)
+            }
+            
+            personalBar = .empty
+            
+        } catch {
+            ErrorHandler.handle(error)
+        }
+    }
+    
     // Bar Items
     func addBarItem(_ item: MyBarItem) async {
         do {
@@ -118,7 +133,7 @@ final class MyBarViewModel: ObservableObject {
     }
     
     // Removed cocktails
-    func addRemoved(_ item: RemovedCocktail) async {
+    func addRemoved(_ item: HiddenCocktail) async {
         do {
             try dependencies.contexCoordinator.performBatch {
                 
@@ -130,7 +145,7 @@ final class MyBarViewModel: ObservableObject {
         }
     }
     
-    func deleteRemoved(_ items: [RemovedCocktail]) async {
+    func deleteRemoved(_ items: [HiddenCocktail]) async {
         do {
             try dependencies.contexCoordinator.performBatch {
                 for item in items {
@@ -178,8 +193,8 @@ final class MyBarViewModel: ObservableObject {
         }
     }
     
-    private func queueRemovedAdd(_ item: RemovedCocktail) {
-        let dto = RemovedCocktailDTO(from: item)
+    private func queueRemovedAdd(_ item: HiddenCocktail) {
+        let dto = HiddenCocktailDTO(from: item)
         do {
             try dependencies.pendingActionService.addAction(.addRemoved, payload: dto)
         } catch {
@@ -187,8 +202,8 @@ final class MyBarViewModel: ObservableObject {
         }
     }
     
-    private func queueRemovedDelete(_ item: RemovedCocktail) {
-        let dto = RemovedCocktailDTO(from: item)
+    private func queueRemovedDelete(_ item: HiddenCocktail) {
+        let dto = HiddenCocktailDTO(from: item)
         do {
             try dependencies.pendingActionService.addAction(.deleteRemoved, payload: dto)
         } catch {

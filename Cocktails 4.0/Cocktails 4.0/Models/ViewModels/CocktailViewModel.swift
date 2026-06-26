@@ -66,6 +66,11 @@ final class CocktailViewModel: ObservableObject {
         )
         
         queueAddCocktail(payload)
+        do {
+            try await dependencies.pendingActionCoordinator.processPendingActionsOfType(type: .addCocktail)
+        } catch {
+            ErrorHandler.handle(error)
+        }
     }
     
     func updateCocktail(_ draft: CocktailDraft, cocktail: Cocktail) async {
@@ -103,7 +108,13 @@ final class CocktailViewModel: ObservableObject {
             imageData: new
         )
         
-        queueAddCocktail(payload)
+        queueUpdateCocktail(payload)
+        
+        do {
+            try await dependencies.pendingActionCoordinator.processPendingActionsOfType(type: .updateCocktail)
+        } catch {
+            ErrorHandler.handle(error)
+        }
     }
     
     func refresh() async {

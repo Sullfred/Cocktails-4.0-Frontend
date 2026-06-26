@@ -36,10 +36,18 @@ struct view_userSettings: View {
                         showDeleteAlert: $showDeleteAlert,
                         showLogoutAlert: $showLogoutAlert,
                         onDeleteConfirm: {
-                            Task { await userViewModel.deleteUser() }
+                            Task {
+                                if (await userViewModel.deleteUser()) {
+                                    await myBarViewModel.cleanLocalBar()
+                                }
+                            }
                         },
                         onLogoutConfirm: {
-                            Task { await userViewModel.logout() }
+                            Task {
+                                if (await userViewModel.logout()) {
+                                    await myBarViewModel.cleanLocalBar()
+                                }
+                            }
                         },
                         checkBeforeDelete: checkBeforeDelete
                     )
@@ -53,7 +61,7 @@ struct view_userSettings: View {
     
     func toggleShowingUserSetting(toggleVar: inout Bool) {
         if userViewModel.currentUser != nil {
-            toggleIfAuthenticated(isAuthenticated: userViewModel.requireAuth, toggleVar: &toggleVar)
+            toggleIfAuthenticated(isAuthenticated: userViewModel.isLoggedIn, toggleVar: &toggleVar)
         }
     }
     

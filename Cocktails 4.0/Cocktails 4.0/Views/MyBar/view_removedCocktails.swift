@@ -10,7 +10,7 @@ import SwiftData
 
 struct view_removedCocktails: View {
     @EnvironmentObject var myBarViewModel: MyBarViewModel
-    @State var selectedCocktails = [RemovedCocktail?]()
+    @State var selectedCocktails = [HiddenCocktail?]()
     
     var body: some View {
         ZStack{
@@ -71,7 +71,7 @@ struct view_removedCocktails: View {
 
 private extension view_removedCocktails {
     func undoDeletes() {
-        var deletedCocktails: [RemovedCocktail] = []
+        var deletedCocktails: [HiddenCocktail] = []
         
         selectedCocktails.forEach { item in
             if let removed = item {

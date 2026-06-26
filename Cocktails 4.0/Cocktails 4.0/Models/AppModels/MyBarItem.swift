@@ -10,10 +10,12 @@ import Foundation
 import SwiftData
 
 class MyBarItem: Codable, Identifiable, Hashable {
+    var id: UUID
     var name: String
     var category: BarItemCategory
     
-    init(name: String = "", category: BarItemCategory = .other) {
+    init(id: UUID = UUID(), name: String = "", category: BarItemCategory = .other) {
+        self.id = id
         self.name = name
         self.category = category
     }

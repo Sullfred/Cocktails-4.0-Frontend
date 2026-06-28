@@ -19,6 +19,10 @@ struct view_cocktailDetailsInfo: View {
     @State private var selectedServing: Double = 1
     let servings: [Double] = [1, 2, 3, 4]
     
+    @State private var customScaleRatio: Double = 1.0
+    @State private var editingIngredient: Ingredient? = nil
+    @State private var inputAmountString: String = ""
+
     var body: some View {
         ZStack{
             ScrollView {
@@ -74,7 +78,16 @@ struct view_cocktailDetailsInfo: View {
                         
                         VStack(alignment: .leading) {
                             ForEach (cocktail.ingredients.sorted(by: { $0.orderIndex < $1.orderIndex })){ ingredient in
-                                ingredientsList(ingredient: ingredient, measurementUnit: selectedMeasurement, servings: selectedServing)
+                                ingredientsList(
+                                    ingredient: ingredient,
+                                    displayedAmount: displayedAmount(for: ingredient),
+                                    displayedUnit: displayedUnit(for: ingredient),
+                                    onEditRequest: {
+                                        editingIngredient = ingredient
+                                        inputAmountString = displayedAmount(for: ingredient)
+                                            .formatted(.number.precision(.fractionLength(0...2)))
+                                    }
+                                )
                             }
                         }
                         
@@ -108,9 +121,15 @@ struct view_cocktailDetailsInfo: View {
                 }
             }
         }
+        .sheet(item: $editingIngredient) { ingredient in
+            scaleSheet(for: ingredient)
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.colorSet2)
+        }
     }
     
-    func toggleFavorite(cocktailId: String) {
+    private func toggleFavorite(cocktailId: String) {
         Task {
             if myBarViewModel.personalBar.favoriteCocktails.contains(cocktailId) {
                 await myBarViewModel.deleteFavorite(cocktailId)
@@ -118,6 +137,113 @@ struct view_cocktailDetailsInfo: View {
                 await myBarViewModel.addFavorite(cocktailId)
             }
         }
+    }
+    
+    private func displayedAmount(for ingredient: Ingredient) -> Double {
+        let baseAmount: Double
+
+        if ingredient.unit == .ml || ingredient.unit == .cl || ingredient.unit == .oz {
+            baseAmount = convertUnit(ingredient: ingredient, targetUnit: selectedMeasurement) ?? 0
+        } else {
+            baseAmount = ingredient.volume
+        }
+
+        return baseAmount * selectedServing * customScaleRatio
+    }
+
+    private func displayedUnit(for ingredient: Ingredient) -> String {
+        if ingredient.unit == .ml || ingredient.unit == .cl || ingredient.unit == .oz {
+            return selectedMeasurement.symbol
+        }
+
+        return ingredient.unit.rawValue
+    }
+
+    private func baseAmount(for ingredient: Ingredient) -> Double {
+        let converted: Double
+
+        if ingredient.unit == .ml || ingredient.unit == .cl || ingredient.unit == .oz {
+            converted = convertUnit(
+                ingredient: ingredient,
+                targetUnit: selectedMeasurement
+            ) ?? 0
+        } else {
+            converted = ingredient.volume
+        }
+
+        return converted * selectedServing
+    }
+    
+    private func applyCustomScale() {
+        guard let ingredient = editingIngredient,
+              let newAmount = Double(inputAmountString.replacingOccurrences(of: ",", with: ".")),
+              newAmount > 0
+        else { return }
+
+        customScaleRatio = newAmount / baseAmount(for: ingredient)
+        editingIngredient = nil
+        inputAmountString = ""
+    }
+
+    private func resetCustomScale() {
+        customScaleRatio = 1.0
+        editingIngredient = nil
+        inputAmountString = ""
+    }
+    
+    @ViewBuilder
+    private func scaleSheet(for ingredient: Ingredient) -> some View {
+            VStack(spacing: 16) {
+                Text("Adjust Recipe Scale")
+                    .font(.headline)
+
+                Text(ingredient.name.capitalized)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Original amount")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    Text("\(baseAmount(for: ingredient), format: .number.precision(.fractionLength(0...2))) \(displayedUnit(for: ingredient))")
+                        .font(.body)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("New amount")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    TextField("Amount", text: $inputAmountString)
+                        .keyboardType(.decimalPad)
+                        .textFieldStyle(.roundedBorder)
+                }
+
+                HStack {
+                    Button("Cancel") {
+                        editingIngredient = nil
+                        inputAmountString = ""
+                    }
+
+                    Spacer()
+
+                    Button("Reset") {
+                        resetCustomScale()
+                    }
+                    .foregroundStyle(.orange)
+
+                    Spacer()
+                    
+                    Button("Apply") {
+                        applyCustomScale()
+                        
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            }
+            .padding(20)
+            .clipShape(RoundedRectangle(cornerRadius: 20))
     }
 }
 

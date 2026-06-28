@@ -11,22 +11,36 @@ import SwiftData
 
 struct ingredientsList: View {
     var ingredient: Ingredient
-     
-    var measurementUnit : UnitVolume
-    var servings : Double
-     
+    
+    var displayedAmount: Double
+    var displayedUnit: String
+    var onEditRequest: () -> Void
+    
     var body: some View {
         HStack {
             Text("-")
-            Text(ingredient.unit == .ml || ingredient.unit == .cl || ingredient.unit == .oz ? (convertUnit(ingredient: ingredient, targetUnit: measurementUnit) ?? 0) * servings : ingredient.volume * servings, format: .number.rounded(rule: .toNearestOrEven, increment: 0.01))
-                .frame(width: 55.0,  alignment: .trailing)
-            Text(ingredient.unit == .ml || ingredient.unit == .cl || ingredient.unit == .oz ? measurementUnit.symbol : ingredient.unit.rawValue)
-                .frame(width: 50.0, alignment: .leading)
+            
+            Button(action: onEditRequest) {
+                HStack(spacing: 2) {
+                    Text(
+                        displayedAmount,
+                        format: .number.rounded(rule: .toNearestOrEven, increment: 0.01)
+                    )
+                    .padding(.trailing, 10)
+
+                    Text(displayedUnit)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(.gray.opacity(0.15))
+                .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
+
             Text(ingredient.name.capitalized)
         }
-         
-     }
- }
+    }
+}
 
 #Preview {
     let testCocktail = Cocktail(
@@ -34,15 +48,17 @@ struct ingredientsList: View {
         creator: "Daniel Kleist",
         style: .shaken,
         ingredients: [Ingredient(volume: 60, unit: .ml, name: "bourbon"),
-            Ingredient(volume: 1, unit: .oz, name: "lemon juice"),
-            Ingredient(volume: 15, unit: .ml, name: "simple syrup"),
-            Ingredient(volume: 15, unit: .ml, name: "egg white"),
-            Ingredient(volume: 3, unit: .dash, name: "angostura bitters")
-        ],
+                      Ingredient(volume: 1, unit: .oz, name: "lemon juice"),
+                      Ingredient(volume: 15, unit: .ml, name: "simple syrup"),
+                      Ingredient(volume: 15, unit: .ml, name: "egg white"),
+                      Ingredient(volume: 3, unit: .dash, name: "angostura bitters")
+                     ],
         comment: "angostura bitters can be left out",
         image: nil,
         cocktailCategory: .sour
     )
     
-    ingredientsList(ingredient: testCocktail.ingredients[0], measurementUnit: .milliliters, servings: 1)
+
+    
+    ingredientsList(ingredient: testCocktail.ingredients[0], displayedAmount: 60, displayedUnit: "ml", onEditRequest: {})
 }

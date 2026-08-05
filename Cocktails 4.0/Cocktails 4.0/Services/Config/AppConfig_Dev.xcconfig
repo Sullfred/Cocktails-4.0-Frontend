@@ -1,0 +1,13 @@
+//
+//  AppConfig.xcconfig
+//  Cocktails 4.0
+//
+//  Created by Daniel Vang Kleist on 03/08/2026.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://developer.apple.com/documentation/xcode/adding-a-build-configuration-file-to-your-project
+
+API_HOST = https
+API_URL = starsmerchant-oils-golden-carmen.trycloudflare.com
+API_KEY = 1234_This_is_a_test_api_key_string

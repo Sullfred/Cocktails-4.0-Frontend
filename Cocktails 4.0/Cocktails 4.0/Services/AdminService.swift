@@ -20,7 +20,7 @@ class AdminService: ObservableObject {
     func fetchUsers() async throws -> [fetchPublicUserDTO] {
         let url = userServiceURL.appending(path: "fetchUsers")
         
-        var users: [fetchPublicUserDTO] = try await APIClient.request(url: url)
+        let users: [fetchPublicUserDTO] = try await APIClient.request(url: url)
         return users
     }
     

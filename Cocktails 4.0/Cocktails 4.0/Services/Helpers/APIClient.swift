@@ -88,7 +88,7 @@ struct APIClient {
         var request = URLRequest(url: url)
         request.httpMethod = "HEAD"
         
-        let apiKey = ProcessInfo.processInfo.environment["COCKTAILS_API_KEY"]
+        let apiKey = ServiceConfig.apiKey
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         
         let (data, response) = try await perform(request)
@@ -100,7 +100,7 @@ struct APIClient {
         var request = URLRequest(url: url)
         request.httpMethod = method
 
-        let apiKey = ProcessInfo.processInfo.environment["COCKTAILS_API_KEY"]
+        let apiKey = ServiceConfig.apiKey
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         
         if let token = try? KeychainAuthStore.shared.getToken() {
@@ -110,7 +110,7 @@ struct APIClient {
         request.setValue(contentType, forHTTPHeaderField: "Content-Type")
         request.setValue("*/*", forHTTPHeaderField: "Accept")
         request.httpBody = body
-
+        
         return request
     }
 

@@ -14,11 +14,12 @@ struct Cocktails_4_0App: App {
     private let modelContainer: ModelContainer
     private let dependencies: AppDependencies
     @StateObject private var toastManager = ToastManager.shared
+    @StateObject private var localizationManager = LocalizationManager.shared
 
     init() {
         let schema = Schema([Cocktail.self, MyBar.self, PendingAction.self])
         let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
+        
         do {
             self.modelContainer = try ModelContainer(for: schema, configurations: [configuration])
             self.dependencies = AppDependencies(context: modelContainer.mainContext)
@@ -34,6 +35,8 @@ struct Cocktails_4_0App: App {
             ContentView(dependencies: dependencies)
                 .environmentObject(dependencies)
                 .environmentObject(toastManager)
+                .environmentObject(localizationManager)
+                .environment(\.locale, Locale(identifier: localizationManager.currentLanguage.rawValue))
                 .toastView(toast: $toastManager.toast)
         }
         .modelContainer(modelContainer)

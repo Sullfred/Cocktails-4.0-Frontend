@@ -27,21 +27,22 @@ struct ContentView: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-
             VStack(spacing: 0) {
                 TabView {
                     CocktailsFrontPage()
                         .tabItem {
-                            Label("Cocktails", systemImage: "list.bullet")
+                            Label("cocktails", systemImage: "list.bullet")
                         }
+                        .toolbarBackground(.visible, for: .tabBar)
 
                     MyBarFrontPage()
                         .tabItem {
-                            Label("My Bar", systemImage: "wineglass")
+                            Label("my_bar", systemImage: "wineglass")
                         }
+                        .toolbarBackground(.visible, for: .tabBar)
                 }
-                .background(Color.colorSet2)
-                .tint(.colorSet5)
+                .background(Color.background)
+                .tint(Color.destructive)
             }
 
             // MARK: - Session Expiry Banner

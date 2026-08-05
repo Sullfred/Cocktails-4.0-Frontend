@@ -22,7 +22,7 @@ final class UserService {
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        let apiKey = ProcessInfo.processInfo.environment["COCKTAILS_API_KEY"]
+        let apiKey = ServiceConfig.apiKey
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         request.setValue("Basic \(base64Creds)", forHTTPHeaderField: "Authorization")
         request.setValue("json", forHTTPHeaderField: "Accept")
@@ -37,7 +37,7 @@ final class UserService {
         let url = base.appending(path: Endpoints.user + "/verifyToken")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        let apiKey = ProcessInfo.processInfo.environment["COCKTAILS_API_KEY"]
+        let apiKey = ServiceConfig.apiKey
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 

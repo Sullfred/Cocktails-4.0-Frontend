@@ -20,7 +20,7 @@ final class CocktailService {
     
     // Fetches cocktails from the server, prepares their images, and returns `[Cocktail]`.
     func fetchCocktails() async throws -> [Cocktail] {
-        var cocktailDTOs: [CocktailDTO] = try await APIClient.request(url: serviceURL)
+        let cocktailDTOs: [CocktailDTO] = try await APIClient.request(url: serviceURL)
         var cocktails: [Cocktail] = cocktailDTOs.map { Cocktail(from: $0) }
         
         // Get cocktail images
@@ -89,7 +89,7 @@ final class CocktailService {
     
     // Helper function for handling images after fetching a cocktail
     private func hydrateImages(for cocktails: [Cocktail], with dtos: [CocktailDTO]) async -> [Cocktail] {
-        var result: [Cocktail] = cocktails
+        let result: [Cocktail] = cocktails
         
         for index in result.indices {
             let dto = dtos[index]

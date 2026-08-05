@@ -17,18 +17,18 @@ struct MyBarFrontPage: View {
         NavigationStack(path: $path) {
             Group {
                 if userViewModel.isLoggedIn {
-                    view_personalBar(path: $path)
+                    PersonalBar(path: $path)
                 } else {
                     LoginView()
                 }
             }
             .navigationDestination(for: String.self) { value in
                 if value == "settings" {
-                    view_userSettings()
+                    UserSettings()
                 }
             }
         }
-        .tint(Color.colorSet4)
+        .tint(Color.textPrimary)
         .onChange(of: userViewModel.isLoggedIn) { _, newValue in
             if !newValue {
                 path.removeAll() // reset navigation after logout

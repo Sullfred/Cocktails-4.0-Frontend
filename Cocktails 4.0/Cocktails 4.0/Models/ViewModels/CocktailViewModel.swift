@@ -50,6 +50,20 @@ final class CocktailViewModel: ObservableObject {
         }
     }
     
+    func fetchLocalCocktails() -> [Cocktail] {
+        let cocktailDescriptor = FetchDescriptor<Cocktail>()
+        
+        do {
+            let localCocktails = try dependencies.contexCoordinator.fetch(cocktailDescriptor)
+            return localCocktails
+        }
+        catch {
+            ErrorHandler.handle(error)
+        }
+        
+        return []
+    }
+    
     func addNewCocktail(_ cocktail: Cocktail) async {
         // Update local state
         do {

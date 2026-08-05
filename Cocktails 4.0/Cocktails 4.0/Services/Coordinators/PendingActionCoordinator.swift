@@ -44,8 +44,12 @@ final class PendingActionCoordinator {
 
         for action in actions {
             do {
-                try await process(action)
-                try pendingActionService.remove(action)
+                if (action.retryCount > 5) {
+                    try pendingActionService.remove(action)
+                } else {
+                    try await process(action)
+                    try pendingActionService.remove(action)
+                }
             } catch {
                 action.retryCount += 1
                 ErrorHandler.handle(error)
@@ -69,8 +73,12 @@ final class PendingActionCoordinator {
         
         for action in actions {
             do {
-                try await process(action)
-                try pendingActionService.remove(action)
+                if (action.retryCount > 5) {
+                    try pendingActionService.remove(action)
+                } else {
+                    try await process(action)
+                    try pendingActionService.remove(action)
+                }
             } catch {
                 action.retryCount += 1
                 ErrorHandler.handle(error)

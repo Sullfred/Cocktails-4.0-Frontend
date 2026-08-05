@@ -29,10 +29,10 @@ struct CocktailsFrontPage: View {
         NavigationStack {
             ScrollView {
                 NavigationLink {
-                    view_cocktailsList(selectedCategory: nil) // Show all cocktails
+                    CocktailsList(selectedCategory: nil) // Show all cocktails
                 } label: {
                     CategoryCard(
-                        title: "All Cocktails",
+                        title: "cocktails_all",
                         imageName: "cocktail_all",
                         uiHeight: 180,
                         iHeight: 150
@@ -45,7 +45,7 @@ struct CocktailsFrontPage: View {
                     // One card per category
                     ForEach(CocktailCategory.allCases, id: \.self) { category in
                         NavigationLink {
-                            view_cocktailsList(selectedCategory: category)
+                            CocktailsList(selectedCategory: category)
                         } label: {
                             CategoryCard(
                                 title: category.rawValue,
@@ -58,14 +58,14 @@ struct CocktailsFrontPage: View {
                 }
                 .padding()
                 
-                Text("Base Spirit")
+                Text("base_spirit")
                     .font(.title2)
                 
                 LazyVGrid(columns: tagColumns, spacing: 20) {
                     // One card per Tag
                     ForEach(IngredientTag.allCases, id: \.self) { tag in
                         NavigationLink {
-                            view_cocktailsList(selectedCategory: nil, baseSpirit: tag)
+                            CocktailsList(selectedCategory: nil, baseSpirit: tag)
                         } label: {
                             CategoryCard(
                                 title: tag.rawValue.capitalized,
@@ -79,31 +79,34 @@ struct CocktailsFrontPage: View {
                 .padding()
                 
                 HStack {
-                    NavigationLink(destination: view_removedCocktails().environmentObject(myBarViewModel)) {
-                        Label("Removed cocktails", systemImage: "trash.square")
+                    NavigationLink(destination: HiddenCocktails()) {
+                        Label("cocktails_removed", systemImage: "trash.square")
                     }
                     Spacer()
+                    NavigationLink(destination: RandomCocktail()) {
+                        Label("cocktails_random", systemImage: "dice")
+                    }
                 }
                 .padding()
             }
-            .navigationTitle("Cocktails")
-            .background(Color.colorSet2)
+            .navigationTitle("cocktails")
+            .background(Color.background)
             .toolbar {
                 if (userViewModel.canCreateCocktails) {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button(action: {
                             checkBeforeGoToNewCocktailView()
                         }) {
-                            Label("Add Cocktail", systemImage: "plus")
+                            Label("cocktails_add", systemImage: "plus")
                         }
                     }
                 }
             }
             .navigationDestination(isPresented: $showCreateNewCocktail){
-                view_newCocktail()
+                NewCocktail()
             }
         }
-        .tint(.colorSet4)
+        .tint(.textPrimary)
     }
     
     private func checkBeforeGoToNewCocktailView() {

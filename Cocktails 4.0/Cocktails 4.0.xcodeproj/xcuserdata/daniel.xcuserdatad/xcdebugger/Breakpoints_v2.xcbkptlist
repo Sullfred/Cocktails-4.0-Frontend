@@ -7,47 +7,17 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "9265931E-6657-442F-B75A-CE9180961F4C"
-            shouldBeEnabled = "No"
+            uuid = "DFC7144E-4587-45FC-ADD2-5708DA2FE495"
+            shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Cocktails 4.0/Models/ViewModels/UserViewModel.swift"
+            filePath = "Cocktails 4.0/Views/Cocktails/NewCocktail.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "153"
-            endingLineNumber = "153"
-            landmarkName = "verifyTokenStatus()"
-            landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "9265931E-6657-442F-B75A-CE9180961F4C - a9535ff13c3cbd05"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "Cocktails_4_0.UserViewModel.verifyTokenStatus() async -&gt; ()"
-                  moduleName = "Cocktails 4.0.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/daniel/Documents/Github%20Repos/Cocktails-4.0/Cocktails%204.0/Cocktails%204.0/Models/ViewModels/UserViewModel.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "153"
-                  endingLineNumber = "153">
-               </Location>
-               <Location
-                  uuid = "9265931E-6657-442F-B75A-CE9180961F4C - 81a383899cf8a8b8"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "(1) suspend resume partial function for Cocktails_4_0.UserViewModel.verifyTokenStatus() async -&gt; ()"
-                  moduleName = "Cocktails 4.0.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/daniel/Documents/Github%20Repos/Cocktails-4.0/Cocktails%204.0/Cocktails%204.0/Models/ViewModels/UserViewModel.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "153"
-                  endingLineNumber = "153">
-               </Location>
-            </Locations>
+            startingLineNumber = "206"
+            endingLineNumber = "206"
+            landmarkName = "body"
+            landmarkType = "24">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

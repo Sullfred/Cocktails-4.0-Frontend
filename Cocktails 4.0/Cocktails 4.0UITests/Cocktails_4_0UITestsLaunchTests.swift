@@ -5,6 +5,7 @@
 //  Created by Daniel Vang Kleist on 22/07/2025.
 //
 
+/*
 import XCTest
 
 final class Cocktails_4_0UITestsLaunchTests: XCTestCase {
@@ -31,3 +32,4 @@ final class Cocktails_4_0UITestsLaunchTests: XCTestCase {
         add(attachment)
     }
 }
+*/

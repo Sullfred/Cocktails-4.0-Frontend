@@ -20,6 +20,16 @@ struct CocktailsListSorted: View {
     let searchTerms: [String]
     var showFavoritesOnly: Bool
     
+    private var filterCriteria: CocktailFilterCriteria {
+        CocktailFilterCriteria(
+            searchTerms: searchTerms,
+            showFavoritesOnly: showFavoritesOnly,
+            showCraftableOnly: showCraftableOnly,
+            selectedCategory: selectedCategory,
+            baseSpirit: baseSpirit
+        )
+    }
+    
     private var filteredCategory: [CocktailCategory] {
         if let selected = selectedCategory {
             return [selected]
@@ -67,19 +77,19 @@ struct CocktailsListSorted: View {
             await cocktailViewModel.refresh()
         }
         .onAppear {
-            updateListViewModel()
+            updateSourceData()
+            listViewModel.setCriteria(filterCriteria)
         }
+
         .onChange(of: allCocktails) { _, _ in
-            updateListViewModel()
+            updateSourceData()
         }
+
         .onChange(of: myBarViewModel.personalBar) { _, _ in
-            updateListViewModel()
+            updateSourceData()
         }
-        .onChange(of: searchTerms) { _, _ in
-            updateListViewModel()
-        }
-        .onChange(of: baseSpirit) { _, _ in
-            updateListViewModel()
+        .onChange(of: filterCriteria) { _, newCriteria in
+            listViewModel.setCriteria(newCriteria)
         }
     }
     
@@ -89,19 +99,19 @@ struct CocktailsListSorted: View {
         self.showCraftableOnly = showCraftableOnly
         self.showFavoritesOnly = showFavoritesOnly
         
-        self.searchTerms = searchText
+        let rawTerms = searchText
             .split(separator: ",")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
-            .filter { !$0.isEmpty }
+            .filter { $0.count >= 2 }
+        var unique: [String] = []
+        var seen = Set<String>()
+        for term in rawTerms where !seen.contains(term) {
+            unique.append(term)
+            seen.insert(term)
+        }
+        self.searchTerms = unique
         
-        _allCocktails = Query(filter: #Predicate<Cocktail> { cocktail in
-            searchText.isEmpty ||
-            searchText.contains(",") ||
-            cocktail.name.localizedStandardContains(searchText) ||
-            cocktail.ingredients.contains { ingredient in
-                ingredient.name.localizedStandardContains(searchText)
-            }
-        }, sort: sortOrder)
+        _allCocktails = Query(sort: sortOrder)
     }
 }
 
@@ -119,20 +129,13 @@ private func categoryHeader(_ category: CocktailCategory) -> some View {
 }
 
 private extension CocktailsListSorted {
-    func updateListViewModel() {
-        listViewModel.criteria = CocktailFilterCriteria(
-            searchTerms: searchTerms,
-            showFavoritesOnly: showFavoritesOnly,
-            showCraftableOnly: showCraftableOnly,
-            selectedCategory: selectedCategory,
-            baseSpirit: baseSpirit
-        )
-
+    func updateSourceData() {
         listViewModel.update(
             cocktails: allCocktails,
             personalBar: myBarViewModel.personalBar
         )
     }
+    
     func hideCocktail(_ indexSet: IndexSet) {
         for index in indexSet {
             let cocktail = allCocktails[index]
@@ -173,3 +176,4 @@ private extension CocktailsListSorted {
     }())
     .environmentObject(myBarVM)
 }
+

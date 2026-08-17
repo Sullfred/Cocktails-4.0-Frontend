@@ -8,7 +8,6 @@
 import Foundation
 import SwiftData
 
-@MainActor
 final class SyncCoordinator {
     private let context: ModelContext
     

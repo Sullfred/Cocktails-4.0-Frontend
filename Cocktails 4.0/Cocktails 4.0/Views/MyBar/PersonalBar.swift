@@ -95,50 +95,54 @@ struct PersonalBar: View {
                 }
             }
             
-            Divider()
-            
-            HStack(alignment: .lastTextBaseline) {
-                VStack(alignment: .leading){
-                    Text("myBar_new_item")
-                        .font(.callout)
-                        .foregroundStyle(Color.textPrimary)
-                    TextField(
-                        "",
-                        text: $newItemName,
-                        prompt: Text("myBar_new_item_name")
-                            .foregroundStyle(Color.textSecondary)
-                    )
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(Color.white)
-                    .foregroundStyle(Color.black)
+            if (userViewModel.isLoggedIn) {
+                
+                Divider()
+                
+                HStack(alignment: .lastTextBaseline) {
+                    VStack(alignment: .leading){
+                        Text("myBar_new_item")
+                            .font(.callout)
+                            .foregroundStyle(Color.textPrimary)
+                        TextField(
+                            "",
+                            text: $newItemName,
+                            prompt: Text("myBar_new_item_name")
+                                .foregroundStyle(Color.textSecondary)
+                        )
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color.white)
+                        .foregroundStyle(Color.black)
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
                                 .stroke(Color.gray.opacity(0.3))
                         )
-                }
-                
-                VStack(alignment: .trailing){
-                    Text("myBar_category")
-                        .font(.callout)
-                        .foregroundStyle(Color.textPrimary)
-                    Picker("myBar_category", selection: $newItemCategory) {
-                        Text("myBar_auto_assign").tag(nil as BarItemCategory?)
-                        ForEach(BarItemCategory.allCases, id: \.self) { category in
-                            Text(category.rawValue.capitalized).tag(category as BarItemCategory?)
+                    }
+                    
+                    VStack(alignment: .trailing){
+                        Text("myBar_category")
+                            .font(.callout)
+                            .foregroundStyle(Color.textPrimary)
+                        Picker("myBar_category", selection: $newItemCategory) {
+                            Text("myBar_auto_assign").tag(nil as BarItemCategory?)
+                            ForEach(BarItemCategory.allCases, id: \.self) { category in
+                                Text(category.rawValue.capitalized).tag(category as BarItemCategory?)
+                            }
                         }
                     }
+                    
+                    Button(action: add_item) {
+                        Text("add")
+                            .frame(minWidth: 25)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(newItemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
+                .frame(minHeight: 50)
+                .padding()
                 
-                Button(action: add_item) {
-                    Text("add")
-                        .frame(minWidth: 25)
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(newItemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
-            .frame(minHeight: 50)
-            .padding()
         }
         .navigationTitle("\((userViewModel.currentUser?.username.components(separatedBy: " ").first ?? "my"))'s bar")
         .background(Color.background)

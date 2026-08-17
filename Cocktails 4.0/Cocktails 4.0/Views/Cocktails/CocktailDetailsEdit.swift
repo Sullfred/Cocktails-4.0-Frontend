@@ -201,7 +201,12 @@ struct CocktailDetailsEdit: View {
                 guard let photoData = try? await selectedPhoto?.loadTransferable(type: Data.self) else {
                     return
                 }
-                draft.image = prepareImageForUpload(photoData)
+                let processed = await Task.detached(priority: .userInitiated) { () -> Data? in
+                    return prepareImageForUpload(photoData)
+                }.value
+                await MainActor.run {
+                    draft.image = processed
+                }
             }
             .navigationTitle("cocktails_edit")
             .navigationBarTitleDisplayMode(.inline)

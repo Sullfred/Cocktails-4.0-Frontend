@@ -202,7 +202,12 @@ struct NewCocktail: View {
             guard let photoData = try? await selectedPhoto?.loadTransferable(type: Data.self) else {
                 return
             }
-            newCocktailImage = prepareImageForUpload(photoData)
+            let processed = await Task.detached(priority: .userInitiated) { () -> Data? in
+                return prepareImageForUpload(photoData)
+            }.value
+            await MainActor.run {
+                newCocktailImage = processed
+            }
         }
         .safeAreaInset(edge: .bottom) { //Save and Cancel button
             HStack{

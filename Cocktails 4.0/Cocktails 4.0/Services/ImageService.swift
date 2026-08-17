@@ -7,7 +7,6 @@
 
 import Foundation
 
-@MainActor
 final class ImageService {
     private let serviceURL = ServiceConfig.baseURL.appending(path: Endpoints.image)
     

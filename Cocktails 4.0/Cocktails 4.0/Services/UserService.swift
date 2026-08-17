@@ -7,11 +7,9 @@
 
 import Foundation
 
-@MainActor
 final class UserService {
     private let base = ServiceConfig.baseURL
 
-    // MARK: - Auth
     func login(username: String, password: String) async throws -> LoginResponse {
         let url = base.appending(path: Endpoints.user + "/login")
         let creds = "\(username):\(password)"
@@ -45,7 +43,6 @@ final class UserService {
         try APIError.map(nil, response, url: "verifyToken")
     }
 
-    // MARK: - User Management
     func register(username: String, password: String, confirmPassword: String) async throws {
         let url = base.appending(path: Endpoints.user + "/register")
         let body = try JSONEncoder().encode(CreateUserDTO(username: username, password: password, confirmPassword: confirmPassword))

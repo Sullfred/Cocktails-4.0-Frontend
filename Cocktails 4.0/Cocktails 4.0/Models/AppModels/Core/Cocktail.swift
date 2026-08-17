@@ -11,6 +11,8 @@ import SwiftUI
 
 @Model
 class Cocktail {
+    #Index<Cocktail>([\.name], [\.creator])
+    
     // Base cocktail
     var id: UUID = UUID()
     var name: String

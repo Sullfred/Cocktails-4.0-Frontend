@@ -44,6 +44,10 @@ class UserViewModel: ObservableObject {
             }
         }
     }
+    
+    var showUsersBar: Bool {
+        authState != .unknown
+    }
 
     // Auth Actions
     func login() async -> Bool {

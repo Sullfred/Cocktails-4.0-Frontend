@@ -23,7 +23,11 @@ struct LoginView: View {
                     .fontWeight(.semibold)
             
             VStack(spacing: 20) {
-                TextField("login_username", text: $userViewModel.username)
+                TextField(
+                    "",
+                    text: $userViewModel.username,
+                    prompt: Text("login_username").foregroundStyle(Color.textSecondary)
+                )
                     .textContentType(.username)
                     .autocapitalization(.none)
                     .disableAutocorrection(true)
@@ -35,9 +39,17 @@ struct LoginView: View {
                 ZStack(alignment: .trailing) {
                     Group {
                         if isPasswordVisible {
-                            TextField("login_password", text: $userViewModel.password)
+                            TextField(
+                                "",
+                                text: $userViewModel.password,
+                                prompt: Text("login_password").foregroundStyle(Color.textSecondary)
+                            )
                         } else {
-                            SecureField("login_password", text: $userViewModel.password)
+                            SecureField(
+                                "",
+                                text: $userViewModel.password,
+                                prompt: Text("login_password").foregroundStyle(Color.textSecondary)
+                            )
                         }
                     }
                     .textContentType(.password)

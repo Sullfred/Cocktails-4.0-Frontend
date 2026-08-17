@@ -9,7 +9,6 @@ import Foundation
 import SwiftData
 import SwiftUI
 
-@MainActor
 class AdminService: ObservableObject {
     private let userServiceURL = ServiceConfig.baseURL.appending(path: Endpoints.user)
     private let cocktailServiceURL = ServiceConfig.baseURL.appending(path: Endpoints.cocktails)

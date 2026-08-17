@@ -37,7 +37,7 @@ final class CocktailViewModel: ObservableObject {
                 if addedCocktails.count > 5 {
                     ToastManager.shared.show(style: .info, message: "\(addedCocktails.count) cocktails added.")
                 } else {
-                    ToastManager.shared.show(style: .info, message: "Cocktails deleted: \(addedCocktails.joined(separator: ", "))")
+                    ToastManager.shared.show(style: .info, message: "Cocktails added: \(addedCocktails.joined(separator: ", "))")
                 }
             }
             
@@ -153,3 +153,4 @@ final class CocktailViewModel: ObservableObject {
         }
     }
 }
+

@@ -36,7 +36,7 @@ struct CocktailCard: View {
         .frame(width: 350, height: 200)
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .fill(Color(UIColor.secondarySystemBackground))
+                .fill(Color.backgroundSecondary)
                 .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
         )
     }

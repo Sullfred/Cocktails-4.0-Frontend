@@ -9,8 +9,7 @@ import Foundation
 import SwiftData
 import SwiftUI
 
-@MainActor
-final class MyBarService {
+class MyBarService {
     private let serviceURL = ServiceConfig.baseURL.appending(path: Endpoints.myBar)
 
     init() {}
@@ -25,73 +24,49 @@ final class MyBarService {
         return personalBar
     }
     
-    func addBarItem(_ payload: MyBarItemDTO) async throws {
+    func addBarItem(_ payloads: [MyBarItemDTO]) async throws {
         let url = serviceURL.appending(path: "items")
-        let body = try JSONEncoder().encode(payload)
+        let body = try JSONEncoder().encode(payloads)
 
-        try await APIClient.mutate(
-            url: url,
-            method: "POST",
-            body: body
-        )
+        try await APIClient.mutate(url: url, method: "POST",body: body)
     }
 
-    func deleteBarItem(_ payload: MyBarItemDTO) async throws {
-        let url = serviceURL
-            .appending(path: "items")
-            .appending(path: payload.id.uuidString)
-
-        try await APIClient.mutate(
-            url: url,
-            method: "DELETE"
-        )
+    func deleteBarItems(_ payloads: [UUID]) async throws {
+        let url = serviceURL.appending(path: "items")
+        let dto = RemoveBarItemsDTO(itemIds: payloads.map { $0 })
+        let body = try JSONEncoder().encode(dto)
+        try await APIClient.mutate(url: url, method: "DELETE", body: body)
     }
 
-    func addFavorite(_ cocktailID: String) async throws {
-        let url = serviceURL
-            .appending(path: "favorites")
-            .appending(path: cocktailID)
-
-        try await APIClient.mutate(
-            url: url,
-            method: "POST"
-        )
+    func addFavorites(_ cocktailIDs: [UUID]) async throws {
+        let url = serviceURL.appending(path: "favorites")
+        let dto = AddFavoritesDTO(itemIds: cocktailIDs)
+        let body = try JSONEncoder().encode(dto)
+        try await APIClient.mutate(url: url, method: "POST", body: body)
     }
 
-    func deleteFavorite(_ cocktailID: String) async throws {
-        let url = serviceURL
-            .appending(path: "favorites")
-            .appending(path: cocktailID)
-
-        try await APIClient.mutate(
-            url: url,
-            method: "DELETE"
-        )
+    func deleteFavorites(_ cocktailIDs: [UUID]) async throws {
+        let url = serviceURL.appending(path: "favorites")
+        let dto = RemoveFavoritesDTO(itemIds: cocktailIDs)
+        let body = try JSONEncoder().encode(dto)
+        try await APIClient.mutate(url: url, method: "DELETE", body: body)
     }
 
-    func addRemoved(_ payload: HiddenCocktailDTO) async throws {
-        let url = serviceURL.appending(path: "removed")
+    func addHiddenCocktail(_ payloads: [HiddenCocktailDTO]) async throws {
+        let url = serviceURL.appending(path: "hiddenCocktail")
 
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
 
-        let body = try encoder.encode(payload)
+        let body = try encoder.encode(payloads)
 
-        try await APIClient.mutate(
-            url: url,
-            method: "POST",
-            body: body
-        )
+        try await APIClient.mutate(url: url, method: "POST",body: body)
     }
 
-    func deleteRemoved(_ payload: HiddenCocktailDTO) async throws {
-        let url = serviceURL
-            .appending(path: "removed")
-            .appending(path: payload.id.uuidString)
-
-        try await APIClient.mutate(
-            url: url,
-            method: "DELETE"
-        )
+    func deleteRemoved(_ payloads: [UUID]) async throws {
+        let url = serviceURL.appending(path: "hiddenCocktail")
+        let dto = RemoveHiddenCocktailsDTO(itemIds: payloads.map { $0 })
+        let body = try JSONEncoder().encode(dto)
+        try await APIClient.mutate(url: url, method: "DELETE", body: body)
     }
 }

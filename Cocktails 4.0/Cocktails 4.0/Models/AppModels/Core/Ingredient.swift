@@ -11,6 +11,8 @@ import SwiftUI
 
 @Model
 class Ingredient {
+    #Index<Ingredient>([\.name])
+    
     var id: UUID = UUID()
     var volume: Double
     var unit: Iunit
@@ -58,26 +60,7 @@ enum IngredientTag: String, Codable, CaseIterable, Identifiable {
 }
 
 extension Ingredient {
-    func assignTagBasedOnName() {
-        let lowercasedName = name.lowercased()
-        let tagKeywords = Self.loadTagKeywords()
-
-        for (tag, keywords) in tagKeywords {
-            for keyword in keywords {
-                if lowercasedName.contains(keyword) {
-                    self.tag = tag
-                    return
-                }
-            }
-        }
-        // Default if no match found
-        self.tag = nil
-    }
-
-    static func loadTagKeywords() -> [IngredientTag: [String]] {
-        struct IngredientTagKeywordsFile: Decodable {
-            let tagKeywords: [String: [String]]
-        }
+    static let tagKeywords: [IngredientTag: [String]] = {
         guard
             let url = Bundle.main.url(forResource: "IngredientTagKeywords", withExtension: "json"),
             let data = try? Data(contentsOf: url),
@@ -92,6 +75,16 @@ extension Ingredient {
             }
         }
         return result
+    }()
+
+    func assignTagBasedOnName() {
+        let lower = name.lowercased()
+        for (tag, keywords) in Ingredient.tagKeywords {
+            if keywords.contains(where: { lower.contains($0) }) {
+                self.tag = tag
+                return
+            }
+        }
+        self.tag = nil
     }
 }
-

@@ -16,7 +16,7 @@ struct MyBarFrontPage: View {
     var body: some View {
         NavigationStack(path: $path) {
             Group {
-                if userViewModel.isLoggedIn {
+                if (userViewModel.showUsersBar) {
                     PersonalBar(path: $path)
                 } else {
                     LoginView()

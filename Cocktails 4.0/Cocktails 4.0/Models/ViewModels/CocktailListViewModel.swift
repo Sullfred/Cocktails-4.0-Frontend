@@ -30,6 +30,10 @@ final class CocktailListViewModel: ObservableObject {
         self.personalBar = personalBar
         recompute()
     }
+    
+    func setCriteria(_ criteria: CocktailFilterCriteria) {
+        self.criteria = criteria
+    }
 
     private func recompute() {
         var filtered = cocktails

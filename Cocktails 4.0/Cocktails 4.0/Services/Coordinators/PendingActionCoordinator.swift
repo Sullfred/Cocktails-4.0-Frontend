@@ -11,7 +11,7 @@ import SwiftData
 @MainActor
 protocol PendingActionProcessor {
     func canProcess(_ type: PendingActionType) -> Bool
-    func process(_ action: PendingAction) async throws
+    func process(_ actions: [PendingAction]) async throws -> [PendingAction]
 }
 
 @MainActor
@@ -20,7 +20,7 @@ final class PendingActionCoordinator {
     private let processors: [any PendingActionProcessor]
 
     private var isProcessing = false
-    
+
     init(
         pendingActionService: PendingActionService,
         processors: [any PendingActionProcessor]
@@ -30,70 +30,79 @@ final class PendingActionCoordinator {
     }
 
     func processAllPendingActions() async throws {
-        guard !isProcessing  else {
+        guard !isProcessing else {
             return
         }
+
         isProcessing = true
-        
+
         defer {
             isProcessing = false
         }
-        
+
         let actions = try pendingActionService.fetchAll()
             .sorted { $0.dateCreated < $1.dateCreated }
 
-        for action in actions {
-            do {
-                if (action.retryCount > 5) {
-                    try pendingActionService.remove(action)
-                } else {
-                    try await process(action)
-                    try pendingActionService.remove(action)
-                }
-            } catch {
-                action.retryCount += 1
-                ErrorHandler.handle(error)
-                continue
-            }
-        }
+        try await process(actions)
     }
-    
+
     func processPendingActionsOfType(type: PendingActionType) async throws {
         guard !isProcessing else {
             return
         }
+
         isProcessing = true
-        
+
         defer {
             isProcessing = false
         }
-        
+
         let actions = try pendingActionService.fetchActions(ofType: type)
             .sorted { $0.dateCreated < $1.dateCreated }
-        
-        for action in actions {
+
+        try await process(actions)
+    }
+
+    private func process(_ actions: [PendingAction]) async throws {
+        for processor in processors {
+            let processorActions = actions.filter {
+                processor.canProcess($0.type)
+            }
+
+            guard !processorActions.isEmpty else {
+                continue
+            }
+
+            let validActions = processorActions.filter {
+                $0.retryCount <= 5
+            }
+
+            let expiredActions = processorActions.filter {
+                $0.retryCount > 5
+            }
+
+            // Give up on actions that have exceeded the retry limit.
+            for action in expiredActions {
+                try pendingActionService.remove(action)
+            }
+
+            guard !validActions.isEmpty else {
+                continue
+            }
+
             do {
-                if (action.retryCount > 5) {
-                    try pendingActionService.remove(action)
-                } else {
-                    try await process(action)
+                let processedActions = try await processor.process(validActions)
+
+                for action in processedActions {
                     try pendingActionService.remove(action)
                 }
             } catch {
-                action.retryCount += 1
+                for action in validActions {
+                    action.retryCount += 1
+                }
+
                 ErrorHandler.handle(error)
-                continue
             }
         }
-    }
-
-    private func process(_ action: PendingAction) async throws {
-        guard let processor = processors.first(where: {
-            $0.canProcess(action.type)
-        }) else {
-            throw PendingActionError.invalidPayload
-        }
-
-        try await processor.process(action)
     }
 }

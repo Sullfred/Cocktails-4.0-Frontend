@@ -11,6 +11,7 @@ import SwiftUI
 struct SessionExpiredBanner: View {
     let onLogin: () -> Void
     let minimize: () -> Void
+    let onlogout: () -> Void
 
     var body: some View {
         VStack {
@@ -25,6 +26,12 @@ struct SessionExpiredBanner: View {
             
             HStack(spacing: 12) {
                 Button("minimize", action: minimize)
+                    .font(.footnote.bold())
+                    .foregroundColor(.white)
+                
+                Spacer()
+                
+                Button("logout", action: onlogout)
                     .font(.footnote.bold())
                     .foregroundColor(.white)
                 

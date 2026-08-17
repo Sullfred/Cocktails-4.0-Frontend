@@ -86,9 +86,9 @@ final class MyBarViewModel: ObservableObject {
             try dependencies.contexCoordinator.performBatch {
                 items.forEach { item in
                     personalBar.myBarItems.append(item)
-                    queueAdd(item)
                 }
             }
+            queueAdd(items)
         } catch {
             ErrorHandler.handle(error)
         }
@@ -150,9 +150,9 @@ final class MyBarViewModel: ObservableObject {
             try dependencies.contexCoordinator.performBatch {
                 for item in items {
                     personalBar.removedCocktails.removeAll { $0.id == item.id }
-                    queueRemovedDelete(item)
                 }
             }
+            queueRemovedDelete(items)
         } catch {
             ErrorHandler.handle(error)
         }
@@ -160,9 +160,13 @@ final class MyBarViewModel: ObservableObject {
     
     // Queue helpers for syncing items later
     private func queueAdd(_ item: MyBarItem) {
-        let dto = MyBarItemDTO(from: item)
+        queueAdd([item])
+    }
+
+    private func queueAdd(_ items: [MyBarItem]) {
+        let dtos = items.map { MyBarItemDTO(from: $0) }
         do {
-            try dependencies.pendingActionService.addAction(.addBarItem, payload: dto)
+            try dependencies.pendingActionService.addAction(.addBarItem, payload: dtos)
         } catch {
             ErrorHandler.handle(error)
         }
@@ -178,36 +182,45 @@ final class MyBarViewModel: ObservableObject {
     }
     
     private func queueFavoriteAdd(_ id: String) {
-        do {
-            try dependencies.pendingActionService.addAction(.addFavorite, payload: id)
-        } catch {
-            ErrorHandler.handle(error)
+        if let uuid = UUID(uuidString: id) {
+            do {
+                try dependencies.pendingActionService.addAction(.addFavorite, payload: [uuid])
+            } catch {
+                ErrorHandler.handle(error)
+            }
         }
     }
     
     private func queueFavoriteDelete(_ id: String) {
-        do {
-            try dependencies.pendingActionService.addAction(.deleteFavorite, payload: id)
-        } catch {
-            ErrorHandler.handle(error)
+        if let uuid = UUID(uuidString: id) {
+            do {
+                try dependencies.pendingActionService.addAction(.deleteFavorite, payload: [uuid])
+            } catch {
+                ErrorHandler.handle(error)
+            }
         }
     }
     
     private func queueRemovedAdd(_ item: HiddenCocktail) {
-        let dto = HiddenCocktailDTO(from: item)
+        queueRemovedAdd([item])
+    }
+
+    private func queueRemovedAdd(_ items: [HiddenCocktail]) {
+        let dtos = items.map { HiddenCocktailDTO(from: $0) }
         do {
-            try dependencies.pendingActionService.addAction(.addRemoved, payload: dto)
+            try dependencies.pendingActionService.addAction(.addRemoved, payload: dtos)
         } catch {
             ErrorHandler.handle(error)
         }
     }
     
-    private func queueRemovedDelete(_ item: HiddenCocktail) {
-        let dto = HiddenCocktailDTO(from: item)
+    private func queueRemovedDelete(_ items: [HiddenCocktail]) {
+        let dtos = items.map { HiddenCocktailDTO(from: $0) }
         do {
-            try dependencies.pendingActionService.addAction(.deleteRemoved, payload: dto)
+            try dependencies.pendingActionService.addAction(.deleteRemoved, payload: dtos)
         } catch {
             ErrorHandler.handle(error)
         }
     }
 }
+

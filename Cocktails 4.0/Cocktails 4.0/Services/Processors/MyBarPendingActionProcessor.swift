@@ -5,6 +5,8 @@
 //  Created by Daniel Vang Kleist on 13/06/2026.
 //
 
+import Foundation
+
 @MainActor
 final class MyBarPendingActionProcessor: PendingActionProcessor {
     private let supportedTypes: Set<PendingActionType> = [
@@ -15,85 +17,230 @@ final class MyBarPendingActionProcessor: PendingActionProcessor {
         .addRemoved,
         .deleteRemoved
     ]
-
+    
     private let myBarService: MyBarService
-
+    
     init(myBarService: MyBarService) {
         self.myBarService = myBarService
     }
-
+    
     func canProcess(_ type: PendingActionType) -> Bool {
         supportedTypes.contains(type)
     }
+    
+    func process(_ actions: [PendingAction]) async throws -> [PendingAction] {
+        guard actions.allSatisfy({ canProcess($0.type) }) else {
+            throw PendingActionError.invalidPayload
+        }
+        
+        var processedActions: [PendingAction] = []
+        
+        let barItemActions = actions.filter {
+            $0.type == .addBarItem || $0.type == .deleteBarItem
+        }
+        
+        if !barItemActions.isEmpty {
+            let processed = try await processBarItems(barItemActions)
+            processedActions.append(contentsOf: processed)
+        }
+        
+        let favoriteActions = actions.filter {
+            $0.type == .addFavorite || $0.type == .deleteFavorite
+        }
+        
+        if !favoriteActions.isEmpty {
+            let processed = try await processFavorites(favoriteActions)
+            processedActions.append(contentsOf: processed)
+        }
+        
+        let hiddenCocktailActions = actions.filter {
+            $0.type == .addRemoved || $0.type == .deleteRemoved
+        }
+        
+        if !hiddenCocktailActions.isEmpty {
+            let processed = try await processHiddenCocktails(hiddenCocktailActions)
+            processedActions.append(contentsOf: processed)
+        }
+        
+        return processedActions
+    }
+}
 
-    func process(_ action: PendingAction) async throws {
-        guard canProcess(action.type) else {
-            throw PendingActionError.unsupportedActionType(action: action.type, processor: "MyBarPendingActionProcessor")
+// Bar Items
+private extension MyBarPendingActionProcessor {
+    func processBarItems(_ actions: [PendingAction]) async throws -> [PendingAction] {
+        enum State {
+            case add(MyBarItemDTO)
+            case delete(UUID)
         }
+        
+        var states: [UUID: State] = [:]
+        
+        for action in actions.sorted(by: {
+            $0.dateCreated < $1.dateCreated
+        }) {
+            guard let item = action.decodePayload(as: MyBarItemDTO.self) else {
+                throw PendingActionError.invalidPayload
+            }
+            
+            switch action.type {
+            case .addBarItem:
+                states[item.id] = .add(item)
+                
+            case .deleteBarItem:
+                states[item.id] = .delete(item.id)
+                
+            default:
+                break
+            }
+        }
+        
+        let itemsToAdd = states.values.compactMap {
+            if case .add(let item) = $0 {
+                return item
+            }
+            
+            return nil
+        }
+        
+        let itemIdsToDelete = states.values.compactMap {
+            if case .delete(let id) = $0 {
+                return id
+            }
+            
+            return nil
+        }
+        
+        if !itemsToAdd.isEmpty {
+            try await myBarService.addBarItem(itemsToAdd)
+        }
+        
+        if !itemIdsToDelete.isEmpty {
+            try await myBarService.deleteBarItems(itemIdsToDelete)
+        }
+        
+        return actions
+    }
+}
 
-        switch action.type {
-        case .addBarItem:
-            try await handleAddBarItem(action)
-        case .deleteBarItem:
-            try await handleDeleteBarItem(action)
-        case .addFavorite:
-            try await handleAddFavorite(action)
-        case .deleteFavorite:
-            try await handleDeleteFavortie(action)
-        case .addRemoved:
-            try await handleAddRemovedCocktail(action)
-        case .deleteRemoved:
-            try await handleDeleteRemovedCocktail(action)
-        default:
-            throw PendingActionError.unsupportedActionType(action: action.type, processor: "MyBarPendingActionProcessor")
-        }
-    }
-    
-    private func handleAddBarItem(_ action: PendingAction) async throws {
-        guard let payload = action.decodePayload(as: MyBarItemDTO.self) else {
-            throw PendingActionError.invalidPayload
+// Favorites
+private extension MyBarPendingActionProcessor {
+    func processFavorites(
+        _ actions: [PendingAction]
+    ) async throws -> [PendingAction] {
+        enum State {
+            case add(UUID)
+            case remove(UUID)
         }
         
-        try await myBarService.addBarItem(payload)
-    }
-    
-    private func handleDeleteBarItem(_ action: PendingAction) async throws {
-        guard let payload = action.decodePayload(as: MyBarItemDTO.self) else {
-            throw PendingActionError.invalidPayload
+        var states: [UUID: State] = [:]
+        
+        for action in actions.sorted(by: {
+            $0.dateCreated < $1.dateCreated
+        }) {
+            guard let id = action.decodePayload(as: UUID.self) else {
+                throw PendingActionError.invalidPayload
+            }
+            
+            switch action.type {
+            case .addFavorite:
+                states[id] = .add(id)
+                
+            case .deleteFavorite:
+                states[id] = .remove(id)
+                
+            default:
+                break
+            }
         }
         
-        try await myBarService.deleteBarItem(payload)
-    }
-    
-    private func handleAddFavorite(_ action: PendingAction) async throws {
-        guard let payload = action.decodePayload(as: String.self) else {
-            throw PendingActionError.invalidPayload
+        let idsToAdd = states.values.compactMap {
+            if case .add(let id) = $0 {
+                return id
+            }
+            
+            return nil
         }
         
-        try await myBarService.addFavorite(payload)
-    }
-    
-    private func handleDeleteFavortie(_ action: PendingAction) async throws {
-        guard let cocktailID = action.decodePayload(as: String.self) else {
-            throw PendingActionError.invalidPayload
+        let idsToRemove = states.values.compactMap {
+            if case .remove(let id) = $0 {
+                return id
+            }
+            
+            return nil
         }
         
-        try await myBarService.deleteFavorite(cocktailID)
-    }
-    
-    private func handleAddRemovedCocktail(_ action: PendingAction) async throws {
-        guard let payload = action.decodePayload(as: HiddenCocktailDTO.self) else {
-            throw PendingActionError.invalidPayload
+        if !idsToAdd.isEmpty {
+            try await myBarService.addFavorites(idsToAdd)
         }
         
-        try await myBarService.addRemoved(payload)
-    }
-    
-    private func handleDeleteRemovedCocktail(_ action: PendingAction) async throws {
-        guard let payload = action.decodePayload(as: HiddenCocktailDTO.self) else {
-            throw PendingActionError.invalidPayload
+        if !idsToRemove.isEmpty {
+            try await myBarService.deleteFavorites(idsToRemove)
         }
         
-        try await myBarService.deleteRemoved(payload)
+        return actions
+    }
+}
+
+// Hidden Cocktails
+private extension MyBarPendingActionProcessor {
+    func processHiddenCocktails(
+        _ actions: [PendingAction]
+    ) async throws -> [PendingAction] {
+        enum State {
+            case add(HiddenCocktailDTO)
+            case delete(UUID)
+        }
+        
+        var states: [UUID: State] = [:]
+        
+        for action in actions.sorted(by: {
+            $0.dateCreated < $1.dateCreated
+        }) {
+            guard let hiddenCocktail = action.decodePayload(
+                as: HiddenCocktailDTO.self
+            ) else {
+                throw PendingActionError.invalidPayload
+            }
+            
+            let id = hiddenCocktail.id
+            
+            switch action.type {
+            case .addRemoved:
+                states[id] = .add(hiddenCocktail)
+                
+            case .deleteRemoved:
+                states[id] = .delete(id)
+                
+            default:
+                break
+            }
+        }
+        
+        let hiddenCocktailsToAdd = states.values.compactMap {
+            if case .add(let hiddenCocktail) = $0 {
+                return hiddenCocktail
+            }
+            
+            return nil
+        }
+        
+        let hiddenCocktailIdsToDelete = states.values.compactMap {
+            if case .delete(let id) = $0 {
+                return id
+            }
+            
+            return nil
+        }
+        
+        if !hiddenCocktailsToAdd.isEmpty {
+            try await myBarService.addHiddenCocktail(hiddenCocktailsToAdd)
+        }
+        
+        if !hiddenCocktailIdsToDelete.isEmpty {
+            try await myBarService.deleteRemoved(hiddenCocktailIdsToDelete)
+        }
+        
+        return actions
     }
 }

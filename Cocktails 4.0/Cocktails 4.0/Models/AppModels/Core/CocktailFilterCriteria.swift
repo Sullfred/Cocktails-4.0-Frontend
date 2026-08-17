@@ -6,7 +6,7 @@
 //
 
 
-struct CocktailFilterCriteria {
+struct CocktailFilterCriteria: Equatable {
     var searchTerms: [String] = []
     var showFavoritesOnly = false
     var showCraftableOnly = false

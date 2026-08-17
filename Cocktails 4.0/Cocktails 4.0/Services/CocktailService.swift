@@ -9,8 +9,7 @@ import Foundation
 import SwiftData
 import SwiftUI
 
-@MainActor
-final class CocktailService {
+class CocktailService {
     private let serviceURL = ServiceConfig.baseURL.appending(path: Endpoints.cocktails)
     private let imageService: ImageService
     
@@ -88,32 +87,52 @@ final class CocktailService {
     }
     
     // Helper function for handling images after fetching a cocktail
-    private func hydrateImages(for cocktails: [Cocktail], with dtos: [CocktailDTO]) async -> [Cocktail] {
-        let result: [Cocktail] = cocktails
+    private func hydrateImages(for cocktails: [Cocktail],with dtos: [CocktailDTO]) async -> [Cocktail] {
+        let result = cocktails
         
-        for index in result.indices {
-            let dto = dtos[index]
-            
-            // Skip if no image exists remotely
-            guard dto.imageURL != nil else {
-                result[index].image = ImageCacheHelper.loadCachedImage(for: dto.id)
-                result[index].imageURL = nil
+        await withTaskGroup(of: HydratedImage.self) { group in
+            for index in result.indices {
+                let dto = dtos[index]
                 
-                continue
+                group.addTask {
+                    guard dto.imageURL != nil else {
+                        return HydratedImage(
+                            index: index,
+                            image: ImageCacheHelper.loadCachedImage(for: dto.id),
+                            imageURL: nil
+                        )
+                    }
+                    
+                    do {
+                        let data = try await self.imageService.fetchImage(for: dto.id)
+                        
+                        return HydratedImage(
+                            index: index,
+                            image: data,
+                            imageURL: dto.imageURL
+                        )
+                    } catch {
+                        return HydratedImage(
+                            index: index,
+                            image: ImageCacheHelper.loadCachedImage(for: dto.id),
+                            imageURL: nil
+                        )
+                    }
+                }
             }
             
-            do {
-                let data = try await imageService.fetchImage(for: dto.id)
-                
-                result[index].image = data
-                result[index].imageURL = dto.imageURL
-            } catch {
-                // fallback to cache only (no UI side effects in service layer)
-                result[index].image = ImageCacheHelper.loadCachedImage(for: dto.id)
-                result[index].imageURL = nil
+            for await hydratedImage in group {
+                result[hydratedImage.index].image = hydratedImage.image
+                result[hydratedImage.index].imageURL = hydratedImage.imageURL
             }
         }
         
         return result
+    }
+    
+    private struct HydratedImage {
+        let index: Int
+        let image: Data?
+        let imageURL: String?
     }
 }

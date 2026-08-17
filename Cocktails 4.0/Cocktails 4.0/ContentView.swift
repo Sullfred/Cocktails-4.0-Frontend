@@ -33,15 +33,12 @@ struct ContentView: View {
                         .tabItem {
                             Label("cocktails", systemImage: "list.bullet")
                         }
-                        .toolbarBackground(.visible, for: .tabBar)
 
                     MyBarFrontPage()
                         .tabItem {
                             Label("my_bar", systemImage: "wineglass")
                         }
-                        .toolbarBackground(.visible, for: .tabBar)
                 }
-                .background(Color.background)
                 .tint(Color.destructive)
             }
 
@@ -55,7 +52,12 @@ struct ContentView: View {
                             onLogin: {
                                 userViewModel.showLogin = true
                             },
-                            minimize: toggleBannerSize
+                            minimize: toggleBannerSize,
+                            onlogout: {
+                                Task {
+                                    await userViewModel.logout()
+                                }
+                            }
                         )
                     }
                 }

@@ -8,6 +8,6 @@
 // Configuration settings file format documentation can be found at:
 // https://developer.apple.com/documentation/xcode/adding-a-build-configuration-file-to-your-project
 
-API_HOST = https
-API_URL = starsmerchant-oils-golden-carmen.trycloudflare.com
+API_HOST = http
+API_URL = 127.0.0.1:8080
 API_KEY = 1234_This_is_a_test_api_key_string

@@ -19,6 +19,13 @@ struct CocktailsList: View {
     let selectedCategory: CocktailCategory?
     @State var baseSpirit: IngredientTag?
     
+    var baseSpiritLabel: String {
+        guard let spirit = baseSpirit else {
+            return NSLocalizedString("all", comment: "")
+        }
+        return spirit.rawValue.capitalized
+    }
+    
     var body: some View {
         CocktailsListSorted(sortOrder: sortOrder, searchText: searchText, showFavoritesOnly: showFavoritesOnly, showCraftableOnly: showCraftableOnly, selectedCategory: selectedCategory, baseSpirit: baseSpirit)
             .navigationTitle(
@@ -68,7 +75,7 @@ struct CocktailsList: View {
                         }
                         
                         Section("base_spirit") {
-                            Picker("base_spirit", selection: $baseSpirit) {
+                            Picker(baseSpiritLabel, selection: $baseSpirit) {
                                 Text("all").tag(nil as IngredientTag?)
                                 ForEach(IngredientTag.allCases, id: \.self) { tag in
                                     Text(tag.rawValue.capitalized).tag(tag as IngredientTag?)

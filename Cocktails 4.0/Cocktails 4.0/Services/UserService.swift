@@ -9,6 +9,11 @@ import Foundation
 
 final class UserService {
     private let base = ServiceConfig.baseURL
+    private let apiClient: APIClientProtocol
+
+    init(apiClient: APIClientProtocol) {
+        self.apiClient = apiClient
+    }
 
     func login(username: String, password: String) async throws -> LoginResponse {
         let url = base.appending(path: Endpoints.user + "/login")
@@ -17,59 +22,81 @@ final class UserService {
             throw APIError.networkFailure(NSError(domain: "Auth", code: -1))
         }
         let base64Creds = loginData.base64EncodedString()
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        let apiKey = ServiceConfig.apiKey
-        request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
-        request.setValue("Basic \(base64Creds)", forHTTPHeaderField: "Authorization")
-        request.setValue("json", forHTTPHeaderField: "Accept")
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-        try APIError.map(data, response, url: request.url?.absoluteString ?? "")
-
-        return try JSONDecoder().decode(LoginResponse.self, from: data)
+        
+        let headers = [
+            "Authorization": "Basic \(base64Creds)",
+            "Accept": "json"
+        ]
+        
+        return try await apiClient.request(
+            url: url,
+            method: "POST",
+            body: nil,
+            headers: headers
+        )
     }
 
     func verifyToken(_ token: String) async throws {
         let url = base.appending(path: Endpoints.user + "/verifyToken")
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        let apiKey = ServiceConfig.apiKey
-        request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-
-        let (_, response) = try await URLSession.shared.data(for: request)
-        try APIError.map(nil, response, url: "verifyToken")
+        let headers = ["Authorization": "Bearer \(token)"]
+        
+        // verifyToken just needs to check if it throws or not
+        // We use requestData since we don't need to decode a specific type
+        _ = try await apiClient.requestData(
+            url: url,
+            method: "GET",
+            body: nil,
+            headers: headers
+        )
     }
 
     func register(username: String, password: String, confirmPassword: String) async throws {
         let url = base.appending(path: Endpoints.user + "/register")
         let body = try JSONEncoder().encode(CreateUserDTO(username: username, password: password, confirmPassword: confirmPassword))
-        try await APIClient.mutate(url: url, method: "POST", body: body)
+        let _ = try await apiClient.mutate(
+            url: url,
+            method: "POST",
+            body: body,
+            responseType: EmptyResponse.self
+        )
     }
 
     func updateUsername(_ newUsername: String) async throws {
         let url = base.appending(path: Endpoints.user + "/updateUsername")
         let body = try JSONEncoder().encode(UpdateUsernameDTO(newUsername: newUsername))
-        try await APIClient.mutate(url: url, method: "PATCH", body: body)
+        let _ = try await apiClient.mutate(
+            url: url,
+            method: "PATCH",
+            body: body,
+            responseType: EmptyResponse.self
+        )
     }
 
     func updatePassword(current: String, new: String, confirm: String) async throws {
         let url = base.appending(path: Endpoints.user + "/updatePassword")
         let body = try JSONEncoder().encode(UpdatePasswordDTO(currentPassword: current, newPassword: new, confirmNewPassword: confirm))
-        try await APIClient.mutate(url: url, method: "PATCH", body: body)
+        let _ = try await apiClient.mutate(
+            url: url,
+            method: "PATCH",
+            body: body,
+            responseType: EmptyResponse.self
+        )
     }
 
     func deleteUser() async throws {
         let url = base.appending(path: Endpoints.user + "/me")
-        try await APIClient.mutate(url: url, method: "DELETE")
+        let _ = try await apiClient.mutate(
+            url: url,
+            method: "DELETE",
+            body: nil,
+            responseType: EmptyResponse.self
+        )
     }
 
     func logout() async throws {
         let url = base.appending(path: Endpoints.user + "/logout")
         do {
-            try await APIClient.mutate(url: url, method: "POST")
+            let _ = try await apiClient.mutate(url: url, method: "POST", body: nil, responseType: EmptyResponse.self)
         } catch APIError.httpError(let code, _) where [401, 403, 404].contains(code) {
             return // Already expired/invalid, treat as success
         } catch {

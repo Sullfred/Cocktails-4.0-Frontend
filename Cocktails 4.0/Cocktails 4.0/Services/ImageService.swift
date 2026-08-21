@@ -7,51 +7,48 @@
 
 import Foundation
 
-final class ImageService {
+class ImageService {
     private let serviceURL = ServiceConfig.baseURL.appending(path: Endpoints.image)
+    private let apiClient: APIClientProtocol
     
-    init() {}
+    init(apiClient: APIClientProtocol) {
+        self.apiClient = apiClient
+    }
     
     func uploadImage(for cocktailID: UUID, imageData: Data) async throws {
         let imageURL = serviceURL.appending(path: "\(cocktailID)/image")
-
-        try await APIClient.upload(
+        let _ = try await apiClient.upload(
             url: imageURL,
             method: "POST",
             imageData: imageData,
-            fileName: "\(cocktailID).jpg"
+            fileName: "\(cocktailID).jpg",
+            mimeType: "image/jpeg",
         )
     }
     
     func updateImage(for cocktailID: UUID, imageData: Data) async throws {
         let imageURL = serviceURL.appending(path: "\(cocktailID)/image")
-
-        try await APIClient.upload(
+        let _ = try await apiClient.upload(
             url: imageURL,
             method: "PUT",
             imageData: imageData,
-            fileName: "\(cocktailID).jpg"
+            fileName: "\(cocktailID).jpg",
+            mimeType: "image/jpeg",
         )
-
         ImageCacheHelper.cacheImage(imageData,for: cocktailID)
     }
     
     func deleteImage(for cocktailID: UUID) async throws {
         let imageURL = serviceURL.appending(path: "\(cocktailID)/image")
-
-        try await APIClient.delete(url: imageURL)
-
+        try await apiClient.delete(url: imageURL)
         ImageCacheHelper.removeCachedImage(for: cocktailID)
     }
     
     func fetchImage(for cocktailID: UUID) async throws -> Data {
         let imageURL = serviceURL.appending(path: "\(cocktailID)/image")
-
-        let data: Data = try await APIClient.requestData(url: imageURL)
-
+        let data: Data = try await apiClient.requestData(url: imageURL, method: "GET", body: nil, headers: nil)
         ImageCacheHelper.cacheImage(data, for: cocktailID)
-
         return data
     }
-    
 }
+

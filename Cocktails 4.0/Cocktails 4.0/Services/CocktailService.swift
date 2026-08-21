@@ -12,28 +12,27 @@ import SwiftUI
 class CocktailService {
     private let serviceURL = ServiceConfig.baseURL.appending(path: Endpoints.cocktails)
     private let imageService: ImageService
-    
-    init(imageService: ImageService) {
+    private let apiClient: APIClientProtocol
+
+    init(imageService: ImageService, apiClient: APIClientProtocol) {
         self.imageService = imageService
+        self.apiClient = apiClient
     }
     
-    // Fetches cocktails from the server, prepares their images, and returns `[Cocktail]`.
     func fetchCocktails() async throws -> [Cocktail] {
-        let cocktailDTOs: [CocktailDTO] = try await APIClient.request(url: serviceURL)
+        let cocktailDTOs: [CocktailDTO] = try await apiClient.request(url: serviceURL, method: "GET", body: nil, headers: nil)
         var cocktails: [Cocktail] = cocktailDTOs.map { Cocktail(from: $0) }
-        
-        // Get cocktail images
         cocktails = await hydrateImages(for: cocktails, with: cocktailDTOs)
-        
         return cocktails
     }
     
     func createCocktail(_ payload: CocktailPayload) async throws {
         let body = try JSONEncoder().encode(payload.cocktail)
-        let _: EmptyResponse = try await APIClient.mutate(
+        let _: EmptyResponse = try await apiClient.mutate(
             url: serviceURL,
             method: "POST",
-            body: body
+            body: body,
+            responseType: EmptyResponse.self
         )
         
         if (payload.imageAction == .upload) {
@@ -46,16 +45,14 @@ class CocktailService {
     
     func updateCocktail(_ payload: CocktailPayload) async throws {
         let url = serviceURL.appending(path: payload.cocktail.id.uuidString)
-        
-        // 1. Update cocktail
         let body = try JSONEncoder().encode(payload.cocktail)
-        try await APIClient.mutate(
+        let _ = try await apiClient.mutate(
             url: url,
             method: "PUT",
-            body: body
+            body: body,
+            responseType: EmptyResponse.self
         )
         
-        // 2. Handle image update/upload/deletion
         switch (payload.imageAction) {
         case .update:
             guard let imageData = payload.imageData else {
@@ -74,26 +71,22 @@ class CocktailService {
         }
     }
     
-    // Check if the server is reachable by sending a HEAD request to the cocktails endpoint
     func checkServerConnection() async -> Bool {
         let url = serviceURL
-        
         do {
-            try await APIClient.ping(url: url)
+            try await apiClient.ping(url: url)
             return true
         } catch {
             return false
         }
     }
     
-    // Helper function for handling images after fetching a cocktail
     private func hydrateImages(for cocktails: [Cocktail],with dtos: [CocktailDTO]) async -> [Cocktail] {
         let result = cocktails
         
         await withTaskGroup(of: HydratedImage.self) { group in
             for index in result.indices {
                 let dto = dtos[index]
-                
                 group.addTask {
                     guard dto.imageURL != nil else {
                         return HydratedImage(
@@ -102,10 +95,8 @@ class CocktailService {
                             imageURL: nil
                         )
                     }
-                    
                     do {
                         let data = try await self.imageService.fetchImage(for: dto.id)
-                        
                         return HydratedImage(
                             index: index,
                             image: data,
@@ -120,13 +111,11 @@ class CocktailService {
                     }
                 }
             }
-            
             for await hydratedImage in group {
                 result[hydratedImage.index].image = hydratedImage.image
                 result[hydratedImage.index].imageURL = hydratedImage.imageURL
             }
         }
-        
         return result
     }
     

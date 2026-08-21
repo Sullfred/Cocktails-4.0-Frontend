@@ -22,11 +22,12 @@ final class AppDependencies: ObservableObject {
     let contexCoordinator: ContextCoordinator
 
     init(context: ModelContext) {
-        let _imageService = ImageService()
-        let _cocktailService = CocktailService(imageService: _imageService)
-        let _myBarService = MyBarService()
-        let _userService = UserService()
-        let _adminService = AdminService()
+        let _apiClient = APIClient()
+        let _imageService = ImageService(apiClient: _apiClient)
+        let _cocktailService = CocktailService(imageService: _imageService, apiClient: _apiClient)
+        let _myBarService = MyBarService(apiClient: _apiClient)
+        let _userService = UserService(apiClient: _apiClient)
+        let _adminService = AdminService(apiClient: _apiClient)
 
         let _processors: [any PendingActionProcessor] = [
             CocktailsPendingActionProcessor(

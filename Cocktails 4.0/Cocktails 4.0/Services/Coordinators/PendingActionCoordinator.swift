@@ -16,13 +16,13 @@ protocol PendingActionProcessor {
 
 @MainActor
 final class PendingActionCoordinator {
-    private let pendingActionService: PendingActionService
+    private let pendingActionService: PendingActionServiceProtocol
     private let processors: [any PendingActionProcessor]
 
     private var isProcessing = false
 
     init(
-        pendingActionService: PendingActionService,
+        pendingActionService: PendingActionServiceProtocol,
         processors: [any PendingActionProcessor]
     ) {
         self.pendingActionService = pendingActionService
@@ -81,7 +81,6 @@ final class PendingActionCoordinator {
                 $0.retryCount > 5
             }
 
-            // Give up on actions that have exceeded the retry limit.
             for action in expiredActions {
                 try pendingActionService.remove(action)
             }

@@ -12,14 +12,15 @@ import SwiftUI
 class AdminService: ObservableObject {
     private let userServiceURL = ServiceConfig.baseURL.appending(path: Endpoints.user)
     private let cocktailServiceURL = ServiceConfig.baseURL.appending(path: Endpoints.cocktails)
+    private let apiClient: APIClientProtocol
     
-    init() {}
+    init(apiClient: APIClientProtocol) {
+        self.apiClient = apiClient
+    }
     
-    // fetch users
     func fetchUsers() async throws -> [fetchPublicUserDTO] {
         let url = userServiceURL.appending(path: "fetchUsers")
-        
-        let users: [fetchPublicUserDTO] = try await APIClient.request(url: url)
+        let users: [fetchPublicUserDTO] = try await apiClient.request(url: url, method: "GET", body: nil, headers: nil)
         return users
     }
     
@@ -28,29 +29,30 @@ class AdminService: ObservableObject {
         let dto = UpdateUserRoleDTO(id: userId, role: newRole)
         let body = try JSONEncoder().encode(dto)
         
-        try await APIClient.mutate(
+        let _ = try await apiClient.mutate(
             url: url,
             method: "PUT",
-            body: body
+            body: body,
+            responseType: EmptyResponse.self
         )
     }
     
     func deleteCocktail(cocktailIds: [String]) async throws {
         for cocktailId in cocktailIds {
             let url = cocktailServiceURL.appending(path: cocktailId)
-            
-            try await APIClient.mutate(
+            let _ = try await apiClient.mutate(
                 url: url,
-                method: "DELETE"
+                method: "DELETE",
+                body: nil,
+                responseType: EmptyResponse.self
             )
         }
     }
     
     func checkServerConnection() async throws -> Bool {
         let url = ServiceConfig.baseURL.appending(path: Endpoints.cocktails)
-        
         do {
-            try await APIClient.ping(url: url)
+            try await apiClient.ping(url: url)
             return true
         } catch {
             return false

@@ -166,7 +166,9 @@ final class MyBarViewModel: ObservableObject {
     private func queueAdd(_ items: [MyBarItem]) {
         let dtos = items.map { MyBarItemDTO(from: $0) }
         do {
-            try dependencies.pendingActionService.addAction(.addBarItem, payload: dtos)
+            try dtos.forEach { dto in
+                try dependencies.pendingActionService.addAction(.addBarItem, payload: dto)
+            }
         } catch {
             ErrorHandler.handle(error)
         }

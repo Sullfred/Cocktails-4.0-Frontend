@@ -5,10 +5,11 @@ import Foundation
 @Suite("MyBarPendingActionProcessor")
 @MainActor
 struct MyBarPendingActionProcessorTests {
+    let mockClient = MockAPIClient()
 
     @Test("canProcess identifies supported types")
     func canProcessTypes() {
-        let mockService = MockMyBarService()
+        let mockService = MockMyBarService(apiClient: mockClient)
         let processor = MyBarPendingActionProcessor(myBarService: mockService)
 
         #expect(processor.canProcess(.addBarItem) == true)
@@ -23,7 +24,7 @@ struct MyBarPendingActionProcessorTests {
 
     @Test("process consolidates add and delete actions for bar items")
     func consolidatesBarItems() async throws {
-        let mockService = MockMyBarService()
+        let mockService = MockMyBarService(apiClient: mockClient)
         let processor = MyBarPendingActionProcessor(myBarService: mockService)
 
         let item1 = MyBarItemDTO(id: UUID(), name: "Bourbon", category: .liquor)
@@ -50,7 +51,7 @@ struct MyBarPendingActionProcessorTests {
 
     @Test("process consolidates favorites")
     func consolidatesFavorites() async throws {
-        let mockService = MockMyBarService()
+        let mockService = MockMyBarService(apiClient: mockClient)
         let processor = MyBarPendingActionProcessor(myBarService: mockService)
 
         let fav1 = UUID()
@@ -72,7 +73,7 @@ struct MyBarPendingActionProcessorTests {
 
     @Test("process consolidates hidden cocktails")
     func consolidatesHiddenCocktails() async throws {
-        let mockService = MockMyBarService()
+        let mockService = MockMyBarService(apiClient: mockClient)
         let processor = MyBarPendingActionProcessor(myBarService: mockService)
 
         let hidden1 = HiddenCocktailDTO(id: UUID(), cocktailId: UUID().uuidString, name: "Secret", creator: "Someone", date: Date())

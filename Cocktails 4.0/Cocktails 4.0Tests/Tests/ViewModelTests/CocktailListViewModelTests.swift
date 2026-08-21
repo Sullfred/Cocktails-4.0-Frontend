@@ -76,7 +76,7 @@ struct CocktailListViewModelTests {
         let highball = makeCocktail(name: "whiskey highball", category: .highball, ingredients: [bourbon, cola])
 
         let barItems = ["bourbon", "lemon juice", "simple syrup", "egg white"].map { MyBarItem(name: $0) }
-        var bar = MyBar.empty
+        let bar = MyBar.empty
         bar.myBarItems = barItems
 
         let vm = CocktailListViewModel(searchManager: SearchManager(ingredientGroups: [:]))
@@ -96,7 +96,7 @@ struct CocktailListViewModelTests {
         let whiskeySour = makeCocktail(name: "whiskey sour", category: .sour, ingredients: [bourbon, lemon, syrup])
         let oldFashioned = makeCocktail(name: "old fashioned", category: .spiritForward, ingredients: [bourbon, syrup])
 
-        var bar = MyBar.empty
+        let bar = MyBar.empty
         bar.favoriteCocktails = [whiskeySour.id.uuidString]
         bar.removedCocktails = [HiddenCocktail(cocktailId: oldFashioned.id.uuidString, name: oldFashioned.name, creator: oldFashioned.creator)]
 
